@@ -7,7 +7,7 @@ PACKAGE_VERSION = 0.1.0
 CVS_MODULE_NAME = gnustep/dev-libs/WebServices
 CVS_TAG_NAME = WebServices
 SVN_BASE_URL=svn+ssh://svn.gna.org/svn/gnustep/libs
-SVN_MODULE_NAME=webservice
+SVN_MODULE_NAME=webservices
 
 TEST_TOOL_NAME=
 
