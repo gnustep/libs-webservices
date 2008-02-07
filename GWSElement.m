@@ -290,7 +290,7 @@
       GWSElement        *c;
 
       c = [[_children objectAtIndex: index] mutableCopyWithZone: aZone];
-      [self addChild: c];
+      [copy addChild: c];
       [c release];
     }
   return copy;
