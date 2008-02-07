@@ -1,0 +1,34 @@
+<?xml version="1.0"?>
+<!DOCTYPE gsdoc PUBLIC "-//GNUstep//DTD gsdoc 1.0.3//EN" "http://www.gnustep.org/gsdoc-1_0_3.xml">
+<gsdoc base="WebServices">
+  <head>
+    <title>The WebServices Project</title>
+  </head>
+  <body>
+    <chapter>
+      <heading>WebServices documentation</heading>
+      <section>
+        <heading>What are the WebServices classes?</heading>
+        <p>
+          The WebServer library contains a collection of classes to be used
+          for creating client and server 'web service' applications.
+        </p>
+        <p>
+          The GWSService class is used to make RPCs as a client.
+          This class makes use of GWSCoder classes to serialize
+          the request before sending it to the remote system,
+          and to deserialize the response received.<br />
+          Different GWSCoder sublasses handle different encoding mechanisms.
+        </p>
+      </section>
+    </chapter>
+    <back>
+      <chapter>
+        <heading>API Documentation</heading>
+        <p>The index below lists the major components of the WebServices 
+         documentation.</p>
+        <index type="title" scope="project" target="mainFrame" />
+      </chapter>
+    </back>
+  </body>
+</gsdoc>

@@ -1,0 +1,19 @@
+Implement parsing of a WSDL document into a GWSDocument and related
+objects.
+
+Implement generation of a WSDL document from a GWSDocument
+
+Implement parsing of schema documents for SOAP type definitions.
+
+Add support for more of the basic xsi:... types.
+
+Improve support for handling arrays.
+
+Apply SOAP type definition information derived from WSDL/schemas to
+encoding/decoding SOAP messages in the 'literal' style. 
+
+Add binding support so we can do the whole SOAP thing automatically
+over http, https etc.
+
+Examples
+
