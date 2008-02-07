@@ -448,10 +448,6 @@ static NSCharacterSet	*ws = nil;
     }
 }
 
-#ifdef  GNUSTEP
-@class  GSSloppyXMLParser;
-#endif
-
 - (GWSElement*) parseXML: (NSData*)xml
 {
   NSAutoreleasePool     *pool;
@@ -459,11 +455,7 @@ static NSCharacterSet	*ws = nil;
 
   pool = [NSAutoreleasePool new];
   [self reset];
-#ifdef  GNUSTEP
-  parser = [[[GSSloppyXMLParser alloc] initWithData: xml] autorelease];
-#else
   parser = [[[NSXMLParser alloc] initWithData: xml] autorelease];
-#endif
   [parser setShouldProcessNamespaces: YES];
   [parser setShouldReportNamespacePrefixes: YES];
   [parser setDelegate: self];
