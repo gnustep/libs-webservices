@@ -297,12 +297,14 @@
             {
               GWSMessage   *message;
 
+              name = [[_elem attributes] objectForKey: @"name"];
               message = [[GWSMessage alloc] initWithName: name
                                                 document: self];
               if (message != nil)
                 {
                   [_messages setObject: message
                                 forKey: [message name]];
+                  [message release];
                 }
               _elem = [_elem sibling];
             }
@@ -311,12 +313,14 @@
             {
               GWSPortType   *portType;
 
+              name = [[_elem attributes] objectForKey: @"name"];
               portType = [[GWSPortType alloc] initWithName: name
                                                   document: self];
               if (portType != nil)
                 {
                   [_portTypes setObject: portType
                                  forKey: [portType name]];
+                  [portType release];
                 }
               _elem = [_elem sibling];
             }
@@ -325,12 +329,14 @@
             {
               GWSBinding   *binding;
 
+              name = [[_elem attributes] objectForKey: @"name"];
               binding = [[GWSBinding alloc] initWithName: name
                                                 document: self];
               if (binding != nil)
                 {
                   [_bindings setObject: binding
                                 forKey: [binding name]];
+                  [binding release];
                 }
               _elem = [_elem sibling];
             }
@@ -339,12 +345,14 @@
             {
               GWSService   *service;
 
+              name = [[_elem attributes] objectForKey: @"name"];
               service = [[GWSService alloc] initWithName: name
                                                 document: self];
               if (service != nil)
                 {
                   [_services setObject: service
                                 forKey: [service name]];
+                  [service release];
                 }
               _elem = [_elem sibling];
             }

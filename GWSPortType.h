@@ -42,12 +42,21 @@ extern "C" {
 @private
   NSString              *_name;
   GWSDocument           *_document;
+  GWSElement            *_documentation;
   NSMutableDictionary   *_operations;
 }
+
+/** Return the documentation for this port type.
+ */
+- (GWSElement*) documentation;
 
 /** Return the name of this port type.
  */
 - (NSString*) name;
+
+/** Set the documentation for the receiver.
+ */
+- (void) setDocumentation: (GWSElement*)documentation;
 
 /** Return a tree representation of the receiver for output as part of
  * a WSDL document.

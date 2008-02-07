@@ -47,9 +47,14 @@ extern "C" {
 @private
   NSString              *_name;
   GWSDocument           *_document;
+  GWSElement            *_documentation;
   NSMutableDictionary   *_elements;
   NSMutableDictionary   *_types;
 }
+
+/** Return the documentation tree for the receiver.
+ */
+- (GWSElement*) documentation;
 
 /** Return the element of the specified part or nil if it does not exist.
  */
@@ -63,6 +68,10 @@ extern "C" {
  * message.
  */
 - (NSArray*) partNames;
+
+/** Set the documentation for the receiver.
+ */
+- (void) setDocumentation: (GWSElement*)documentation;
 
 /** Set the element of the specified part.
  */

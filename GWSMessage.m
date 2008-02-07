@@ -39,9 +39,15 @@
       return;
     }
   [_name release];
+  [_documentation release];
   [_types release];
   [_elements release];
   [super dealloc];
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
 }
 
 - (NSString*) elementOfPartNamed: (NSString*)name
@@ -59,8 +65,60 @@
 {
   if ((self = [super init]) != nil)
     {
+      GWSElement        *elem;
+
       _name = [name copy];
       _document = document;
+
+      elem = [_document initializing];
+      elem = [elem firstChild];
+      if ([[elem name] isEqualToString: @"documentation"] == YES)
+        {
+          _documentation = [elem retain];
+          elem = [elem sibling];
+          [_documentation remove];
+        }
+      while (elem != nil)
+        {
+          if ([[elem name] isEqualToString: @"part"] == YES)
+            {
+              NSString          *name;
+
+              name = [[elem attributes] objectForKey: @"name"];
+              if (name == nil)
+                {
+                  NSLog(@"Part without a name in WSDL!");
+                }
+              else
+                {
+                  NSDictionary  *attrs = [elem attributes];
+                  NSString      *type = [attrs objectForKey: @"type"];
+                  NSString      *element = [attrs objectForKey: @"element"];
+
+                  if (type == nil && element == nil)
+                    {
+                      NSLog(@"Part %@ without element or type", name);
+                    }
+                  else if (type != nil && element != nil)
+                    {
+                      NSLog(@"Part %@ with both element or type", name);
+                    }
+                  else if (type != nil)
+                    {
+                      [self setType: type forPartNamed: name];
+                    }
+                  else
+                    {
+                      [self setElement: element forPartNamed: name];
+                    }
+                }
+            }
+          else
+            {
+              NSLog(@"Bad element '%@' in message", [elem name]);
+            }
+          elem = [elem sibling];
+        }
     }
   return self;
 }
@@ -91,28 +149,110 @@
   return m;
 }
 
-- (void) setElement: (NSString*)type forPartNamed: (NSString*)name
+- (void) setDocumentation: (GWSElement*)documentation
 {
-  [_types removeObjectForKey: name];
-  [_elements setObject: type forKey: name];
+  if (documentation != _documentation)
+    {
+      id        o = _documentation;
+
+      _documentation = [documentation retain];
+      [o release];
+      [_documentation remove];
+    }
+}
+
+- (void) setElement: (NSString*)element forPartNamed: (NSString*)name
+{
+  if (element == nil)
+    {
+      [_elements removeObjectForKey: name];
+      if ([_elements count] == 0)
+        {
+          [_elements release];
+          _elements = nil;
+        }
+    }
+  else
+    {
+      [_types removeObjectForKey: name];
+      if (_elements == nil)
+        {
+          _elements = [NSMutableDictionary new];
+        }
+      [_elements setObject: element forKey: name];
+    }
 }
 
 - (void) setType: (NSString*)type forPartNamed: (NSString*)name
 {
-  [_elements removeObjectForKey: name];
-  [_types setObject: type forKey: name];
+  if (type == nil)
+    {
+      [_types removeObjectForKey: name];
+      if ([_types count] == 0)
+        {
+          [_types release];
+          _types = nil;
+        }
+    }
+  else
+    {
+      [_elements removeObjectForKey: name];
+      if (_types == nil)
+        {
+          _types = [NSMutableDictionary new];
+        }
+      [_types setObject: type forKey: name];
+    }
 }
 
 - (GWSElement*) tree
 {
   GWSElement    *tree;
+  GWSElement    *elem;
+  NSEnumerator  *enumerator;
+  NSString      *key;
+  NSString      *qual;
 
   tree = [[GWSElement alloc] initWithName: @"message"
                                 namespace: nil
                                 qualified: [_document qualify: @"message"]
                                attributes: nil];
   [tree setAttribute: _name forKey: @"name"];
-  NSLog(@"FIXME .. message tree not implemented");
+  if (_documentation != nil)
+    {
+      elem = [_documentation mutableCopy];
+      [tree addChild: elem];
+      [elem release];
+    }
+  qual = [_document qualify: @"part"];
+  enumerator = [_types keyEnumerator];
+  while ((key = [enumerator nextObject]) != nil)
+    {
+      NSString  *val = [_types objectForKey: key];
+
+      elem = [[GWSElement alloc] initWithName: @"message"
+                                    namespace: nil
+                                    qualified: qual
+                                   attributes: nil];
+      [elem setAttribute: key forKey: @"name"];
+      [elem setAttribute: val forKey: @"type"];
+      [tree addChild: elem];
+      [elem release];
+    }
+  enumerator = [_elements keyEnumerator];
+  while ((key = [enumerator nextObject]) != nil)
+    {
+      NSString  *val = [_elements objectForKey: key];
+
+      elem = [[GWSElement alloc] initWithName: @"message"
+                                    namespace: nil
+                                    qualified: qual
+                                   attributes: nil];
+      [elem setAttribute: key forKey: @"name"];
+      [elem setAttribute: val forKey: @"element"];
+      [tree addChild: elem];
+      [elem release];
+    }
   return [tree autorelease];
 }
 

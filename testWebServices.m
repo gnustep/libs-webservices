@@ -49,14 +49,14 @@ main()
       nil]
     ];
 
-/*
+
 {
   GWSDocument   *document;
   document = [[GWSDocument alloc] initWithContentsOfFile: @"SMS.wsdl"];
   xml = [document data];
   NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
 }
-  */
+
 
 
   // [[NSRunLoop currentRunLoop] run];
@@ -141,7 +141,7 @@ main()
   [order addObject: @"string1"];
   method = @"test";
   fprintf(stdout, "Request encode/decode ");
-  [(GWSSOAPCoder*)coder setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
+  [(GWSSOAPCoder*)coder setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
   xml = [coder buildRequest: method
                  parameters: params
                       order: order];

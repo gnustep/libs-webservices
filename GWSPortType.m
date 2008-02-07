@@ -38,9 +38,15 @@
       [m removePortTypeNamed: _name];
       return;
     }
+  [_documentation release];
   [_operations release];
   [_name release];
   [super dealloc];
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
 }
 
 - (id) init
@@ -55,11 +61,16 @@
     {
       GWSElement        *elem;
 
-      _operations = [NSMutableDictionary new];
       _name = [name copy];
       _document = document;
       elem = [_document initializing];
       elem = [elem firstChild];
+      if ([[elem name] isEqualToString: @"documentation"] == YES)
+        {
+          _documentation = [elem retain];
+          elem = [elem sibling];
+          [_documentation remove];
+        }
       while (elem != nil)
         {
           if ([[elem name] isEqualToString: @"operation"] == YES)
@@ -73,6 +84,10 @@
                 }
               else
                 {
+                  if (_operations == nil)
+                    {
+                      _operations = [NSMutableDictionary new];
+                    }
                   [_operations setObject: elem forKey: name];
                 }
             }
@@ -91,6 +106,18 @@
   return _name;
 }
 
+- (void) setDocumentation: (GWSElement*)documentation
+{
+  if (documentation != _documentation)
+    {
+      id        o = _documentation;
+
+      _documentation = [documentation retain];
+      [o release];
+      [_documentation remove];
+    }
+}
+
 - (GWSElement*) tree
 {
   GWSElement    *tree;
@@ -102,6 +129,12 @@
                                 qualified: [_document qualify: @"portType"]
                                attributes: nil];
   [tree setAttribute: _name forKey: @"name"];
+  if (_documentation != nil)
+    {
+      elem = [_documentation mutableCopy];
+      [tree addChild: elem];
+      [elem release];
+    }
   enumerator = [_operations objectEnumerator];
   while ((elem = [enumerator nextObject]) != nil)
     {

@@ -70,6 +70,9 @@
     }
   [_response release];
   [_connectionURL release];
+  [_documentation release];
+  [_extensibility release];
+  [_ports release];
   [_name release];
   [super dealloc];
 }
@@ -77,6 +80,11 @@
 - (id) delegate
 {
   return _delegate;
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
 }
 
 - (id) init
@@ -89,8 +97,50 @@
 {
   if ((self = [super init]) != nil)
     {
+      GWSElement        *elem;
+
       _name = [name copy];
       _document = document;
+      elem = [_document initializing];
+      elem = [elem firstChild];
+      if ([[elem name] isEqualToString: @"documentation"] == YES)
+        {
+          _documentation = [elem retain];
+          elem = [elem sibling];
+          [_documentation remove];
+        }
+      while (elem != nil && [[elem name] isEqualToString: @"port"] == YES)
+        {
+          GWSElement    *used = nil;
+          NSString      *name;
+
+          name = [[elem attributes] objectForKey: @"name"];
+          if (name == nil)
+            {
+              NSLog(@"Port without a name in WSDL!");
+            }
+          else
+            {
+              if (_ports == nil)
+                {
+                  _ports = [NSMutableDictionary new];
+                }
+              used = elem;
+              [_ports setObject: elem forKey: name];
+            }
+          elem = [elem sibling];
+          [used remove];
+        }
+      while (elem != nil)
+        {
+          if (_extensibility == nil)
+            {
+              _extensibility = [NSMutableArray new];
+            }
+          [_extensibility addObject: elem];
+          elem = [elem sibling];
+          [[_extensibility lastObject] remove];
+        }
     }
   return self;
 }
@@ -203,6 +253,18 @@
   _delegate = aDelegate;
 }
 
+- (void) setDocumentation: (GWSElement*)documentation
+{
+  if (documentation != _documentation)
+    {
+      id        o = _documentation;
+
+      _documentation = [documentation retain];
+      [o release];
+      [_documentation remove];
+    }
+}
+
 - (void) setTimeZone: (NSTimeZone*)timeZone
 {
   if (_tz != timeZone)
@@ -251,13 +313,34 @@
 - (GWSElement*) tree
 {
   GWSElement    *tree;
+  GWSElement    *elem;
+  NSEnumerator  *enumerator;
 
   tree = [[GWSElement alloc] initWithName: @"service"
                                 namespace: nil
                                 qualified: [_document qualify: @"service"]
                                attributes: nil];
   [tree setAttribute: _name forKey: @"name"];
-  NSLog(@"FIXME .. service tree not implemented");
+  if (_documentation != nil)
+    {
+      elem = [_documentation mutableCopy];
+      [tree addChild: elem];
+      [elem release];
+    }
+  enumerator = [_ports objectEnumerator];
+  while ((elem = [enumerator nextObject]) != nil)
+    {
+      elem = [elem mutableCopy];
+      [tree addChild: elem];
+      [elem release];
+    }
+  enumerator = [_extensibility objectEnumerator];
+  while ((elem = [enumerator nextObject]) != nil)
+    {
+      elem = [elem mutableCopy];
+      [tree addChild: elem];
+      [elem release];
+    }
   return [tree autorelease];
 }
 

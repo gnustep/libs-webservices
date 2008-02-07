@@ -45,10 +45,22 @@ extern "C" {
   NSString      *_name;
   NSString      *_type;
   GWSDocument   *_document;
+  GWSElement            *_documentation;
+  NSMutableDictionary   *_operations;
+  NSMutableArray        *_extensibility;
 }
+
+/** Return the documentation for the receiver.
+ */
+- (GWSElement*) documentation;
+
 /** Returns the name of the receiver.
  */
 - (NSString*) name;
+
+/** Set the documentation for the receiver.
+ */
+- (void) setDocumentation: (GWSElement*)documentation;
 
 /** Sets the type of the binding.  This should be the name of an
  * existing [GWSPortType] instance owned by the same [GWSDocument]

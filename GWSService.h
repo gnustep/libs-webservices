@@ -79,6 +79,9 @@ extern "C" {
 @private
   NSString              *_name;
   GWSDocument           *_document;
+  GWSElement            *_documentation;
+  NSMutableDictionary   *_ports;
+  NSMutableArray        *_extensibility;
   NSString		*_connectionURL;
   NSURLConnection	*_connection;
   NSMutableData		*_response;
@@ -102,6 +105,10 @@ extern "C" {
  * URL specified when the receiver was initialised (if any).
  */
 - (id) delegate;
+
+/** Return the documentation for the receiver.
+ */
+- (GWSElement*) documentation;
 
 /**
  * Calls -sendRequest:parameters:order:timeout:
@@ -160,6 +167,10 @@ extern "C" {
  * to remove the delegate).
  */
 - (void) setDelegate: (id)aDelegate;
+
+/** Set the documentation for the receiver.
+ */
+- (void) setDocumentation: (GWSElement*)documentation;
 
 /**
  * Sets the time zone for use when sending/receiving date/time values.<br />
