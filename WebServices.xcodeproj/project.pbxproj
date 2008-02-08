@@ -29,6 +29,8 @@
 		791867280D4A4C82003EBF9C /* testWebServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 791867270D4A4C82003EBF9C /* testWebServices.m */; };
 		791867350D4A4DA2003EBF9C /* WebServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* WebServices.framework */; };
 		792C21710D55B94900459A2C /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
+		79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
+		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
@@ -208,6 +210,7 @@
 				791866E70D4A46A1003EBF9C /* GWSService.h in Headers */,
 				791866EA0D4A46A1003EBF9C /* GWSType.h in Headers */,
 				791866EC0D4A46A1003EBF9C /* WebServices.h in Headers */,
+				79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -303,6 +306,7 @@
 				791866E90D4A46A1003EBF9C /* GWSSOAPCoder.m in Sources */,
 				791866EB0D4A46A1003EBF9C /* GWSXMLRPCCoder.m in Sources */,
 				791866ED0D4A46A1003EBF9C /* WebServices.m in Sources */,
+				79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

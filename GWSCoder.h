@@ -44,11 +44,12 @@ extern "C" {
  * With its standard instance variables and helper functions it really
  * just provides a convenient mechanism to store data in a mutable
  * string, but in conjunction with [GWSElement] it can be used to
- * serialize a tree of elements to a string.<br />
+ * serialize a tree of elements to a string and will parse an XML
+ * document ninto a tree of elements.<br />
  * Often (for RPC and messaging), the actual encoding/decoding is
  * handled by a concrete subclass.<br />
- * Instances of these classes are expected to be re-usable, but not
- * thread-safe, so you need to create one instance for each thread
+ * Instances of these classes are not expected to be re-entrant or
+ * thread-safe, so you need to create an instance for each thread
  * in which you are working.<br />
  */
 @interface	GWSCoder : NSObject
@@ -113,7 +114,7 @@ extern "C" {
 
 /**
  * Specify whether to generate compact XML (omit indentation and other white
- * space and omit &lt;string&gt; element markup).<br />
+ * space and omit &lt;string&gt; element markup for XMLRPC).<br />
  * Compact representation saves some space (can be important when sent over
  * slow/low bandwidth connections), but sacrifices readability.
  */
@@ -185,7 +186,7 @@ extern "C" {
  * <ref type="constant" id="GWSMethodKey">GWSMethodKey</ref>,
  * <ref type="constant" id="GWSParametersKey">GWSParametersKey</ref>,
  * and <ref type="constant" id="GWSOrderKey">GWSOrderKey</ref> on success,
- * or <ref type="constant" id="GWSErrorKey">GWSOrderKey</ref> on failure.<br />
+ * or <ref type="constant" id="GWSErrorKey">GWSErrorKey</ref> on failure.<br />
  * NB. Any containers (arrays or dictionaries) in the parsed parameters
  * will be mutable, so you can modify this data structure as you like.<br />
  * This method is intended for the use of server applications.
@@ -297,7 +298,9 @@ extern "C" {
 @interface GWSXMLRPCCoder : GWSCoder
 {
 }
-/** Take the supplied data and encode it as an XMLRPC timestamp.
+/** Take the supplied data and encode it as an XMLRPC timestamp.<br />
+ * This uses the timezone currently set in the receiver to determine
+ * the time of day encoded.
  */
 - (NSString*) encodeDateTimeFrom: (NSDate*)source;
 
@@ -313,7 +316,11 @@ extern "C" {
   BOOL          _useLiteral;
 }
 
-/** Take the supplied data and append it as an xsd:dateTime representation.
+/** Take the supplied data and return it in the format used for
+ * an xsd:dateTime typed element.<br />
+ * This uses the timezone currently set in the receiver to determine
+ * the time of day encoded and to provide the timezone offset in the
+ * encoded string.
  */
 - (NSString*) encodeDateTimeFrom: (NSDate*)source;
 
