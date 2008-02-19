@@ -59,6 +59,7 @@ WebServices_AGSDOC_FLAGS = \
 	-MakeFrames YES \
 	-ConstantsTemplate TypesAndConstants \
 
+WebServices_NEEDS_GUI = NO
 
 # Optional Java wrappers for the library
 JAVA_WRAPPER_NAME = WebServices
@@ -84,6 +85,7 @@ TEST_TOOL_NAME+=testWebServices
 testWebServices_OBJC_FILES = testWebServices.m
 testWebServices_TOOL_LIBS += -lWebServices
 testWebServices_LIB_DIRS += -L./$(GNUSTEP_OBJ_DIR)
+testWebServices_NEEDS_GUI = NO
 
 -include GNUmakefile.preamble
 
