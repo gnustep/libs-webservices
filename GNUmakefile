@@ -9,6 +9,8 @@ CVS_TAG_NAME = WebServices
 SVN_BASE_URL=svn+ssh://svn.gna.org/svn/gnustep/libs
 SVN_MODULE_NAME=webservices
 
+NEEDS_GUI = NO
+
 TEST_TOOL_NAME=
 
 LIBRARY_NAME=WebServices
@@ -59,8 +61,6 @@ WebServices_AGSDOC_FLAGS = \
 	-MakeFrames YES \
 	-ConstantsTemplate TypesAndConstants \
 
-WebServices_NEEDS_GUI = NO
-
 # Optional Java wrappers for the library
 JAVA_WRAPPER_NAME = WebServices
 
@@ -85,7 +85,6 @@ TEST_TOOL_NAME+=testWebServices
 testWebServices_OBJC_FILES = testWebServices.m
 testWebServices_TOOL_LIBS += -lWebServices
 testWebServices_LIB_DIRS += -L./$(GNUSTEP_OBJ_DIR)
-testWebServices_NEEDS_GUI = NO
 
 -include GNUmakefile.preamble
 
