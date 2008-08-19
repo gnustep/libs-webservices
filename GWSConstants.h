@@ -94,10 +94,16 @@ NSString * const GWSSOAPBodyEncodingStyleRPC;
  */
 NSString * const GWSSOAPBodyEncodingStyleWrapped;
 
-/** Key for the URI to be used as the default namespace for all elements
- * within the method being encoded.
+/** Key for the URI to be used as the namespace for the method and as
+ * the default namespace for all elements within the method being encoded.
  */
 NSString * const GWSSOAPMethodNamespaceURIKey;
+
+/** Key for the name to be used for the namespace of the method.  If this
+ * is omitted then it is assumed that the namespace of the method is set
+ * to be its default namespace (ie it has no name).
+ */
+NSString * const GWSSOAPMethodNamespaceNameKey;
 
 /** Key for a header element for a soap message.  The headers for
  * for the message may be provided by setting a value for this key
@@ -105,7 +111,8 @@ NSString * const GWSSOAPMethodNamespaceURIKey;
  * As a special case you may set an instance of [NSNull] rather than
  * an instance of [GWSElement] for this key, in which case the coder
  * will generate an empty header element which the coder's delegate
- * can then modify.
+ * can then modify.<br />
+ * If no value is set for this key, the header element is omitted.
  */
 NSString * const GWSSOAPMessageHeadersKey;
 

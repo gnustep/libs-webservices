@@ -36,6 +36,8 @@ NSString * const GWSSOAPBodyEncodingStyleWrapped
   = @"GWSSOAPBodyEncodingStyleWrapped";
 NSString * const GWSSOAPMethodNamespaceURIKey
   = @"GWSSOAPMethodNamespaceURIKey";
+NSString * const GWSSOAPMethodNamespaceNameKey
+  = @"GWSSOAPMethodNamespaceNameKey";
 NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
 
@@ -327,11 +329,21 @@ NSString * const GWSSOAPMessageHeadersKey
 
   if (_style == GWSSOAPBodyEncodingStyleRPC)
     {
+      NSString  *nsName;
       NSString  *nsURI;
 
-      qualified = method;
+      nsName = [parameters objectForKey: GWSSOAPMethodNamespaceNameKey];
+
+      if (nsName == nil)
+        {
+          qualified = method;
+        }
+      else
+        {
+          qualified = [NSString stringWithFormat: @"%@:%@", nsName, method];
+        }
       container = [[GWSElement alloc] initWithName: method
-                                         namespace: nil
+                                         namespace: nsName
                                          qualified: qualified
                                         attributes: nil];
       [body addChild: container];
@@ -347,7 +359,11 @@ NSString * const GWSSOAPMessageHeadersKey
       nsURI = [parameters objectForKey: GWSSOAPMethodNamespaceURIKey];
       if (nsURI != nil)
         {
-          [container setNamespace: nsURI forKey: @""];
+          if (nsName == nil)
+            {
+              nsName = @"";
+            }
+          [container setNamespace: nsURI forKey: nsName];
         }
       if ([self delegate] != nil)
         {
