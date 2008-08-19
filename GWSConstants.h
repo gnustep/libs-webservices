@@ -94,14 +94,16 @@ NSString * const GWSSOAPBodyEncodingStyleRPC;
  */
 NSString * const GWSSOAPBodyEncodingStyleWrapped;
 
-/** Key for the URI to be used as the namespace for the method and as
- * the default namespace for all elements within the method being encoded.
+/** Key for the URI to be used as the namespace for the method.  If the
+ * GWSSOAPMethodNamespaceNameKey is not used, this namespace URI is set
+ * as the default namespace for the method.
  */
 NSString * const GWSSOAPMethodNamespaceURIKey;
 
-/** Key for the name to be used for the namespace of the method.  If this
- * is omitted then it is assumed that the namespace of the method is set
- * to be its default namespace (ie it has no name).
+/** Key for the name to be used for the namespace of the method.<br />
+ * If this is set in conjunction with GWSSOAPMethodNamespaceURIKey then
+ * the appropriate namespace mapping is set up in the SOAP envelope.
+ * In any case this name is used to qualify the method name.
  */
 NSString * const GWSSOAPMethodNamespaceNameKey;
 

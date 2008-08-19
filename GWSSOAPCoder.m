@@ -211,6 +211,8 @@ NSString * const GWSSOAPMessageHeadersKey
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
 {
+  NSString              *nsName;
+  NSString              *nsURI;
   GWSElement            *envelope;
   GWSElement            *header;
   GWSElement            *body;
@@ -260,6 +262,16 @@ NSString * const GWSSOAPMessageHeadersKey
               forKey: @"xsd"];
   [envelope setNamespace: @"http://www.w3.org/2001/XMLSchema-instance"
               forKey: @"xsi"];
+
+  /* Check the method namespace ... if we have a URI and a name then we
+   * want to spedcify the namespace in the envelope.
+   */
+  nsName = [parameters objectForKey: GWSSOAPMethodNamespaceNameKey];
+  nsURI = [parameters objectForKey: GWSSOAPMethodNamespaceURIKey];
+  if (_style == GWSSOAPBodyEncodingStyleRPC && nsName != nil && nsURI != nil)
+    {
+      [envelope setNamespace: nsURI forKey: nsName];
+    }
 
   if ([self delegate] != nil)
     {
@@ -329,11 +341,6 @@ NSString * const GWSSOAPMessageHeadersKey
 
   if (_style == GWSSOAPBodyEncodingStyleRPC)
     {
-      NSString  *nsName;
-      NSString  *nsURI;
-
-      nsName = [parameters objectForKey: GWSSOAPMethodNamespaceNameKey];
-
       if (nsName == nil)
         {
           qualified = method;
@@ -356,15 +363,14 @@ NSString * const GWSSOAPMessageHeadersKey
       [container setAttribute: @"http://schemas.xmlsoap.org/soap/encoding/"
                        forKey: qualified];
 
-      nsURI = [parameters objectForKey: GWSSOAPMethodNamespaceURIKey];
-      if (nsURI != nil)
+      if (nsURI != nil && nsName == nil)
         {
-          if (nsName == nil)
-            {
-              nsName = @"";
-            }
-          [container setNamespace: nsURI forKey: nsName];
+          /* We have a namespace but no name ... make it the default namespace
+           * for the body.
+           */
+          [container setNamespace: nsURI forKey: @""];
         }
+
       if ([self delegate] != nil)
         {
           GWSElement        *elem;
