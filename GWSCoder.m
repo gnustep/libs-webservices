@@ -232,8 +232,7 @@ static NSCharacterSet	*ws = nil;
   str = [[NSString alloc] initWithBytesNoCopy: dBuf
                                        length: destlen
                                      encoding: NSASCIIStringEncoding
-                                 freeWhenDone: NO];
-  NSZoneFree (NSDefaultMallocZone(), dBuf);
+                                 freeWhenDone: YES];
   return [str autorelease];
 }
 
