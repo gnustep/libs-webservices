@@ -433,6 +433,11 @@ NSString * const GWSSOAPMessageHeadersKey
       id                v = [parameters objectForKey: k];
       GWSElement        *e;
 
+      if (v == nil)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"Value '%@' (order %u) missing", k, i];
+	}
       e = [[self delegate] encodeWithCoder: self
                                       item: v
                                      named: k
@@ -860,10 +865,12 @@ NSString * const GWSSOAPMessageHeadersKey
           NSString      *k = [order objectAtIndex: i];
           id            v = [o objectForKey: k];
 
-          if (v != nil)
-            {
-              [e addChild: [self _elementForObject: v named: k]];
-            }
+	  if (v == nil)
+	    {
+	      [NSException raise: NSInvalidArgumentException
+			  format: @"Parameter '%@' (order %u) missing", k, i];
+	    }
+	  [e addChild: [self _elementForObject: v named: k]];
         }
     }
   if (array == YES)
