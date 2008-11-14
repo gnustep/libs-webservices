@@ -144,6 +144,9 @@ extern "C" {
  * as an NSData object.<br />
  * For XMLRCP the two parameters should be faultCode (an integer)
  * and faultString.<br />
+ * The order array may be empty or nil if the order of the parameters
+ * is not important, otherwise it must contain the names of the parameters
+ * in the order in which they are to be encoded.<br />
  * This method is intended for use by applications acting as RPC servers.
  */
 - (NSData*) buildFaultWithParameters: (NSDictionary*)parameters
@@ -156,7 +159,8 @@ extern "C" {
  * The parameters dictionary may be empty or nil if there are no parameters
  * to be passed.<br />
  * The order array may be empty or nil if the order of the parameters
- * is not important.<br />
+ * is not important, otherwise it must contain the names of the parameters
+ * in the order in which they are to be encoded.<br />
  * The method returns nil if passed an invalid method name.<br />
  * This method is used internally when sending an RPC method call to
  * a remote system, but you can also call it yourself.
@@ -173,7 +177,8 @@ extern "C" {
  * The parameters dictionary may be empty or nil if there are no parameters
  * to be returned (an empty parameters element will be created).<br />
  * The order array may be empty or nil if the order of the parameters
- * is not important.<br />
+ * is not important, otherwise it must contain the names of the parameters
+ * in the order in which they are to be encoded.<br />
  * This method is intended for use by applications acting as RPC servers.
  */
 - (NSData*) buildResponse: (NSString*)method
