@@ -48,7 +48,7 @@
   binding = [_bindings objectForKey: name];
   if (binding == nil && shouldCreate == YES)
     {
-      binding = [[GWSBinding alloc] initWithName: name document: self];
+      binding = [[GWSBinding alloc] _initWithName: name document: self];
       [_bindings setObject: binding forKey: name];
       [binding release];
     }
@@ -81,16 +81,29 @@
 
 - (void) dealloc
 {
+  NSEnumerator  *e;
+  id            o;
+
   [_name release];
   [_prefix release];
   [_targetNamespace release];
   [_documentation release];
+  e = [_portTypes objectEnumerator];
+  while ((o = [e nextObject]) != nil) [o _remove];
   [_portTypes release];
+  e = [_bindings objectEnumerator];
+  while ((o = [e nextObject]) != nil) [o _remove];
   [_bindings release];
+  e = [_services objectEnumerator];
+  while ((o = [e nextObject]) != nil) [o _remove];
   [_services release];
+  e = [_messages objectEnumerator];
+  while ((o = [e nextObject]) != nil) [o _remove];
   [_messages release];
-  [_namespaces release];
+  e = [_types objectEnumerator];
+  while ((o = [e nextObject]) != nil) [o _remove];
   [_types release];
+  [_namespaces release];
   [_lock release];
   [super dealloc];
 }
@@ -298,8 +311,8 @@
               GWSMessage   *message;
 
               name = [[_elem attributes] objectForKey: @"name"];
-              message = [[GWSMessage alloc] initWithName: name
-                                                document: self];
+              message = [[GWSMessage alloc] _initWithName: name
+                                                 document: self];
               if (message != nil)
                 {
                   [_messages setObject: message
@@ -314,8 +327,8 @@
               GWSPortType   *portType;
 
               name = [[_elem attributes] objectForKey: @"name"];
-              portType = [[GWSPortType alloc] initWithName: name
-                                                  document: self];
+              portType = [[GWSPortType alloc] _initWithName: name
+                                                   document: self];
               if (portType != nil)
                 {
                   [_portTypes setObject: portType
@@ -330,8 +343,8 @@
               GWSBinding   *binding;
 
               name = [[_elem attributes] objectForKey: @"name"];
-              binding = [[GWSBinding alloc] initWithName: name
-                                                document: self];
+              binding = [[GWSBinding alloc] _initWithName: name
+                                                 document: self];
               if (binding != nil)
                 {
                   [_bindings setObject: binding
@@ -346,8 +359,8 @@
               GWSService   *service;
 
               name = [[_elem attributes] objectForKey: @"name"];
-              service = [[GWSService alloc] initWithName: name
-                                                document: self];
+              service = [[GWSService alloc] _initWithName: name
+                                                 document: self];
               if (service != nil)
                 {
                   [_services setObject: service
@@ -395,7 +408,7 @@
   message = [_messages objectForKey: name];
   if (message == nil && shouldCreate == YES)
     {
-      message = [[GWSType alloc] initWithName: name document: self];
+      message = [[GWSType alloc] _initWithName: name document: self];
       [_messages setObject: message forKey: name];
       [message release];
     }
@@ -436,7 +449,7 @@
   portType = [_portTypes objectForKey: name];
   if (portType == nil && shouldCreate == YES)
     {
-      portType = [[GWSType alloc] initWithName: name document: self];
+      portType = [[GWSType alloc] _initWithName: name document: self];
       [_portTypes setObject: portType forKey: name];
       [portType release];
     }
@@ -451,6 +464,7 @@
 - (void) removeBindingNamed: (NSString*)name
 {
   [_lock lock];
+  [[_bindings objectForKey: name] _remove];
   [_bindings removeObjectForKey: name];
   [_lock unlock];
 }
@@ -458,6 +472,7 @@
 - (void) removeMessageNamed: (NSString*)name
 {
   [_lock lock];
+  [[_bindings objectForKey: name] _remove];
   [_messages removeObjectForKey: name];
   [_lock unlock];
 }
@@ -465,6 +480,7 @@
 - (void) removePortTypeNamed: (NSString*)name
 {
   [_lock lock];
+  [[_bindings objectForKey: name] _remove];
   [_portTypes removeObjectForKey: name];
   [_lock unlock];
 }
@@ -472,6 +488,7 @@
 - (void) removeServiceNamed: (NSString*)name
 {
   [_lock lock];
+  [[_bindings objectForKey: name] _remove];
   [_services removeObjectForKey: name];
   [_lock unlock];
 }
@@ -479,6 +496,7 @@
 - (void) removeTypeNamed: (NSString*)name
 {
   [_lock lock];
+  [[_bindings objectForKey: name] _remove];
   [_types removeObjectForKey: name];
   [_lock unlock];
 }
@@ -511,7 +529,7 @@
   service = [_services objectForKey: name];
   if (service == nil && shouldCreate == YES)
     {
-      service = [[GWSType alloc] initWithName: name document: self];
+      service = [[GWSType alloc] _initWithName: name document: self];
       [_services setObject: service forKey: name];
       [service release];
     }
@@ -670,7 +688,7 @@
   type = [_types objectForKey: name];
   if (type == nil && shouldCreate == YES)
     {
-      type = [[GWSType alloc] initWithName: name document: self];
+      type = [[GWSType alloc] _initWithName: name document: self];
       [_types setObject: type forKey: name];
       [type release];
     }

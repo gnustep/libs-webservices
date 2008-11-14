@@ -26,42 +26,8 @@
 #include <Foundation/Foundation.h>
 #include "GWSPrivate.h"
 
-@implementation	GWSMessage
-
-- (void) dealloc
-{
-  if (_document != nil)
-    {
-      GWSDocument        *m = _document;
-
-      _document = nil;
-      [m removeMessageNamed: _name];
-      return;
-    }
-  [_name release];
-  [_documentation release];
-  [_types release];
-  [_elements release];
-  [super dealloc];
-}
-
-- (GWSElement*) documentation
-{
-  return _documentation;
-}
-
-- (NSString*) elementOfPartNamed: (NSString*)name
-{
-  return [_elements objectForKey: name];
-}
-
-- (id) init
-{
-  [self release];
-  return nil;
-}
-
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document
+@implementation	GWSMessage (Private)
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
 {
   if ((self = [super init]) != nil)
     {
@@ -121,6 +87,38 @@
         }
     }
   return self;
+}
+- (void) _remove
+{
+  _document = nil;
+}
+@end
+
+@implementation	GWSMessage
+
+- (void) dealloc
+{
+  [_name release];
+  [_documentation release];
+  [_types release];
+  [_elements release];
+  [super dealloc];
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
+}
+
+- (NSString*) elementOfPartNamed: (NSString*)name
+{
+  return [_elements objectForKey: name];
+}
+
+- (id) init
+{
+  [self release];
+  return nil;
 }
 
 - (NSString*) name

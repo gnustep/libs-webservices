@@ -18,7 +18,12 @@
           This class makes use of GWSCoder classes to serialize
           the request before sending it to the remote system,
           and to deserialize the response received.<br />
-          Different GWSCoder sublasses handle different encoding mechanisms.
+          Different GWSCoder sublasses handle different encoding mechanisms,
+          and this library provides one for XMLRPC (because it's a nice,
+          simple mechanism good for most normal applicatiions), and one for
+          SOAP (because, while it's a horrible, bloated, designed-by-comittee
+          mechanism, it's also the most common one by far and the standard
+          one for web services).
         </p>
       </section>
     </chapter>

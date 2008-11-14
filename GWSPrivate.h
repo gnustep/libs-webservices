@@ -45,18 +45,23 @@
 
 
 @interface      GWSBinding (Private)
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document;
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (void) _remove;
 @end
 @interface      GWSMessage (Private)
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document;
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (void) _remove;
 @end
 @interface      GWSPortType (Private)
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document;
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (void) _remove;
 @end
 @interface      GWSService (Private)
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document;
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (void) _remove;
 @end
 @interface      GWSType (Private)
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document;
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (void) _remove;
 @end
 

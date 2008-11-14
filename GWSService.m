@@ -26,73 +26,8 @@
 #include <Foundation/Foundation.h>
 #include "GWSPrivate.h"
 
-@implementation	GWSService
-
-- (void) _setProblem: (NSString*)s
-{
-  [_result release];
-  _result = [[NSMutableDictionary alloc] initWithObjects: &s
-						 forKeys: &GWSErrorKey
-						   count: 1];
-}
-
-- (GWSCoder*) coder
-{
-  return _coder;
-}
-
-- (BOOL) compact
-{
-  return _compact;
-}
-
-- (void) dealloc
-{
-  if (_document != nil)
-    {
-      GWSDocument        *m = _document;
-
-      _document = nil;
-      [m removeServiceNamed: _name];
-      return;
-    }
-  [_coder release];
-  _coder = nil;
-  [_tz release];
-  if (_timer != nil)
-    {
-      [self timeout: nil];	// Treat as immediate timeout.
-    }
-  [_result release];
-  if (_connection)
-    {
-      [_connection release];
-    }
-  [_response release];
-  [_connectionURL release];
-  [_documentation release];
-  [_extensibility release];
-  [_ports release];
-  [_name release];
-  [super dealloc];
-}
-
-- (id) delegate
-{
-  return _delegate;
-}
-
-- (GWSElement*) documentation
-{
-  return _documentation;
-}
-
-- (id) init
-{
-  return [self initWithName: nil document: nil];
-}
-
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document
+@implementation	GWSService (Private)
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
 {
   if ((self = [super init]) != nil)
     {
@@ -142,6 +77,69 @@
         }
     }
   return self;
+}
+- (void) _remove
+{
+  _document = nil;
+}
+- (void) _setProblem: (NSString*)s
+{
+  [_result release];
+  _result = [[NSMutableDictionary alloc] initWithObjects: &s
+						 forKeys: &GWSErrorKey
+						   count: 1];
+}
+
+@end
+
+@implementation	GWSService
+
+- (GWSCoder*) coder
+{
+  return _coder;
+}
+
+- (BOOL) compact
+{
+  return _compact;
+}
+
+- (void) dealloc
+{
+  [_coder release];
+  _coder = nil;
+  [_tz release];
+  if (_timer != nil)
+    {
+      [self timeout: nil];	// Treat as immediate timeout.
+    }
+  [_result release];
+  if (_connection)
+    {
+      [_connection release];
+    }
+  [_response release];
+  [_connectionURL release];
+  [_documentation release];
+  [_extensibility release];
+  [_ports release];
+  [_name release];
+  [super dealloc];
+}
+
+- (id) delegate
+{
+  return _delegate;
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
+}
+
+- (id) init
+{
+  return [self _initWithName: nil document: nil];
 }
 
 - (NSMutableDictionary*) invokeMethod: (NSString*)method 

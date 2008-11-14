@@ -26,36 +26,9 @@
 #include <Foundation/Foundation.h>
 #include "GWSPrivate.h"
 
-@implementation	GWSPortType
+@implementation	GWSPortType (Private)
 
-- (void) dealloc
-{
-  if (_document != nil)
-    {
-      GWSDocument        *m = _document;
-
-      _document = nil;
-      [m removePortTypeNamed: _name];
-      return;
-    }
-  [_documentation release];
-  [_operations release];
-  [_name release];
-  [super dealloc];
-}
-
-- (GWSElement*) documentation
-{
-  return _documentation;
-}
-
-- (id) init
-{
-  [self release];
-  return nil;
-}
-
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
 {
   if ((self = [super init]) != nil)
     {
@@ -99,6 +72,32 @@
         }
     }
   return self;
+}
+- (void) _remove
+{
+  _document = nil;
+}
+@end
+
+@implementation	GWSPortType
+
+- (void) dealloc
+{
+  [_documentation release];
+  [_operations release];
+  [_name release];
+  [super dealloc];
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
+}
+
+- (id) init
+{
+  [self release];
+  return nil;
 }
 
 - (NSString*) name

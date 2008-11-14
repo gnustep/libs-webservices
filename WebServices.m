@@ -55,7 +55,7 @@ NSString * const GWSResponseDataKey = @"GWSCoderResponseData";
   return nil;
 }
 
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
 {
   if ((self = [super init]) != 0)
     {

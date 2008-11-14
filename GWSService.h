@@ -44,15 +44,16 @@ extern "C" {
 /**
  * <p>The GWSService class provides methods for makeing a Remote Procedure
  * Call (RPC) as a web services client.<br />
- * Instances of this class are normally created by the GWSDocument class as
- * it parses a WSDL document, and contain information parsed from that
- * document.  However, standalone instances may be created to allow you to
- * perform RPCs to a web services server when you dont have a fully specified
- * WSDL document.
+ * Instances of this class are (in an ideal world) created and owned by
+ * instances the GWSDocument class as it parses a WSDL document, and contain
+ * information parsed from that document allowing them to set up the coding
+ * mechanism and URL to talk to.<br />
+ * However, standalone instances may be created to allow you to perform RPCs
+ * to a web services server when you dont have a fully specified WSDL document
+ * (or if the GWSDocument mechanism isn't working).
  * </p>
- * <p>The class provides a method for making a synchronous RPC
- * (with timeout), or an asynchronous RPC in which the
- * call completion is handled by a delegate.
+ * <p>The class provides a method for making a synchronous RPC (with timeout),
+ * or an asynchronous RPC in which the call completion is handled by a delegate.
  * </p>
  * <p>In order to simply make a synchronous call to a server, all
  * you need to do is write code like:
@@ -62,7 +63,7 @@ extern "C" {
  *   NSDictionary       *result;
  *   server = [GWSService new];
  *   [server setURL: @"http://server/path"];
- *   [server setCoder: [GWSCoder coder]];
+ *   [server setCoder: [GWSSOAPCoder coder]];
  *   result = [server invokeMethod: name
  *                      parameters: p
  *                           order: o
@@ -84,7 +85,7 @@ extern "C" {
 {
 @private
   NSString              *_name;
-  GWSDocument           *_document;
+  GWSDocument           *_document;     // Not retained (our owner)
   GWSElement            *_documentation;
   NSMutableDictionary   *_ports;
   NSMutableArray        *_extensibility;

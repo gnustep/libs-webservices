@@ -26,38 +26,8 @@
 #include <Foundation/Foundation.h>
 #include "GWSPrivate.h"
 
-@implementation	GWSBinding
-
-- (void) dealloc
-{
-  if (_document != nil)
-    {
-      GWSDocument        *m = _document;
-
-      _document = nil;
-      [m removeBindingNamed: _name];
-      return;
-    }
-  [_documentation release];
-  [_extensibility release];
-  [_operations release];
-  [_type release];
-  [_name release];
-  [super dealloc];
-}
-
-- (GWSElement*) documentation
-{
-  return _documentation;
-}
-
-- (id) init
-{
-  [self release];
-  return nil;
-}
-
-- (id) initWithName: (NSString*)name document: (GWSDocument*)document
+@implementation GWSBinding (Private)
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
 {
   if ((self = [super init]) != nil)
     {
@@ -115,6 +85,34 @@
         }
     }
   return self;
+}
+- (void) _remove
+{
+  _document = nil;
+}
+@end
+
+@implementation	GWSBinding
+
+- (void) dealloc
+{
+  [_documentation release];
+  [_extensibility release];
+  [_operations release];
+  [_type release];
+  [_name release];
+  [super dealloc];
+}
+
+- (GWSElement*) documentation
+{
+  return _documentation;
+}
+
+- (id) init
+{
+  [self release];
+  return nil;
 }
 
 - (NSString*) name
