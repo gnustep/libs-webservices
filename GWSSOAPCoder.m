@@ -223,31 +223,39 @@ NSString * const GWSSOAPMessageHeadersKey
   unsigned	        c;
   unsigned	        i;
 
-  if ([method length] == 0)
+  /* The method name is required for RPC operations ...
+   * for document style operations the method is implicit in the URL
+   * that the document is sent to.
+   * We therefore check the method name only if we are doing an RPC.
+   */
+  if (_style == GWSSOAPBodyEncodingStyleRPC)
     {
-      return nil;
-    }
-  else
-    {
-      static NSCharacterSet	*illegal = nil;
-      NSRange			r;
-
-      if (illegal == nil)
+      if ([method length] == 0)
 	{
-	  NSMutableCharacterSet	*tmp = [NSMutableCharacterSet new];
-
-	  [tmp addCharactersInRange: NSMakeRange('0', 10)];
-	  [tmp addCharactersInRange: NSMakeRange('a', 26)];
-	  [tmp addCharactersInRange: NSMakeRange('A', 26)];
-	  [tmp addCharactersInString: @"_.:/"];
-	  [tmp invert];
-	  illegal = [tmp copy];
-	  [tmp release];
+	  return nil;
 	}
-      r = [method rangeOfCharacterFromSet: illegal];
-      if (r.length > 0)
+      else
 	{
-	  return nil;	// Bad method name.
+	  static NSCharacterSet	*illegal = nil;
+	  NSRange			r;
+
+	  if (illegal == nil)
+	    {
+	      NSMutableCharacterSet	*tmp = [NSMutableCharacterSet new];
+
+	      [tmp addCharactersInRange: NSMakeRange('0', 10)];
+	      [tmp addCharactersInRange: NSMakeRange('a', 26)];
+	      [tmp addCharactersInRange: NSMakeRange('A', 26)];
+	      [tmp addCharactersInString: @"_.:/"];
+	      [tmp invert];
+	      illegal = [tmp copy];
+	      [tmp release];
+	    }
+	  r = [method rangeOfCharacterFromSet: illegal];
+	  if (r.length > 0)
+	    {
+	      return nil;	// Bad method name.
+	    }
 	}
     }
 
