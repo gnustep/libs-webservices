@@ -31,9 +31,9 @@
 - (void) _setProblem: (NSString*)s
 {
   [_result release];
-  _result = [[NSDictionary alloc] initWithObjects: &s
-                                         forKeys: &GWSErrorKey
-                                           count: 1];
+  _result = [[NSMutableDictionary alloc] initWithObjects: &s
+						 forKeys: &GWSErrorKey
+						   count: 1];
 }
 
 - (GWSCoder*) coder
@@ -89,8 +89,7 @@
 
 - (id) init
 {
-  [self release];
-  return nil;
+  return [self initWithName: nil document: nil];
 }
 
 - (id) initWithName: (NSString*)name document: (GWSDocument*)document
@@ -315,10 +314,12 @@
   GWSElement    *tree;
   GWSElement    *elem;
   NSEnumerator  *enumerator;
+  NSString	*q;
 
+  q = (_document == nil) ? (id)@"service" : (id)[_document qualify: @"service"];
   tree = [[GWSElement alloc] initWithName: @"service"
                                 namespace: nil
-                                qualified: [_document qualify: @"service"]
+                                qualified: q
                                attributes: nil];
   [tree setAttribute: _name forKey: @"name"];
   if (_documentation != nil)
@@ -406,11 +407,15 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
     {
       id        reason = [localException reason];
 
-      _result = [NSDictionary dictionaryWithObjects: &reason
-                                           forKeys: &GWSFaultKey
-                                             count: 1];
+      _result = [NSMutableDictionary dictionaryWithObjects: &reason
+						   forKeys: &GWSFaultKey
+						     count: 1];
     }
   NS_ENDHANDLER
+  if ([_response length] > 0)
+    {
+      [_result setObject: _response forKey: GWSResponseDataKey];
+    }
   [_result retain];
 
   [_timer invalidate];

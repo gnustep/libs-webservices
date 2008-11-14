@@ -68,6 +68,13 @@ NSString * const GWSOrderKey;
  */
 NSString * const GWSParametersKey;
 
+/** Key for the data from a remote system returned in a result
+ * of a GWSService RCP made to a web services server.<br />
+ * This is present if the remote end returned data, but is omitted
+ * otherwise.
+ */
+NSString * const GWSResponseDataKey;
+
 
 /** Key for the encoding style to be used for the SOAP body.
  */

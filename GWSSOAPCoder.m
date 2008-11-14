@@ -520,6 +520,11 @@ NSString * const GWSSOAPMessageHeadersKey
 
       parser = [[GWSCoder new] autorelease];
       envelope = [parser parseXML: data];
+      if (envelope == nil)
+	{
+          [NSException raise: NSInvalidArgumentException
+                      format: @"Document is NOT parsable as XML"];
+	}
       if ([self delegate] != nil)
         {
           envelope = [[self delegate] coder: self willDecode: envelope];

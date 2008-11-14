@@ -32,6 +32,7 @@ main()
   NSAutoreleasePool     *pool;
   NSUserDefaults	*defs;
   GWSCoder              *coder;
+  GWSService		*service;
   NSData                *xml;
   NSString              *method;
   NSMutableArray        *order;
@@ -193,6 +194,18 @@ main()
         }
     }
 
+
+  fprintf(stdout, "Expect this to produce an error ... it tries a request"
+    " on the local web server:\n");
+  service = [GWSService new]; 
+  [service setURL: @"http://localhost/"];
+  [service setCoder: coder];
+  result = [service invokeMethod: method
+                      parameters: params
+                           order: order
+                         timeout: 30];
+  fprintf(stdout, "Result: %s\n", [[result description] cString]);
+  [service release];
 
   [coder release];
 

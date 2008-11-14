@@ -43,7 +43,12 @@ extern "C" {
 
 /**
  * <p>The GWSService class provides methods for makeing a Remote Procedure
- * Call (RPC) as a web services client.
+ * Call (RPC) as a web services client.<br />
+ * Instances of this class are normally created by the GWSDocument class as
+ * it parses a WSDL document, and contain information parsed from that
+ * document.  However, standalone instances may be created to allow you to
+ * perform RPCs to a web services server when you dont have a fully specified
+ * WSDL document.
  * </p>
  * <p>The class provides a method for making a synchronous RPC
  * (with timeout), or an asynchronous RPC in which the
@@ -55,7 +60,8 @@ extern "C" {
  * <example>
  *   GWSService	*server;
  *   NSDictionary       *result;
- *   server = [[GWSService alloc] initWithURL: @"http://server/path"];
+ *   server = [GWSService new];
+ *   [server setURL: @"http://server/path"];
  *   [server setCoder: [GWSCoder coder]];
  *   result = [server invokeMethod: name
  *                      parameters: p
