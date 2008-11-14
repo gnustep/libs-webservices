@@ -1,5 +1,5 @@
-Implement parsing of a WSDL document into a GWSDocument and related
-objects.
+Completely implement parsing of a WSDL document into a GWSDocument
+and related objects.
 
 Implement generation of a WSDL document from a GWSDocument
 
