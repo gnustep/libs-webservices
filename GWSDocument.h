@@ -40,6 +40,7 @@ extern "C" {
 @class  NSURL;
 @class  GWSBinding;
 @class  GWSElement;
+@class  GWSExtensibility;
 @class  GWSMessage;
 @class  GWSPortType;
 @class  GWSService;
@@ -65,7 +66,22 @@ extern "C" {
   NSMutableDictionary   *_portTypes;
   NSMutableDictionary   *_services;
   NSMutableDictionary   *_types;
+  NSDictionary		*_ext;
 }
+
+/** Return a previously registered extensibility object.
+ */
++ (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL;
+
+/** Registers an extensibility object to be used to handle extensibility
+ * elements with the specified namespace.<br />
+ * New registrations replace older ones for the same namespace URL.<br />
+ * Registering a nil object removes registrations for the namespace URL.<br />
+ * NB. Changes to the registered extensibilities do not effect any
+ * document instances created bnefore the change took place.
+ */
++ (void) registerExtensibility: (GWSExtensibility*)extensibility
+		  forNamespace: (NSString*)namespaceURL;
 
 /** Returns the names of all WSDL bindings currently defined in this document.
  */
@@ -84,6 +100,11 @@ extern "C" {
 /** Returns the receiver's documentation.
  */
 - (GWSElement*) documentation;
+
+/** Returns the extensibility object that this document uses to 
+ * handle extensibility elements with the specified namespace.
+ */
+- (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL;
 
 /** Returns the current element when initializing the document from a
  * tree of elements, nil otherwise.  This is intended for use by

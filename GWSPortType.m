@@ -4,7 +4,7 @@
    Written by:  Richard Frith-Macdonald <rfm@gnu.org>
    Date:	January 2008
    
-   This file is part of the WebPortTypes Library.
+   This file is part of the WebServices Library.
 
    This library is free software; you can redistribute it and/or
    modify it under the terms of the GNU Lesser General Public
@@ -23,8 +23,8 @@
    $Date: 2007-09-24 14:19:12 +0100 (Mon, 24 Sep 2007) $ $Revision: 25500 $
    */ 
 
-#include <Foundation/Foundation.h>
-#include "GWSPrivate.h"
+#import <Foundation/Foundation.h>
+#import "GWSPrivate.h"
 
 @implementation	GWSPortType (Private)
 

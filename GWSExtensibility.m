@@ -2,7 +2,7 @@
    Copyright (C) 2008 Free Software Foundation, Inc.
    
    Written by:  Richard Frith-Macdonald <rfm@gnu.org>
-   Date:	January 2008
+   Date:	November 2008
    
    This file is part of the WebServices Library.
 
@@ -20,22 +20,28 @@
    License along with this library; if not, write to the Free
    Software Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA 02111 USA.
 
-   $Date: 2007-09-14 13:54:55 +0100 (Fri, 14 Sep 2007) $ $Revision: 25485 $
+   $Date: 2007-09-24 14:19:12 +0100 (Mon, 24 Sep 2007) $ $Revision: 25500 $
    */ 
 
-#ifndef	INCLUDED_WEBSERVICES_H
-#define	INCLUDED_WEBSERVICES_H
+#import <Foundation/Foundation.h>
+#import "GWSPrivate.h"
 
-#import <WebServices/GWSBinding.h>
-#import <WebServices/GWSCoder.h>
-#import <WebServices/GWSConstants.h>
-#import <WebServices/GWSDocument.h>
-#import <WebServices/GWSElement.h>
-#import <WebServices/GWSExtensibility.h>
-#import <WebServices/GWSMessage.h>
-#import <WebServices/GWSPortType.h>
-#import <WebServices/GWSService.h>
-#import <WebServices/GWSType.h>
+@implementation	GWSExtensibility
 
-#endif
+- (NSString*) validate: (GWSElement*)tree
+		   for: (GWSDocument*)document
+		    in: (NSString*)section
+{
+  return nil;
+}
+
+- (void) setupService: (GWSService*)service
+		 from: (GWSElement*)tree
+		  for: (GWSDocument*)document
+		   in: (NSString*)section
+{
+  return;
+}
+
+@end
 

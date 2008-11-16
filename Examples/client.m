@@ -23,8 +23,8 @@
    $Date: 2007-09-14 13:54:55 +0100 (Fri, 14 Sep 2007) $ $Revision: 25485 $
    */ 
 
-#include	<Foundation/Foundation.h>
-#include	"../GWSPrivate.h"
+#import	<Foundation/Foundation.h>
+#import	"../GWSPrivate.h"
 
 int
 main()

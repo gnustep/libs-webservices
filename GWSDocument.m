@@ -23,11 +23,57 @@
    $Date: 2007-09-24 14:19:12 +0100 (Mon, 24 Sep 2007) $ $Revision: 25500 $
    */ 
 
-#include <Foundation/Foundation.h>
-#include "GWSPrivate.h"
+#import <Foundation/Foundation.h>
+#import "GWSPrivate.h"
 
+static NSMutableDictionary	*extDict = nil;
+static NSLock			*extLock = nil;
 
 @implementation GWSDocument
+
++ (void) initialize
+{
+  if (extLock == nil)
+    {
+      extLock = [NSLock new];
+      extDict = [NSMutableDictionary new];
+    }
+}
+
++ (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL
+{
+  GWSExtensibility	*e;
+
+  if (namespaceURL == nil)
+    {
+      e = nil;
+    }
+  else
+    {
+      [extLock lock];
+      e = [[extDict objectForKey: namespaceURL] retain];
+      [extLock unlock];
+    }
+  return [e autorelease];
+}
+
++ (void) registerExtensibility: (GWSExtensibility*)extensibility
+		  forNamespace: (NSString*)namespaceURL
+{
+  if (namespaceURL != nil)
+    {
+      [extLock lock];
+      if (extensibility == nil)
+	{
+	  [extDict removeObjectForKey: namespaceURL];
+	}
+      else
+	{
+	  [extDict setObject: extensibility forKey: namespaceURL];
+	}
+      [extLock unlock];
+    }
+}
 
 - (NSArray*) bindingNames
 {
@@ -84,6 +130,7 @@
   NSEnumerator  *e;
   id            o;
 
+  [_ext release];
   [_name release];
   [_prefix release];
   [_targetNamespace release];
@@ -113,6 +160,11 @@
   return _documentation;
 }
 
+- (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL
+{
+  return [_ext objectForKey: namespaceURL];
+}
+
 - (id) init
 {
   if ((self = [super init]) != nil)
@@ -124,6 +176,9 @@
       _messages = [NSMutableDictionary new];
       _namespaces = [NSMutableDictionary new];
       _types = [NSMutableDictionary new];
+      [extLock lock];
+      _ext = [extDict copy];
+      [extLock unlock];
     }
   return self;
 }

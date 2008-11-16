@@ -37,6 +37,7 @@
 #import "GWSCoder.h"
 #import "GWSConstants.h"
 #import "GWSElement.h"
+#import "GWSExtensibility.h"
 #import "GWSDocument.h"
 #import "GWSMessage.h"
 #import "GWSPortType.h"

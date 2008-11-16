@@ -23,8 +23,8 @@
    $Date: 2007-09-24 14:19:12 +0100 (Mon, 24 Sep 2007) $ $Revision: 25500 $
    */ 
 
-#include <Foundation/Foundation.h>
-#include "GWSPrivate.h"
+#import <Foundation/Foundation.h>
+#import "GWSPrivate.h"
 
 @implementation	GWSService (Private)
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document

@@ -24,6 +24,7 @@ WebServices_OBJC_FILES +=\
 	GWSCoder.m \
 	GWSDocument.m \
 	GWSElement.m \
+	GWSExtensibility.m \
 	GWSMessage.m \
 	GWSPortType.m \
 	GWSService.m \
@@ -38,6 +39,7 @@ WebServices_HEADER_FILES += \
 	GWSConstants.h \
 	GWSDocument.h \
 	GWSElement.h \
+	GWSExtensibility.h \
 	GWSMessage.h \
 	GWSPortType.h \
 	GWSService.h \
@@ -52,6 +54,7 @@ WebServices_AGSDOC_FILES += \
 	GWSConstants.h \
 	GWSDocument.h \
 	GWSElement.h \
+	GWSExtensibility.h \
 	GWSMessage.h \
 	GWSPortType.h \
 	GWSService.h \

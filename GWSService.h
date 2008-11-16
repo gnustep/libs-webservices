@@ -119,8 +119,8 @@ extern "C" {
 - (GWSElement*) documentation;
 
 /**
- * Calls -sendRequest:parameters:order:timeout:
- * and waits for the response.<br />
+ * Calls -sendRequest:parameters:order:timeout: and waits for the
+ * response.<br />
  * Parameters must be supplied as for the
  * [GWSCoder-buildRequest:parameters:order:] method.<br />
  * Returns the response dictionary containing values for the
@@ -147,6 +147,11 @@ extern "C" {
 
 /**
  * Send an asynchronous RPC method call with the specified timeout.<br />
+ * The method argument is the name of the operation to be performed,
+ * however, if the receiver is owned by a GWSDocument instance which
+ * defines multiple ports for the service, the operation name may not
+ * be unique, in which case it must be specified as the port type and
+ * operation names separated by a full stop (port.operation).<br />
  * A delegate should have been set to handle the result of this call,
  * but if one was not set the state of the asynchronous call may be polled
  * by calling the -result method, which will return nil as long as the
