@@ -53,15 +53,25 @@ main()
 
 
   document = [[GWSDocument alloc] initWithContentsOfFile: @"SMS.wsdl"];
+  
+  params = [NSMutableDictionary dictionaryWithCapacity: 8];
+  order = [NSMutableArray arrayWithCapacity: 8];
+  [params setObject: @"hello" forKey: @"string1"];
+  [order addObject: @"string1"];
+  [params setObject: [NSDictionary dictionaryWithObjectsAndKeys:
+    @"obj1", @"key1",
+    nil] forKey: @"dict1"];
+  [order addObject: @"dict1"];
+  service = [document serviceWithName: @"SMSService" create: NO];
+  result = [service invokeMethod: @"sendSMS"
+                      parameters: params
+                           order: order
+                         timeout: 3];
+  NSLog(@"Invoke gives ... %@", result);
+
   xml = [document data];
   NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
   [document release];
-
-  document = [[GWSDocument alloc] initWithContentsOfFile: @"Enterprise.wsdl"];
-  xml = [document data];
-  NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
-  [document release];
-
 
 
   // [[NSRunLoop currentRunLoop] run];

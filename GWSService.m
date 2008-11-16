@@ -543,6 +543,7 @@
 {
   [_timer invalidate];
   _timer = nil;
+  [self _setProblem: @"timed out"];
   [_connection cancel];
 }
 

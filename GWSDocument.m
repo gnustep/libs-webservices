@@ -30,6 +30,20 @@ static NSMutableDictionary	*extDict = nil;
 static NSLock			*extLock = nil;
 
 @implementation GWSDocument (Private)
+
+/* Make sure that a name is the local version without the target prefix.
+ */
+- (NSString*) _local: (NSString*)name
+{
+  NSRange	r = [name rangeOfString: @":"];
+
+  if (r.length > 0)
+    {
+      return [name substringFromIndex: NSMaxRange(r)];
+    }
+  return name;
+}
+
 - (NSString*) _setupService: (GWSService*)service
 		       from: (GWSElement*)element
 			 in: (NSString*)section
@@ -137,6 +151,7 @@ static NSLock			*extLock = nil;
 {
   GWSBinding    *binding;
 
+  name = [self _local: name];
   [_lock lock];
   binding = [_bindings objectForKey: name];
   if (binding == nil && shouldCreate == YES)
@@ -361,6 +376,9 @@ static NSLock			*extLock = nil;
                     }
                 }
 
+	      /* Now parse the namespaces and their prefixes so we have
+	       * those mappings available.
+	       */
               d = [tree namespaces];
               e = [d keyEnumerator];
               while ((k = [e nextObject]) != nil)
@@ -521,6 +539,7 @@ static NSLock			*extLock = nil;
 {
   GWSMessage    *message;
 
+  name = [self _local: name];
   [_lock lock];
   message = [_messages objectForKey: name];
   if (message == nil && shouldCreate == YES)
@@ -562,6 +581,7 @@ static NSLock			*extLock = nil;
 {
   GWSPortType   *portType;
 
+  name = [self _local: name];
   [_lock lock];
   portType = [_portTypes objectForKey: name];
   if (portType == nil && shouldCreate == YES)
@@ -657,6 +677,7 @@ static NSLock			*extLock = nil;
 {
   GWSService    *service;
 
+  name = [self _local: name];
   [_lock lock];
   service = [_services objectForKey: name];
   if (service == nil && shouldCreate == YES)
@@ -848,6 +869,7 @@ static NSLock			*extLock = nil;
 {
   GWSType       *type;
 
+  name = [self _local: name];
   [_lock lock];
   type = [_types objectForKey: name];
   if (type == nil && shouldCreate == YES)

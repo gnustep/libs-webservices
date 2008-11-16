@@ -36,6 +36,7 @@
       _name = [name copy];
       _document = document;
       elem = [_document initializing];
+      [self setTypeName: [[elem attributes] objectForKey: @"type"]];
       elem = [elem firstChild];
       if ([[elem name] isEqualToString: @"documentation"] == YES)
         {
