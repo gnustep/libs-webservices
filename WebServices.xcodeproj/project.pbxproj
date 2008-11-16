@@ -7,6 +7,9 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		790D8DC20ED0A36700CF2935 /* GWSExtensibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 790D8DC10ED0A36700CF2935 /* GWSExtensibility.m */; };
+		790D8DC30ED0A36D00CF2935 /* GWSExtensibility.h in Headers */ = {isa = PBXBuildFile; fileRef = 790D8DC00ED0A36700CF2935 /* GWSExtensibility.h */; };
+		790D8DC40ED0A37000CF2935 /* GWSExtensibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 790D8DC10ED0A36700CF2935 /* GWSExtensibility.m */; };
 		791866D90D4A46A0003EBF9C /* GWSBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C40D4A46A0003EBF9C /* GWSBinding.h */; };
 		791866DA0D4A46A1003EBF9C /* GWSBinding.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866C50D4A46A0003EBF9C /* GWSBinding.m */; };
 		791866DB0D4A46A1003EBF9C /* GWSCoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C60D4A46A0003EBF9C /* GWSCoder.h */; };
@@ -51,6 +54,8 @@
 		089C1667FE841158C02AAC07 /* English */ = {isa = PBXFileReference; fileEncoding = 10; lastKnownFileType = text.plist.strings; name = English; path = English.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = /System/Library/Frameworks/Cocoa.framework; sourceTree = "<absolute>"; };
 		32DBCF5E0370ADEE00C91783 /* WebServices_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WebServices_Prefix.pch; sourceTree = "<group>"; };
+		790D8DC00ED0A36700CF2935 /* GWSExtensibility.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSExtensibility.h; sourceTree = "<group>"; };
+		790D8DC10ED0A36700CF2935 /* GWSExtensibility.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSExtensibility.m; sourceTree = "<group>"; };
 		791866C40D4A46A0003EBF9C /* GWSBinding.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSBinding.h; sourceTree = "<group>"; };
 		791866C50D4A46A0003EBF9C /* GWSBinding.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSBinding.m; sourceTree = "<group>"; };
 		791866C60D4A46A0003EBF9C /* GWSCoder.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSCoder.h; sourceTree = "<group>"; };
@@ -151,6 +156,8 @@
 				791866C80D4A46A0003EBF9C /* GWSConstants.h */,
 				791866C90D4A46A0003EBF9C /* GWSElement.h */,
 				791866CA0D4A46A0003EBF9C /* GWSElement.m */,
+				790D8DC00ED0A36700CF2935 /* GWSExtensibility.h */,
+				790D8DC10ED0A36700CF2935 /* GWSExtensibility.m */,
 				791866CD0D4A46A0003EBF9C /* GWSMessage.h */,
 				791866CE0D4A46A0003EBF9C /* GWSMessage.m */,
 				791866CF0D4A46A0003EBF9C /* GWSPortType.h */,
@@ -211,6 +218,7 @@
 				791866EA0D4A46A1003EBF9C /* GWSType.h in Headers */,
 				791866EC0D4A46A1003EBF9C /* WebServices.h in Headers */,
 				79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */,
+				790D8DC30ED0A36D00CF2935 /* GWSExtensibility.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -290,6 +298,7 @@
 			files = (
 				791867280D4A4C82003EBF9C /* testWebServices.m in Sources */,
 				792C21710D55B94900459A2C /* GWSDocument.m in Sources */,
+				790D8DC20ED0A36700CF2935 /* GWSExtensibility.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -307,6 +316,7 @@
 				791866EB0D4A46A1003EBF9C /* GWSXMLRPCCoder.m in Sources */,
 				791866ED0D4A46A1003EBF9C /* WebServices.m in Sources */,
 				79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */,
+				790D8DC40ED0A37000CF2935 /* GWSExtensibility.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

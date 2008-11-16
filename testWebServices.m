@@ -208,7 +208,7 @@ main()
                       parameters: params
                            order: order
                          timeout: 30];
-  fprintf(stdout, "Result: %s\n", [[result description] cString]);
+  fprintf(stdout, "Result: %s\n", [[result description] UTF8String]);
   [service release];
 
   [coder release];
