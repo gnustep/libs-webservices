@@ -610,9 +610,27 @@ static NSCharacterSet	*ws = nil;
   return nil;
 }
 
+- (GWSService*) service
+{
+  return _service;
+}
+
 - (void) setDelegate: (id)delegate
 {
   _delegate = delegate;
+}
+
+- (void) setService: (GWSService*)service
+{
+  if (_service != service)
+    {
+      GWSService	*old = _service;
+
+      _service = nil;
+      [old setCoder: nil];
+      _service = service;
+      [_service setCoder: self];
+    }
 }
 
 - (void) setTimeZone: (NSTimeZone*)timeZone

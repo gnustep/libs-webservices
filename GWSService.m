@@ -456,8 +456,11 @@
     {
       GWSCoder   *old = _coder;
 
+      _coder = nil;
+      [old setService: nil];
       _coder = [aCoder retain];
       [old release];
+      [_coder setService: self];
     }
 }
 

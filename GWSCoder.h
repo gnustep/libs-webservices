@@ -37,6 +37,7 @@ extern "C" {
 @class  NSString;
 @class  NSTimeZone;
 @class  GWSElement;
+@class  GWSService;
 
 /**
  * The GWSCoder class is a semi-abstract class for handling encoding to
@@ -62,6 +63,7 @@ extern "C" {
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
+  GWSService		*_service;	// Not retained.
 }
 
 /** Creates and returns an autoreleased instance.<br />
@@ -202,6 +204,10 @@ extern "C" {
  */
 - (NSMutableDictionary*) parseMessage: (NSData*)data;
 
+/** Return the service using this coder (if known).
+ */
+- (GWSService*) service;
+
 /**
  * Sets a delegate to handle decoding and encoding of data items.<br />
  * The delegate should implement the informal GWSCoder protocol to
@@ -209,6 +215,10 @@ extern "C" {
  * it won't do it for a particular case.
  */
 - (void) setDelegate: (id)delegate;
+
+/** Set the service using this coder.
+ */
+- (void) setService: (GWSService*)service;
 
 /**
  * Sets the time zone for use when sending/receiving date/time values.<br />
