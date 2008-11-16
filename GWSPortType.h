@@ -54,6 +54,10 @@ extern "C" {
  */
 - (NSString*) name;
 
+/** Returns the dictionary of GWSElement nodes representing operations.
+ */
+- (NSMutableDictionary*) operations;
+
 /** Set the documentation for the receiver.
  */
 - (void) setDocumentation: (GWSElement*)documentation;

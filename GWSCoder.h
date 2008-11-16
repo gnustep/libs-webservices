@@ -161,6 +161,10 @@ extern "C" {
  * The order array may be empty or nil if the order of the parameters
  * is not important, otherwise it must contain the names of the parameters
  * in the order in which they are to be encoded.<br />
+ * If composite data types within the parameters dictionary contain fields
+ * which must be sent in a specific order, the dictionary containing those
+ * fields may contain a key 'GWSOrderKey' whose value is an array containing
+ * the names of those fields in the order of their encoding.<br />
  * The method returns nil if passed an invalid method name.<br />
  * This method is used internally when sending an RPC method call to
  * a remote system, but you can also call it yourself.
@@ -311,8 +315,16 @@ extern "C" {
 
 @end
 
-/** The GWSSOAPCCoder class is a concrete subclass of [GWSCoder] which
+/** <p>The GWSSOAPCCoder class is a concrete subclass of [GWSCoder] which
  * implements coding/decoding for the SOAP protocol.
+ * </p>
+ * <p>Dictionaries passed to/from the SOAP coder may contain special keys
+ * with the <code>GWSSOAP</code> prefix which control the coding rather
+ * than specifying values to be coded (this is in addition to the special
+ * <code>GWSOrderKey</code> used for ordering fields in a complex type).<br />
+ * See the section on constants for a description of what these keys are
+ * used for.
+ * </p>
  */
 @interface GWSSOAPCoder : GWSCoder
 {

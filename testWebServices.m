@@ -33,6 +33,7 @@ main()
   NSUserDefaults	*defs;
   GWSCoder              *coder;
   GWSService		*service;
+  GWSDocument   	*document;
   NSData                *xml;
   NSString              *method;
   NSMutableArray        *order;
@@ -51,12 +52,15 @@ main()
     ];
 
 
-{
-  GWSDocument   *document;
   document = [[GWSDocument alloc] initWithContentsOfFile: @"SMS.wsdl"];
   xml = [document data];
   NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
-}
+  [document release];
+
+  document = [[GWSDocument alloc] initWithContentsOfFile: @"Enterprise.wsdl"];
+  xml = [document data];
+  NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
+  [document release];
 
 
 

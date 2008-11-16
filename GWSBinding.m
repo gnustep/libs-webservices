@@ -109,6 +109,11 @@
   return _documentation;
 }
 
+- (NSMutableArray*) extensibility
+{
+  return _extensibility;
+}
+
 - (id) init
 {
   [self release];
@@ -118,6 +123,11 @@
 - (NSString*) name
 {
   return _name;
+}
+
+- (NSMutableDictionary*) operations
+{
+  return _operations;
 }
 
 - (void) setDocumentation: (GWSElement*)documentation

@@ -138,6 +138,10 @@ extern "C" {
 - (GWSPortType*) portTypeWithName: (NSString*)name
                            create: (BOOL)shouldCreate;
 
+/** Returns the prefix for the specified namespace (if defined).
+ */
+- (NSString*) prefixForNamespace: (NSString*)url;
+
 /** Removes the named WSDL binding from the document.
  */
 - (void) removeBindingNamed: (NSString*)name;

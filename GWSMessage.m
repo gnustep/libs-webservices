@@ -159,9 +159,9 @@
     }
 }
 
-- (void) setElement: (NSString*)element forPartNamed: (NSString*)name
+- (void) setElement: (NSString*)type forPartNamed: (NSString*)name
 {
-  if (element == nil)
+  if (type == nil)
     {
       [_elements removeObjectForKey: name];
       if ([_elements count] == 0)
@@ -172,12 +172,12 @@
     }
   else
     {
-      [_types removeObjectForKey: name];
+      [_types removeObjectForKey: type];
       if (_elements == nil)
         {
           _elements = [NSMutableDictionary new];
         }
-      [_elements setObject: element forKey: name];
+      [_elements setObject: type forKey: name];
     }
 }
 

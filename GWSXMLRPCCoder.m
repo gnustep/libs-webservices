@@ -83,7 +83,7 @@ static NSCharacterSet   *ws;
   ms = [self mutableString];
   [ms setString: @""];
   
-  if (order == nil)
+  if ([order count] == 0)
     {
       order = [parameters allKeys];
     }
@@ -182,7 +182,7 @@ static NSCharacterSet   *ws;
   ms = [self mutableString];
   [ms setString: @""];
 
-  if (order == nil)
+  if ([order count] == 0)
     {
       order = [parameters allKeys];
     }

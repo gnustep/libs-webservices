@@ -54,9 +54,18 @@ extern "C" {
  */
 - (GWSElement*) documentation;
 
+/** Returns the array of GWSElement objects representing the binding
+ * extensibility.  Usually this is a soap:binding node.
+ */
+- (NSMutableArray*) extensibility;
+
 /** Returns the name of the receiver.
  */
 - (NSString*) name;
+
+/** Returns the dictionary of operations.
+ */
+- (NSMutableDictionary*) operations;
 
 /** Set the documentation for the receiver.
  */

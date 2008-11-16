@@ -461,6 +461,21 @@
   return [portType autorelease];
 }
 
+- (NSString*) prefixForNamespace: (NSString*)url
+{
+  NSEnumerator	*e = [_namespaces keyEnumerator];
+  NSString	*k;
+
+  while ((k = [e nextObject]) != nil)
+    {
+      if ([[_namespaces objectForKey: k] isEqual: url])
+	{
+	  break;
+	}
+    }
+  return k;
+}
+
 - (void) removeBindingNamed: (NSString*)name
 {
   [_lock lock];

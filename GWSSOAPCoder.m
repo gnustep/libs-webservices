@@ -165,7 +165,7 @@ NSString * const GWSSOAPMessageHeadersKey
         }
     }
 
-  if (order == nil)
+  if ([order count] == 0)
     {
       NSEnumerator      *kEnum = [parameters keyEnumerator];
       NSString          *k;
@@ -402,7 +402,7 @@ NSString * const GWSSOAPMessageHeadersKey
       container = body;    // Direct encoding inside the body.
     }
 
-  if (order == nil)
+  if ([order count] == 0)
     {
       NSEnumerator      *kEnum = [parameters keyEnumerator];
       NSString          *k;
@@ -855,7 +855,7 @@ NSString * const GWSSOAPMessageHeadersKey
       unsigned  count;
       unsigned  i;
 
-      if (order == nil)
+      if ([order count] == 0)
         {
           order = [o allKeys];
         }

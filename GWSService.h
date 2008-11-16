@@ -97,6 +97,7 @@ extern "C" {
   id			_delegate;	// Not retained.
   NSTimeZone		*_tz;
   GWSCoder              *_coder;
+  NSString		*_SOAPAction;
   BOOL			_compact;
 }
 
@@ -120,8 +121,10 @@ extern "C" {
 /**
  * Calls -sendRequest:parameters:order:timeout:
  * and waits for the response.<br />
+ * Parameters must be supplied as for the
+ * [GWSCoder-buildRequest:parameters:order:] method.<br />
  * Returns the response dictionary containing values for the
- * success or failure of the call (as returned by -result).
+ * success or failure of the call (as returned by -result).<br />
  */
 - (NSMutableDictionary*) invokeMethod: (NSString*)method
                            parameters: (NSDictionary*)parameters
@@ -153,7 +156,9 @@ extern "C" {
  * NO if it could not be started
  * (eg because another call is in progress or because of bad arguments).<br />
  * NB. For the asynchronous operation to proceed, the current [NSRunLoop]
- * must be run.
+ * must be run.<br />
+ * Parameters must be supplied as for the
+ * [GWSCoder-buildRequest:parameters:order:] method.<br />
  */
 - (BOOL) sendRequest: (NSString*)method
           parameters: (NSDictionary*)parameters
@@ -178,6 +183,13 @@ extern "C" {
 /** Set the documentation for the receiver.
  */
 - (void) setDocumentation: (GWSElement*)documentation;
+
+/**
+ * Sets the value of the SOAPAction header to be sent with a request.<br />
+ * Most servers use an empty string for this (so this is the default).<br />
+ * Setting a nil value suppresses the sending of this header.
+ */
+- (void) setSOAPAction: (NSString*)action;
 
 /**
  * Sets the time zone for use when sending/receiving date/time values.<br />

@@ -47,13 +47,28 @@
         {
           GWSElement    *used = nil;
           NSString      *name;
+          NSString      *binding;
 
           name = [[elem attributes] objectForKey: @"name"];
+          binding = [[elem attributes] objectForKey: @"binding"];
           if (name == nil)
             {
               NSLog(@"Port without a name in WSDL!");
             }
-          else
+          else if ([_document portTypeWithName: name create: NO] == nil)
+	    {
+              NSLog(@"Port type '%@' in service but not in ports", name);
+	    }
+          else if (binding == nil)
+            {
+              NSLog(@"Port named '%@' without a binding in WSDL!", name);
+            }
+          else if ([_document bindingWithName: binding create: NO] == nil)
+	    {
+              NSLog(@"Port named '%@' with binding '%@' in service but "
+		@"not in bindings", name, binding);
+	    }
+	  else
             {
               if (_ports == nil)
                 {
@@ -122,6 +137,7 @@
   [_connectionURL release];
   [_documentation release];
   [_extensibility release];
+  [_SOAPAction release];
   [_ports release];
   [_name release];
   [super dealloc];
@@ -189,6 +205,13 @@
     }
 }
 
+static BOOL
+isSOAP(GWSElement *elem)
+{
+  return [[elem namespace] isEqualToString:
+    @"http://schemas.xmlsoap.org/wsdl/soap/"];
+}
+
 - (BOOL) sendRequest: (NSString*)method 
           parameters: (NSDictionary*)parameters
                order: (NSArray*)order
@@ -196,6 +219,155 @@
 {
   NSMutableURLRequest   *request;
   NSData	        *data;
+
+  /* If this is not a standalone service, we must set up information from
+   * the parsed WSDL document.
+   */
+  if (_document != nil)
+    {
+      NSRange		r;
+      NSString		*portName;
+      NSString		*operationName;
+      NSEnumerator	*enumerator;
+      GWSElement	*elem;
+      GWSPortType	*portType;
+      GWSBinding	*binding;
+      GWSElement	*operation;
+      GWSSOAPCoder	*c;
+
+      r = [method rangeOfString: @"."];
+      if (r.length == 1)
+	{
+	  portName = [method substringToIndex: r.location];
+	  operationName = [method substringFromIndex: NSMaxRange(r)];
+	}
+      else
+	{
+	  portName = nil;
+	  operationName = method;
+	}
+
+      /* Look through the ports declared in this service for one matching
+       * the port name and operation name.  Get details by looking up
+       * bindings, since we can't actually use a port/operation if there
+       * is no binding for it.
+       */
+      enumerator = [_ports objectEnumerator];
+      while ((elem = [enumerator nextObject]) != nil)
+	{
+          NSString	*bName = [[elem attributes] objectForKey: @"binding"];
+
+	  binding = [_document bindingWithName: bName create: NO];
+	  portType = [binding type];
+	  if (portType != nil)
+	    {
+	      operation = [[portType operations] objectForKey: operationName];
+	      if (operation != nil)
+		{
+		  if (portName == nil || [portName isEqual: [portType name]])
+		    {
+		      break;	// matched
+		    }
+		  operation = nil;
+		}
+	    }
+	}
+
+      if (elem == nil)
+	{
+	  [self _setProblem: [NSString stringWithFormat:
+	    @"Unable to find port.operation matching '%@'", method]];
+	  return NO;
+	}
+      else
+	{
+	  // FIXME ... just assuming we are using SOAP.
+	  if (_coder == nil)
+	    {
+	      _coder = [GWSSOAPCoder new];
+	    }
+	  c = (GWSSOAPCoder*)_coder;
+
+	  /* Handle SOAP address for service ... this supplies the URL
+	   * that we should send to.
+	   */
+	  elem = [elem firstChild];
+	  if (isSOAP(elem) && [[elem name] isEqualToString: @"address"])
+	    {
+	      NSString	*location;
+
+	      location = [[elem attributes] objectForKey: @"location"];
+	      [self setURL: location];
+	    }
+
+	  /* Handle SOAP binding ... this supplies the encoding style and
+	   * transport that we should used.
+	   */
+          enumerator = [[binding extensibility] objectEnumerator];
+	  while ((elem = [enumerator nextObject]) != nil)
+	    {
+	      if (isSOAP(elem) && [[elem name] isEqualToString: @"binding"])
+		{
+		  NSDictionary	*a = [elem attributes];
+		  NSString	*style;
+		  NSString	*transport;
+
+		  style = [a objectForKey: @"style"];
+		  if (style == nil || [style isEqualToString: @"document"])
+		    {
+		      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
+		    }
+		  else if ([style isEqualToString: @"rpc"])
+		    {
+		      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
+		    }
+		  else
+		    {
+		      [self _setProblem: [NSString stringWithFormat:
+			@"Unsupported coding style: '%@'", style]];
+		      return NO;
+		    }
+
+		  transport = [a objectForKey: @"transport"];
+		  if (transport == nil || [transport isEqualToString:
+		    @"http://schemas.xmlsoap.org/soap/http"])
+		    {
+		    }
+		  else
+		    {
+		      [self _setProblem: [NSString stringWithFormat:
+			@"Unsupported transport mechanism: '%@'", transport]];
+		      return NO;
+		    }
+		}
+	    }
+
+	  /* Now look at operation specific information.
+	   */
+	  elem = [operation firstChild];
+	  if (isSOAP(elem) && [[elem name] isEqualToString: @"operation"])
+	    {
+	      NSString	*sa = [[elem attributes] objectForKey: @"SOAPAction"];
+
+	      [self setSOAPAction: sa];
+	    }
+
+	  /* FIXME ... look at input and output encoding.
+	   * Record output information for use in handling result.
+ 	   */
+	}
+    }
+
+  if (_coder == nil)
+    {
+      [self _setProblem: @"no coder set  (use -setCoder:)"];
+      return NO;
+    }
+  if (_connectionURL == nil)
+    {
+      [self _setProblem: @"no URL string set  (use -setURL:)"];
+      return NO;
+    }
 
   [self _setProblem: @"unable to send"];
 
@@ -219,8 +391,12 @@
   request = [request initWithURL: [NSURL URLWithString: _connectionURL]];
   [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
   [request setHTTPMethod: @"POST"];  
-  [request setValue: @"GWSCoders/0.1.0" forHTTPHeaderField: @"User-Agent"];
+  [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
   [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+  if (_SOAPAction != nil)
+    {
+      [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
+    }
   [request setHTTPBody: data];
 
   _connection = [NSURLConnection alloc];
@@ -262,6 +438,17 @@
     }
 }
 
+- (void) setSOAPAction: (NSString*)action
+{
+  if (_SOAPAction != action)
+    {
+      NSString	*old = _SOAPAction;
+
+      _SOAPAction = [action copy];
+      [old release];
+    }
+}
+
 - (void) setTimeZone: (NSTimeZone*)timeZone
 {
   if (_tz != timeZone)
@@ -283,12 +470,25 @@
      privateKey: (NSString*)pKey
        password: (NSString*)pwd
 {
+  id	old;
+
   if (url != nil)
     {
-      _connectionURL = [url copy];
-      _connection = nil;
-      _response = [[NSMutableData alloc] init];
+      NSURL	*u = [NSURL URLWithString: url];
+
+      if (u == nil)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"Bad URL (%@) supplied", url];
+	}
     }
+  old = _connectionURL;
+  _connectionURL = [url copy];
+  [old release];
+  [_connection release];
+  _connection = nil;
+  [_response release];
+  _response = [[NSMutableData alloc] init];
 }
 
 - (void) timeout: (NSTimer*)t
