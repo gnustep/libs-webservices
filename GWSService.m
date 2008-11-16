@@ -82,6 +82,13 @@
         }
       while (elem != nil)
         {
+	  NSString	*problem;
+
+	  problem = [_document _validate: elem in: @"port"];
+	  if (problem != nil)
+	    {
+	      NSLog(@"Bad port extensibility: % @", problem);
+	    }
           if (_extensibility == nil)
             {
               _extensibility = [NSMutableArray new];
@@ -205,13 +212,6 @@
     }
 }
 
-static BOOL
-isSOAP(GWSElement *elem)
-{
-  return [[elem namespace] isEqualToString:
-    @"http://schemas.xmlsoap.org/wsdl/soap/"];
-}
-
 - (BOOL) sendRequest: (NSString*)method 
           parameters: (NSDictionary*)parameters
                order: (NSArray*)order
@@ -233,7 +233,6 @@ isSOAP(GWSElement *elem)
       GWSPortType	*portType;
       GWSBinding	*binding;
       GWSElement	*operation;
-      GWSSOAPCoder	*c;
 
       r = [method rangeOfString: @"."];
       if (r.length == 1)
@@ -281,23 +280,22 @@ isSOAP(GWSElement *elem)
 	}
       else
 	{
-	  // FIXME ... just assuming we are using SOAP.
-	  if (_coder == nil)
-	    {
-	      _coder = [GWSSOAPCoder new];
-	    }
-	  c = (GWSSOAPCoder*)_coder;
+	  NSString	*problem;
 
-	  /* Handle SOAP address for service ... this supplies the URL
-	   * that we should send to.
+	  /* Handle extensibility for port ...
+	   * With SOAP this supplies the URL that we should send to.
 	   */
 	  elem = [elem firstChild];
-	  if (isSOAP(elem) && [[elem name] isEqualToString: @"address"])
+	  while (elem != nil)
 	    {
-	      NSString	*location;
-
-	      location = [[elem attributes] objectForKey: @"location"];
-	      [self setURL: location];
+	      problem = [_document _setupService: self
+					    from: elem
+					      in: @"port"];
+	      if (problem != nil)
+		{
+		  [self _setProblem: problem];
+		  return NO;
+		}
 	    }
 
 	  /* Handle SOAP binding ... this supplies the encoding style and
@@ -306,50 +304,31 @@ isSOAP(GWSElement *elem)
           enumerator = [[binding extensibility] objectEnumerator];
 	  while ((elem = [enumerator nextObject]) != nil)
 	    {
-	      if (isSOAP(elem) && [[elem name] isEqualToString: @"binding"])
+	      problem = [_document _setupService: self
+					    from: elem
+					      in: @"binding"];
+	      if (problem != nil)
 		{
-		  NSDictionary	*a = [elem attributes];
-		  NSString	*style;
-		  NSString	*transport;
-
-		  style = [a objectForKey: @"style"];
-		  if (style == nil || [style isEqualToString: @"document"])
-		    {
-		      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
-		    }
-		  else if ([style isEqualToString: @"rpc"])
-		    {
-		      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
-		    }
-		  else
-		    {
-		      [self _setProblem: [NSString stringWithFormat:
-			@"Unsupported coding style: '%@'", style]];
-		      return NO;
-		    }
-
-		  transport = [a objectForKey: @"transport"];
-		  if (transport == nil || [transport isEqualToString:
-		    @"http://schemas.xmlsoap.org/soap/http"])
-		    {
-		    }
-		  else
-		    {
-		      [self _setProblem: [NSString stringWithFormat:
-			@"Unsupported transport mechanism: '%@'", transport]];
-		      return NO;
-		    }
+		  [self _setProblem: problem];
+		  return NO;
 		}
 	    }
 
 	  /* Now look at operation specific information.
 	   */
 	  elem = [operation firstChild];
-	  if (isSOAP(elem) && [[elem name] isEqualToString: @"operation"])
+	  while ((elem = [enumerator nextObject]) != nil
+	    && [[elem name] isEqualToString: @"input"] == NO
+	    && [[elem name] isEqualToString: @"output"] == NO)
 	    {
-	      NSString	*sa = [[elem attributes] objectForKey: @"SOAPAction"];
-
-	      [self setSOAPAction: sa];
+	      problem = [_document _setupService: self
+					    from: elem
+					      in: @"operation"];
+	      if (problem != nil)
+		{
+		  [self _setProblem: problem];
+		  return NO;
+		}
 	    }
 
 	  /* FIXME ... look at input and output encoding.

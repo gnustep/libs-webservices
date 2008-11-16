@@ -45,6 +45,13 @@
         }
       while (elem != nil && [[elem name] isEqualToString: @"operation"] == NO)
         {
+	  NSString	*problem;
+
+	  problem = [_document _validate: elem in: @"binding"];
+	  if (problem != nil)
+	    {
+	      NSLog(@"Bad binding extensibility: % @", problem);
+	    }
           if (_extensibility == nil)
             {
               _extensibility = [NSMutableArray new];

@@ -49,6 +49,12 @@
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
 - (void) _remove;
 @end
+@interface      GWSDocument (Private)
+- (NSString*) _setupService: (GWSService*)service
+		       from: (GWSElement*)element
+		         in: (NSString*)section;
+- (NSString*) _validate: (GWSElement*)element in: (NSString*)section;
+@end
 @interface      GWSMessage (Private)
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
 - (void) _remove;

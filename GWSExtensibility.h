@@ -37,30 +37,58 @@ extern "C" {
 @class  GWSElement;
 @class  GWSService;
 
+/** <p>GWSExtensibility is an abstract class declaring the methods needed to
+ * implement WSDL extensibility.<br />
+ * The extensibility mechanism is the way that WSDL was designed to be
+ * future-proof, it works by defining certain points within a WSDL document
+ * at which extensibility elements may be inserted to give additional
+ * information.
+ * </p>
+ * <p>The WebServices library reads in and stores extensibility elements in
+ * the form of GWSElement objects and looks up the GWSExtensibility objects
+ * to handle them using the namespaces of the elements read in.<br />
+ * If there is no registered handler (see
+ * [GWSDocument+registerExtensibility:forNamespace:]) then the
+ * extensibility elements are ignored, but preserved for output
+ * when a document is written.<br />
+ * However, if a handler ihas been registered, the extensibility elements
+ * are validated when the document is read in, and the handler is also asked
+ * to perform service/coder setup when an attempt is made to perform an
+ * operation using a service defined in the document.
+ * </p>
+ */
 @interface	GWSExtensibility : NSObject
 {
 }
 
-/** Method to validate an extensibility element for the specified document.
+/** Method to validate an extensibility node for the specified document.
  * The section argument is the name of the element in the document in
  * which the extensibility instance is being parsed (eg 'portType').<br />
- * This must return nil if the tree is valid, and a descriptive error
- * message if it is not.
+ * This must return nil if the extensibility node is valid,
+ * and a descriptive error message if it is not.
  */
-- (NSString*) validate: (GWSElement*)tree
+- (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
 		    in: (NSString*)section;
 
 /** Method to set up a service for an operation based on the extensibility
- * tree provided.<br />
+ * node provided.<br />
  * The section argument is the name of the element in the document containing
- * the extensibility inofrmation to be used.<br />
+ * the extensibility node to be used.<br />
+ * Returns nil on success and an error message on failure.
  */
-- (void) setupService: (GWSService*)service
-		 from: (GWSElement*)tree
-		  for: (GWSDocument*)document
-		   in: (NSString*)section;
+- (NSString*) setupService: (GWSService*)service
+		      from: (GWSElement*)node
+		       for: (GWSDocument*)document
+			in: (NSString*)section;
 
+@end
+
+/**
+ * An instance of this class is registered by default to handle the
+ * <code>http://schemas.xmlsoap.org/wsdl/soap/</code> namespace.
+ */
+@interface	GWSSOAPExtensibility : GWSExtensibility
 @end
 
 #if	defined(__cplusplus)

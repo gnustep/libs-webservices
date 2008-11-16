@@ -29,14 +29,61 @@
 static NSMutableDictionary	*extDict = nil;
 static NSLock			*extLock = nil;
 
+@implementation GWSDocument (Private)
+- (NSString*) _setupService: (GWSService*)service
+		       from: (GWSElement*)element
+			 in: (NSString*)section
+{
+  NSString		*n;
+
+  n = [element namespace];
+  if (n != nil)
+    {
+      GWSExtensibility	*e = [_ext objectForKey: n];
+
+      if (e != nil)
+	{
+	  return [e setupService: service
+			    from: element
+			     for: self
+			      in: section];
+	}
+    }
+  return nil;
+}
+
+- (NSString*) _validate: (GWSElement*)element in: (NSString*)section
+{
+  NSString		*n;
+
+  n = [element namespace];
+  if (n != nil)
+    {
+      GWSExtensibility	*e = [_ext objectForKey: n];
+
+      if (e != nil)
+	{
+	  return [e validate: element for: self in: section];
+	}
+    }
+  return nil;
+}
+@end
+
 @implementation GWSDocument
 
 + (void) initialize
 {
   if (extLock == nil)
     {
+      GWSSOAPExtensibility	*e;
+
       extLock = [NSLock new];
       extDict = [NSMutableDictionary new];
+      e = [GWSSOAPExtensibility	new];
+      [self registerExtensibility: e forNamespace:
+        @"http://schemas.xmlsoap.org/wsdl/soap/"];
+      [e release];
     }
 }
 
@@ -158,11 +205,6 @@ static NSLock			*extLock = nil;
 - (GWSElement*) documentation
 {
   return _documentation;
-}
-
-- (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL
-{
-  return [_ext objectForKey: namespaceURL];
 }
 
 - (id) init
