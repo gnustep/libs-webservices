@@ -27,6 +27,24 @@
 #import "GWSPrivate.h"
 
 @implementation	GWSService (Private)
+- (void) _completed
+{
+  if (_input != nil)
+    {
+      [_input release];
+      _input = nil;
+    }
+  if (_output != nil)
+    {
+      [_output release];
+      _output = nil;
+    }
+  if ([_delegate respondsToSelector: @selector(completedRPC:)])
+    {
+      [_delegate completedRPC: self];
+    }    
+}
+
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document
 {
   if ((self = [super init]) != nil)
@@ -165,6 +183,11 @@
   return [self _initWithName: nil document: nil];
 }
 
+- (GWSElement*) input
+{
+  return _input;
+}
+
 - (NSMutableDictionary*) invokeMethod: (NSString*)method 
                            parameters: (NSDictionary*)parameters
                                 order: (NSArray*)order
@@ -200,6 +223,11 @@
   return _name;
 }
 
+- (GWSElement*) output
+{
+  return _output;
+}
+
 - (NSMutableDictionary*) result
 {
   if (_timer == nil)
@@ -219,9 +247,18 @@
 {
   NSMutableURLRequest   *request;
   NSData	        *data;
+  GWSElement		*ip = nil;
+  GWSElement		*op = nil;
+
+  if (_input != nil || _output != nil)
+    {
+      [self _setProblem: @"Earlier operation still in progress"];
+      return NO;
+    }
 
   /* If this is not a standalone service, we must set up information from
-   * the parsed WSDL document.
+   * the parsed WSDL document.  Otherwise we just use whatever has been
+   * set via the API.
    */
   if (_document != nil)
     {
@@ -296,6 +333,7 @@
 		  [self _setProblem: problem];
 		  return NO;
 		}
+	      elem = [elem sibling];
 	    }
 
 	  /* Handle SOAP binding ... this supplies the encoding style and
@@ -317,7 +355,7 @@
 	  /* Now look at operation specific information.
 	   */
 	  elem = [operation firstChild];
-	  while ((elem = [enumerator nextObject]) != nil
+	  while (elem != nil
 	    && [[elem name] isEqualToString: @"input"] == NO
 	    && [[elem name] isEqualToString: @"output"] == NO)
 	    {
@@ -329,11 +367,34 @@
 		  [self _setProblem: problem];
 		  return NO;
 		}
+	      elem = [elem sibling];
 	    }
 
-	  /* FIXME ... look at input and output encoding.
-	   * Record output information for use in handling result.
+	  /* Now get (and make a note of) the input and output messages.
  	   */
+	  if ([[elem name] isEqualToString: @"input"])
+	    {
+	      ip = elem;
+	      elem = [elem sibling];
+	    }
+	  if ([[elem name] isEqualToString: @"output"])
+	    {
+	      op = elem;
+	    }
+
+	  /* Perform any extensibility setup for the input message.
+	   */
+	  for (elem = [_input firstChild]; elem != nil; elem = [elem sibling])
+	    {
+	      problem = [_document _setupService: self
+					    from: elem
+					      in: @"input"];
+	      if (problem != nil)
+		{
+		  [self _setProblem: problem];
+		  return NO;
+		}
+	    }
 	}
     }
 
@@ -377,6 +438,11 @@
       [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
     }
   [request setHTTPBody: data];
+
+  /* Record information about the messages in progess.
+   */
+  _input = [ip retain];
+  _output = [ip retain];
 
   _connection = [NSURLConnection alloc];
   _connection = [_connection initWithRequest: request delegate: self];
@@ -534,10 +600,7 @@ didCancelAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   [self _setProblem: [error localizedDescription]];
   [_timer invalidate];
   _timer = nil;
-  if ([_delegate respondsToSelector: @selector(completedRPC:)])
-    {
-      [_delegate completedRPC: self];
-    }    
+  [self _completed];
 }
 
 - (void) connection: (NSURLConnection*)connection
@@ -597,13 +660,8 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
   [_timer invalidate];
   _timer = nil;
-    
-  if ([_delegate respondsToSelector: @selector(completedRPC:)])
-    {
-      [_delegate completedRPC: self];
-    }        
+  [self _completed];
 }
-
 
 @end
 

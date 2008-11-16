@@ -50,10 +50,12 @@
 		   for: (GWSDocument*)document
 		    in: (NSString*)section
 {
+  NSString	*name = [node name];
+
   if ([section isEqualToString: @"binding"])
     {
       // This is a binding element inside a document
-      if ([[node name] isEqualToString: @"binding"])
+      if ([name isEqualToString: @"binding"])
 	{
 	  NSDictionary	*a = [node attributes];
 	  NSString	*style;
@@ -68,7 +70,7 @@
 	  else
 	    {
 	      return [NSString stringWithFormat:
-		@"unsupported coding style: '%@'", style];
+		@"unknown style in binding: '%@'", style];
 	    }
 
 	  transport = [a objectForKey: @"transport"];
@@ -85,48 +87,91 @@
       else
 	{
 	  return [NSString stringWithFormat:
-	    @"unknown SOAP extensibility: '%@' in binding", [node name]];
+	    @"unknown SOAP extensibility: '%@' in binding", name];
+	}
+    }
+  else if ([section isEqualToString: @"input"]
+    || [section isEqualToString: @"output"])
+    {
+      NSDictionary	*a = [node attributes];
+      NSString		*use = [a objectForKey: @"use"];
+
+      if ([name isEqualToString: @"body"])
+	{
+	}
+      else if ([name isEqualToString: @"header"])
+	{
+	}
+      else
+	{
+	  return [NSString stringWithFormat:
+	    @"unknown SOAP extensibility: '%@' in %@", name, section];
+	}
+      if ([use isEqualToString: @"literal"])
+	{
+	}
+      else if ([use isEqualToString: @"encoded"])
+	{
+	}
+      else
+	{
+	  return [NSString stringWithFormat:
+	    @"bad SOAP 'use' value: '%@' in %@ %@", use, section, name];
 	}
     }
   else if ([section isEqualToString: @"operation"])
     {
       /* This is an operation element inside a portType element
        */
-      if ([[node name] isEqualToString: @"operation"])
+      if ([name isEqualToString: @"operation"])
 	{
-	  if ([[node attributes] objectForKey: @"SOAPAction"] == nil)
+	  NSString	*style;
+
+	  /* No mandatory attributes.
+	   */
+	  style = [[node attributes] objectForKey: @"style"];
+	  if (style != nil 
+	    && [style isEqualToString: @"document"] == NO
+	    && [style isEqualToString: @"rpc"] == NO)
 	    {
-	      return @"missing SOAPAction in operation";
+	      return [NSString stringWithFormat:
+		@"bad SOAP style: '%@' in operation", style];
 	    }
 	}
       else
 	{
 	  return [NSString stringWithFormat:
-	    @"unknown SOAP extensibility: '%@' in operation", [node name]];
+	    @"unknown SOAP extensibility: '%@' in operation", name];
 	}
     }
   else if ([section isEqualToString: @"port"])
     {
       /* This is a port element inside a service element inside a document
        */
-      if ([[node name] isEqualToString: @"address"])
+      if ([name isEqualToString: @"address"])
 	{
 	  NSString	*location;
-	  NSURL		*u;
 
 	  location = [[node attributes] objectForKey: @"location"];
-	  u = [NSURL URLWithString: location];
-	  if (u == nil)
+	  if (location == nil)
 	    {
-	      return [NSString stringWithFormat:
-	        @"bad/missing location '%@' in SOAP port address: '%@'",
-		location];
+	      return @"missing location in port address";
+	    }
+	  else
+	    {
+	      NSURL	*u = [NSURL URLWithString: location];
+
+	      if (u == nil)
+		{
+		  return [NSString stringWithFormat:
+		    @"bad location '%@' in SOAP port address: '%@'", location];
+		}
 	    }
 	}
       else
 	{
 	  return [NSString stringWithFormat:
-	    @"unknown SOAP extensibility: '%@' in port", [node name]];
+	    @"unknown SOAP extensibility: '%@' in port", name];
 	}
     }
   return nil;
@@ -138,6 +183,7 @@
 			in: (NSString*)section
 {
   NSString	*problem;
+  NSString	*name;
   GWSSOAPCoder	*c;
 
   /* To avoid checking things in two places, we do all the checking in the
@@ -162,13 +208,15 @@
       [c release];
     }
 
+  name = [node name];
+
   /* Now we do section specific setup.
    */
   if ([section isEqualToString: @"binding"])
     {
       /* Binding setup 
        */
-      if ([[node name] isEqualToString: @"binding"])
+      if ([name isEqualToString: @"binding"])
 	{
 	  NSDictionary	*a = [node attributes];
 	  NSString	*style;
@@ -179,7 +227,7 @@
 	    {
 	      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
 	    }
-	  else if ([style isEqualToString: @"rpc"])
+	  else
 	    {
 	      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
 	    }
@@ -191,21 +239,65 @@
 	    }
 	}
     }
+  else if ([section isEqualToString: @"input"]
+    || [section isEqualToString: @"output"])
+    {
+      NSDictionary	*a = [node attributes];
+      NSString		*use = [a objectForKey: @"use"];
+
+      if ([name isEqualToString: @"body"])
+	{
+	}
+      else if ([name isEqualToString: @"header"])
+	{
+	}
+
+      if ([use isEqualToString: @"literal"])
+	{
+	  [c setUseLiteral: YES];
+	}
+      else
+	{
+	  [c setUseLiteral: NO];
+	}
+    }
   else if ([section isEqualToString: @"operation"])
     {
       /* This is an operation element inside a portType element
        */
-      if ([[node name] isEqualToString: @"operation"])
+      if ([name isEqualToString: @"operation"])
 	{
-	  [service setSOAPAction: [[node attributes]
-	    objectForKey: @"SOAPAction"]];
+	  NSDictionary	*attributes = [node attributes];
+	  NSString	*style = [attributes objectForKey: @"style"];
+	  NSString	*action = [attributes objectForKey: @"soapAction"];
+
+	  /* If present, the style overrides the one from the binding.
+	   */
+	  if (style != nil)
+	    {
+	      if ([style isEqualToString: @"rpc"])
+		{
+		  [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
+		}
+	      else
+		{
+		  [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
+		}
+	    }
+
+	  /* The SOAP action is optional.
+	   */
+	  if (action != nil)
+	    {
+	      [service setSOAPAction: action];
+	    }
 	}
     }
   else if ([section isEqualToString: @"port"])
     {
       /* This is a port element inside a service element
        */
-      if ([[node name] isEqualToString: @"address"])
+      if ([name isEqualToString: @"address"])
 	{
 	  [service setURL: [[node attributes] objectForKey: @"location"]];
 	}

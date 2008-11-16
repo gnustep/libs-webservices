@@ -67,6 +67,7 @@ extern "C" {
   NSMutableDictionary   *_services;
   NSMutableDictionary   *_types;
   NSDictionary		*_ext;
+  NSMutableArray	*_extensibility;
 }
 
 /** Return a previously registered extensibility object.
@@ -100,6 +101,10 @@ extern "C" {
 /** Returns the receiver's documentation.
  */
 - (GWSElement*) documentation;
+
+/** Returns the receiver's extensibility elements.
+ */
+- (NSArray*) extensibility;
 
 /** Returns the current element when initializing the document from a
  * tree of elements, nil otherwise.  This is intended for use by
@@ -197,6 +202,10 @@ extern "C" {
 /** Set the documentation of this document.
  */
 - (void) setDocumentation: (GWSElement*)documentation;
+
+/** Set the extensibility elements for this document.
+ */
+- (void) setExtensibility: (NSArray*)extensibility;
 
 /** Set the name of this document.
  */

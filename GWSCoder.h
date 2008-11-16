@@ -362,7 +362,8 @@ extern "C" {
  */
 - (void) setOperationStyle: (NSString*)style;
 
-/** Sets the encoding usage in operation to  be 'literal' (YES) or encoded (NO).
+/** Sets the encoding usage in operation to  be 'literal' (YES)
+ * or encoded (NO).
  */
 - (void) setUseLiteral: (BOOL)use;
 

@@ -99,6 +99,8 @@ extern "C" {
   GWSCoder              *_coder;
   NSString		*_SOAPAction;
   BOOL			_compact;
+  GWSElement		*_input;
+  GWSElement		*_output;
 }
 
 /**
@@ -118,6 +120,13 @@ extern "C" {
  */
 - (GWSElement*) documentation;
 
+/** Return the message definition for the incoming message in progress
+ * or nil if there is none.  In the service definition XML, this is the
+ * <code>output</code> element of the operation which was started by a
+ * call to the -sendRequest:parameters:order:timeout: method.
+ */
+- (GWSElement*) input;
+
 /**
  * Calls -sendRequest:parameters:order:timeout: and waits for the
  * response.<br />
@@ -134,6 +143,13 @@ extern "C" {
 /** Returns the name of this WSDL service.
  */
 - (NSString*) name;
+
+/** Return the message definition for the outgoing message in progress
+ * or nil if there is none.  In the service definition XML, this is the
+ * <code>output</code> element of the operation which was started by a
+ * call to the -sendRequest:parameters:order:timeout: method.
+ */
+- (GWSElement*) output;
 
 /**
  * Returns the result of the last method call, or nil if there has been

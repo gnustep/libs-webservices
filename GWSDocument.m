@@ -182,6 +182,7 @@ static NSLock			*extLock = nil;
   [_prefix release];
   [_targetNamespace release];
   [_documentation release];
+  [_extensibility release];
   e = [_portTypes objectEnumerator];
   while ((o = [e nextObject]) != nil) [o _remove];
   [_portTypes release];
@@ -207,6 +208,16 @@ static NSLock			*extLock = nil;
   return _documentation;
 }
 
+- (NSArray*) extensibility
+{
+  NSArray	*a;
+
+  [_lock lock];
+  a = [_extensibility copy];
+  [_lock unlock];
+  return [a autorelease];
+}
+
 - (id) init
 {
   if ((self = [super init]) != nil)
@@ -218,6 +229,7 @@ static NSLock			*extLock = nil;
       _messages = [NSMutableDictionary new];
       _namespaces = [NSMutableDictionary new];
       _types = [NSMutableDictionary new];
+      _extensibility = [NSMutableArray new];
       [extLock lock];
       _ext = [extDict copy];
       [extLock unlock];
@@ -469,9 +481,17 @@ static NSLock			*extLock = nil;
 
           while (_elem != nil)
             {
-              NSLog(@"Argh ... extensibility '%@' not handled",
-                [_elem name]);
+	      NSString	*problem;
+
+	      problem = [self _validate: _elem in: [self name]];
+	      if (problem != nil)
+		{
+		  [NSException raise: NSInvalidArgumentException
+			      format: @"%@", problem];
+		}
+	      [_extensibility addObject: _elem];
               _elem = [_elem sibling];
+              [[_extensibility lastObject] remove];
             }
         }
       NS_HANDLER
@@ -664,6 +684,33 @@ static NSLock			*extLock = nil;
     }
 }
 
+- (void) setExtensibility: (NSArray*)extensibility
+{
+  NSMutableArray	*m;
+  unsigned		c;
+
+  c = [extensibility count];
+  while (c-- > 0)
+    {
+      NSString		*problem;
+      GWSElement	*element;
+
+      element = [extensibility objectAtIndex: c];
+      problem = [self _validate: element in: [self name]];
+      if (problem != nil)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"%@", problem];
+	}
+    }
+
+  m = [extensibility mutableCopy];
+  [_lock lock];
+  [_extensibility release];
+  _extensibility = m;
+  [_lock unlock];
+}
+
 - (void) setName: (NSString*)name
 {
   if (_name != name)
@@ -694,6 +741,7 @@ static NSLock			*extLock = nil;
 - (GWSElement*) tree
 {
   GWSElement    *tree;
+  GWSElement	*elem;
   NSEnumerator  *enumerator;
   NSString      *key;
   NSString      *uri;
@@ -738,8 +786,6 @@ static NSLock			*extLock = nil;
 
   if ([_types count] > 0)
     {
-      GWSElement        *elem;
-
       elem = [[GWSElement alloc] initWithName: @"types"
                                     namespace: nil
                                     qualified: @"types"
@@ -776,6 +822,12 @@ static NSLock			*extLock = nil;
   while ((key = [enumerator nextObject]) != nil)
     {
       [tree addChild: [[_services objectForKey: key] tree]];
+    }
+
+  enumerator = [_extensibility objectEnumerator];
+  while ((elem = [enumerator nextObject]) != nil)
+    {
+      [tree addChild: elem];
     }
 
   return tree;
