@@ -32,6 +32,9 @@
 		791867280D4A4C82003EBF9C /* testWebServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 791867270D4A4C82003EBF9C /* testWebServices.m */; };
 		791867350D4A4DA2003EBF9C /* WebServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* WebServices.framework */; };
 		792C21710D55B94900459A2C /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
+		79DC40B90ED21E79009451BF /* GWSPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 79DC40B70ED21E79009451BF /* GWSPort.m */; };
+		79DC40BD0ED21ED9009451BF /* GWSPort.h in Headers */ = {isa = PBXBuildFile; fileRef = 79DC40B80ED21E79009451BF /* GWSPort.h */; };
+		79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 79DC40B70ED21E79009451BF /* GWSPort.m */; };
 		79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
 		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
@@ -79,6 +82,8 @@
 		791867270D4A4C82003EBF9C /* testWebServices.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = testWebServices.m; sourceTree = "<group>"; };
 		792C216F0D55B94900459A2C /* GWSDocument.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSDocument.h; sourceTree = "<group>"; };
 		792C21700D55B94900459A2C /* GWSDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSDocument.m; sourceTree = "<group>"; };
+		79DC40B70ED21E79009451BF /* GWSPort.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSPort.m; sourceTree = "<group>"; };
+		79DC40B80ED21E79009451BF /* GWSPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSPort.h; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* WebServices.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebServices.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
@@ -160,6 +165,8 @@
 				790D8DC10ED0A36700CF2935 /* GWSExtensibility.m */,
 				791866CD0D4A46A0003EBF9C /* GWSMessage.h */,
 				791866CE0D4A46A0003EBF9C /* GWSMessage.m */,
+				79DC40B70ED21E79009451BF /* GWSPort.m */,
+				79DC40B80ED21E79009451BF /* GWSPort.h */,
 				791866CF0D4A46A0003EBF9C /* GWSPortType.h */,
 				791866D00D4A46A0003EBF9C /* GWSPortType.m */,
 				791866D10D4A46A0003EBF9C /* GWSPrivate.h */,
@@ -219,6 +226,7 @@
 				791866EC0D4A46A1003EBF9C /* WebServices.h in Headers */,
 				79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */,
 				790D8DC30ED0A36D00CF2935 /* GWSExtensibility.h in Headers */,
+				79DC40BD0ED21ED9009451BF /* GWSPort.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -299,6 +307,7 @@
 				791867280D4A4C82003EBF9C /* testWebServices.m in Sources */,
 				792C21710D55B94900459A2C /* GWSDocument.m in Sources */,
 				790D8DC20ED0A36700CF2935 /* GWSExtensibility.m in Sources */,
+				79DC40B90ED21E79009451BF /* GWSPort.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -317,6 +326,7 @@
 				791866ED0D4A46A1003EBF9C /* WebServices.m in Sources */,
 				79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */,
 				790D8DC40ED0A37000CF2935 /* GWSExtensibility.m in Sources */,
+				79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
