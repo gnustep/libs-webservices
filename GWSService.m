@@ -88,12 +88,20 @@
 	    }
 	  else
             {
+              GWSPort	*port;
+
+              port = [[GWSPort alloc] _initWithName: name
+					   document: _document];
               if (_ports == nil)
                 {
                   _ports = [NSMutableDictionary new];
                 }
+              if (port != nil)
+                {
+                  [_ports setObject: port forKey: [port name]];
+                  [port release];
+                }
               used = elem;
-              [_ports setObject: elem forKey: name];
             }
           elem = [elem sibling];
           [used remove];
@@ -267,6 +275,7 @@
       NSString		*operationName;
       NSEnumerator	*enumerator;
       GWSElement	*elem;
+      GWSPort		*port;
       GWSPortType	*portType;
       GWSBinding	*binding;
       GWSElement	*operation;
@@ -289,11 +298,9 @@
        * is no binding for it.
        */
       enumerator = [_ports objectEnumerator];
-      while ((elem = [enumerator nextObject]) != nil)
+      while ((port = [enumerator nextObject]) != nil)
 	{
-          NSString	*bName = [[elem attributes] objectForKey: @"binding"];
-
-	  binding = [_document bindingWithName: bName create: NO];
+	  binding = [port binding];
 	  portType = [binding type];
 	  if (portType != nil)
 	    {
@@ -309,7 +316,7 @@
 	    }
 	}
 
-      if (elem == nil)
+      if (port == nil)
 	{
 	  [self _setProblem: [NSString stringWithFormat:
 	    @"Unable to find port.operation matching '%@'", method]];
@@ -322,8 +329,8 @@
 	  /* Handle extensibility for port ...
 	   * With SOAP this supplies the URL that we should send to.
 	   */
-	  elem = [elem firstChild];
-	  while (elem != nil)
+          enumerator = [[port extensibility] objectEnumerator];
+	  while ((elem = [enumerator nextObject]) != nil)
 	    {
 	      problem = [_document _setupService: self
 					    from: elem
@@ -333,7 +340,6 @@
 		  [self _setProblem: problem];
 		  return NO;
 		}
-	      elem = [elem sibling];
 	    }
 
 	  /* Handle SOAP binding ... this supplies the encoding style and
@@ -560,6 +566,7 @@
 {
   GWSElement    *tree;
   GWSElement    *elem;
+  GWSPort	*port;
   NSEnumerator  *enumerator;
   NSString	*q;
 
@@ -576,11 +583,9 @@
       [elem release];
     }
   enumerator = [_ports objectEnumerator];
-  while ((elem = [enumerator nextObject]) != nil)
+  while ((port = [enumerator nextObject]) != nil)
     {
-      elem = [elem mutableCopy];
-      [tree addChild: elem];
-      [elem release];
+      [tree addChild: [port tree]];
     }
   enumerator = [_extensibility objectEnumerator];
   while ((elem = [enumerator nextObject]) != nil)

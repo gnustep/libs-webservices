@@ -23,20 +23,51 @@
    $Date: 2007-09-14 13:54:55 +0100 (Fri, 14 Sep 2007) $ $Revision: 25485 $
    */ 
 
-#ifndef	INCLUDED_WEBSERVICES_H
-#define	INCLUDED_WEBSERVICES_H
+#ifndef	INCLUDED_GWSPORT_H
+#define	INCLUDED_GWSPORT_H
 
-#import <WebServices/GWSBinding.h>
-#import <WebServices/GWSCoder.h>
-#import <WebServices/GWSConstants.h>
-#import <WebServices/GWSDocument.h>
-#import <WebServices/GWSElement.h>
-#import <WebServices/GWSExtensibility.h>
-#import <WebServices/GWSMessage.h>
-#import <WebServices/GWSPort.h>
-#import <WebServices/GWSPortType.h>
-#import <WebServices/GWSService.h>
-#import <WebServices/GWSType.h>
+#import <Foundation/NSObject.h>
+
+#if     defined(__cplusplus)
+extern "C" {
+#endif
+
+@class  NSMutableArray;
+@class  NSString;
+@class  GWSBinding;
+@class  GWSDocument;
+@class  GWSElement;
+
+@interface	GWSPort : NSObject
+{
+@private
+  NSString              *_name;
+  NSString		*_binding;
+  GWSDocument           *_document;
+  NSMutableArray	*_extensibility;
+}
+
+/** Return the binding of this port.
+ */
+- (GWSBinding*) binding;
+
+/** Return the extensibility for this port.
+ */
+- (NSMutableArray*) extensibility;
+
+/** Return the name of this port type.
+ */
+- (NSString*) name;
+
+/** Return a tree representation of the receiver for output as part of
+ * a WSDL document.
+ */
+- (GWSElement*) tree;
+@end
+
+#if	defined(__cplusplus)
+}
+#endif
 
 #endif
 

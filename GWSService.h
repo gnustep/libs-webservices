@@ -235,7 +235,11 @@ extern "C" {
  * requests and build responses.<br />
  * If the SSL credentials are non-nil, connections to the remote server
  * will be authenticated using the supplied certificate so that the
- * remote system knows who is contacting it.
+ * remote system knows who is contacting it.<br />
+ * Certificate based authentication currently <em>NOT</em> implemented.
+ * I could easily implement it using gnustep-base, but I don't know how
+ * to do this for MacOS-X. Please could someone let me know how
+ * certificate based authentication is done for HTTPS on MacOS-X?
  */
 - (void) setURL: (NSString*)url
     certificate: (NSString*)cert
