@@ -514,18 +514,22 @@
     }
 }
 
-- (void) setURL: (NSString*)url
+- (void) setURL: (id)url
 {
   [self setURL: url certificate: nil privateKey: nil password: nil];
 }
 
-- (void) setURL: (NSString*)url
+- (void) setURL: (id)url
     certificate: (NSString*)cert
      privateKey: (NSString*)pKey
        password: (NSString*)pwd
 {
   id	old;
 
+  if ([url isKindOfClass: [NSURL class]])
+    {
+      url = [(NSURL*)url absoluteString];
+    }
   if (url != nil)
     {
       NSURL	*u = [NSURL URLWithString: url];

@@ -225,7 +225,7 @@ extern "C" {
  * This method just calls -initWithURL:certificate:privateKey:password:
  * with nil arguments for the SSL credentials.
  */
-- (void) setURL: (NSString*)url;
+- (void) setURL: (id)url;
 
 /**
  * Sets up the receiver to make XMLRPC calls to the specified url
@@ -233,6 +233,7 @@ extern "C" {
  * The url argument may be nil, in which case the receiver will be
  * unable to make XMLRPC calls, but can be used to parse incoming
  * requests and build responses.<br />
+ * The url can actually be either a string or an instance of NSURL.<br />
  * If the SSL credentials are non-nil, connections to the remote server
  * will be authenticated using the supplied certificate so that the
  * remote system knows who is contacting it.<br />
@@ -241,7 +242,7 @@ extern "C" {
  * to do this for MacOS-X. Please could someone let me know how
  * certificate based authentication is done for HTTPS on MacOS-X?
  */
-- (void) setURL: (NSString*)url
+- (void) setURL: (id)url
     certificate: (NSString*)cert
      privateKey: (NSString*)pKey
        password: (NSString*)pwd;
