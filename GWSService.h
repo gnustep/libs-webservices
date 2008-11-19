@@ -99,6 +99,7 @@ extern "C" {
   GWSCoder              *_coder;
   NSString		*_SOAPAction;
   BOOL			_compact;
+  GWSElement		*_fault;
   GWSElement		*_input;
   GWSElement		*_output;
 }
@@ -119,6 +120,13 @@ extern "C" {
 /** Return the documentation for the receiver.
  */
 - (GWSElement*) documentation;
+
+/** Return the definition for a fault for the message in progress
+ * or nil if there is none.  In the service definition XML, this is the
+ * <code>fault</code> element of the operation which was started by a
+ * call to the -sendRequest:parameters:order:timeout: method.
+ */
+- (GWSElement*) fault;
 
 /** Return the message definition for the incoming message in progress
  * or nil if there is none.  In the service definition XML, this is the

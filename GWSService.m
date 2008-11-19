@@ -29,6 +29,11 @@
 @implementation	GWSService (Private)
 - (void) _completed
 {
+  if (_fault != nil)
+    {
+      [_fault release];
+      _fault = nil;
+    }
   if (_input != nil)
     {
       [_input release];
@@ -186,6 +191,11 @@
   return _documentation;
 }
 
+- (GWSElement*) fault
+{
+  return _fault;
+}
+
 - (id) init
 {
   return [self _initWithName: nil document: nil];
@@ -255,10 +265,11 @@
 {
   NSMutableURLRequest   *request;
   NSData	        *data;
+  GWSElement		*fault = nil;
   GWSElement		*ip = nil;
   GWSElement		*op = nil;
 
-  if (_input != nil || _output != nil)
+  if (_fault != nil || _input != nil || _output != nil)
     {
       [self _setProblem: @"Earlier operation still in progress"];
       return NO;
@@ -386,11 +397,17 @@
 	  if ([[elem name] isEqualToString: @"output"])
 	    {
 	      op = elem;
+	      elem = [elem sibling];
+	    }
+	  if ([[elem name] isEqualToString: @"fault"])
+	    {
+	      op = elem;
+	      elem = [elem sibling];
 	    }
 
 	  /* Perform any extensibility setup for the input message.
 	   */
-	  for (elem = [_input firstChild]; elem != nil; elem = [elem sibling])
+	  for (elem = [ip firstChild]; elem != nil; elem = [elem sibling])
 	    {
 	      problem = [_document _setupService: self
 					    from: elem
@@ -447,6 +464,7 @@
 
   /* Record information about the messages in progess.
    */
+  _fault = [fault retain];
   _input = [ip retain];
   _output = [ip retain];
 
