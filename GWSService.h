@@ -40,6 +40,7 @@ extern "C" {
 @class  GWSCoder;
 @class  GWSDocument;
 @class  GWSElement;
+@class  GWSPort;
 
 /**
  * <p>The GWSService class provides methods for makeing a Remote Procedure
@@ -99,9 +100,8 @@ extern "C" {
   GWSCoder              *_coder;
   NSString		*_SOAPAction;
   BOOL			_compact;
-  GWSElement		*_fault;
-  GWSElement		*_input;
-  GWSElement		*_output;
+  NSString		*_operation;
+  GWSPort		*_port;
 }
 
 /**
@@ -121,20 +121,6 @@ extern "C" {
  */
 - (GWSElement*) documentation;
 
-/** Return the definition for a fault for the message in progress
- * or nil if there is none.  In the service definition XML, this is the
- * <code>fault</code> element of the operation which was started by a
- * call to the -sendRequest:parameters:order:timeout: method.
- */
-- (GWSElement*) fault;
-
-/** Return the message definition for the incoming message in progress
- * or nil if there is none.  In the service definition XML, this is the
- * <code>output</code> element of the operation which was started by a
- * call to the -sendRequest:parameters:order:timeout: method.
- */
-- (GWSElement*) input;
-
 /**
  * Calls -sendRequest:parameters:order:timeout: and waits for the
  * response.<br />
@@ -152,12 +138,15 @@ extern "C" {
  */
 - (NSString*) name;
 
-/** Return the message definition for the outgoing message in progress
- * or nil if there is none.  In the service definition XML, this is the
- * <code>output</code> element of the operation which was started by a
- * call to the -sendRequest:parameters:order:timeout: method.
+/** Returns the name of the current operation being performed,
+ * or nil if there is no operation in progress.
  */
-- (GWSElement*) output;
+- (NSString*) webServiceOperation;
+
+/** Returns the port of the current operation being performed,
+ * or nil if there is no operation in progress.
+ */
+- (GWSPort*) webServicePort;
 
 /**
  * Returns the result of the last method call, or nil if there has been
@@ -196,7 +185,10 @@ extern "C" {
 
 /** Sets the coder to be used by the receiver for encoding to XML and
  * decoding from XML.  If this is not called, the receiver creates a
- * coder as needed.
+ * coder as needed.<br />
+ * Calling this method removes the receiver as the delegate of its
+ * previous coder (if it ewas the delegate of a coder) and sets it
+ * as the delegate of the new coder.
  */
 - (void) setCoder: (GWSCoder*)aCoder;
 

@@ -36,7 +36,10 @@ extern "C" {
 @class  NSMutableString;
 @class  NSString;
 @class  NSTimeZone;
+@class  GWSBinding;
 @class  GWSElement;
+@class  GWSPort;
+@class  GWSPortType;
 @class  GWSService;
 
 /**
@@ -63,7 +66,6 @@ extern "C" {
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
-  GWSService		*_service;	// Not retained.
 }
 
 /** Creates and returns an autoreleased instance.<br />
@@ -136,7 +138,8 @@ extern "C" {
 @interface      GWSCoder (RPC)
 
 /** Returns the RPC encoding delegate (if any) set by a previous call
- * to the -setDelegate: method.
+ * to the -setDelegate: method.<br />
+ * Normally the delagate of a coder is the GWSService instance which owns it.
  */
 - (id) delegate;
 
@@ -204,10 +207,6 @@ extern "C" {
  */
 - (NSMutableDictionary*) parseMessage: (NSData*)data;
 
-/** Return the service using this coder (if known).
- */
-- (GWSService*) service;
-
 /**
  * Sets a delegate to handle decoding and encoding of data items.<br />
  * The delegate should implement the informal GWSCoder protocol to
@@ -215,10 +214,6 @@ extern "C" {
  * it won't do it for a particular case.
  */
 - (void) setDelegate: (id)delegate;
-
-/** Set the service using this coder.
- */
-- (void) setService: (GWSService*)service;
 
 /**
  * Sets the time zone for use when sending/receiving date/time values.<br />
@@ -238,10 +233,24 @@ extern "C" {
 
 /** This informal protocol specifies the methods that a coder delegate
  * may implement in order to override general encoding/decoding of
- * service arguments.
+ * service arguments.<br />
+ * Generally the delegate is a GWSService instance.
  */
 @interface      NSObject(GWSCoder)
 
+/** This method is called to ask the delegate to decode the specified
+ * element and return the result.  If the delegate does not wish to
+ * decode the element, it should simply return nil.<br />
+ * The name and index arguments provide context for decoding, allowing the
+ * delegate to better understand how the element should be decoded... the
+ * index is the position of the item in the ordered list of items being
+ * decoded, and the name is the identifier that will be used for the item.<br />
+ * The default implementation returns nil.
+ */
+- (id) decodeWithCoder: (GWSCoder*)coder
+                  item: (GWSElement*)item
+                 named: (NSString*)name
+                 index: (unsigned)index;
 /** This method is called to ask the delegate to encode the specified item
  * with the given name and array index where appropriate.<br />
  * The delegate must return nil if it does not wish to encode the item
@@ -261,19 +270,15 @@ extern "C" {
                           named: (NSString*)name
                           index: (unsigned)index;
 
-/** This method is called to ask the delegate to decode the specified
- * element and return the result.  If the delegate does not wish to
- * decode the element, it should simply return nil.<br />
- * The name and index arguments provide context for decoding, allowing the
- * delegate to better understand how the element should be decoded... the
- * index is the position of the item in the ordered list of items being
- * decoded, and the name is the identifier that will be used for the item.<br />
- * The default implementation returns nil.
+/** Returns the name of the operation that the receiver is being
+ * used to implement.
  */
-- (id) decodeWithCoder: (GWSCoder*)coder
-                  item: (GWSElement*)item
-                 named: (NSString*)name
-                 index: (unsigned)index;
+- (NSString*) webServiceOperation;
+
+/** Returns the port object defining the binding and address of
+ * the operation being performed.
+ */
+- (GWSPort*) webServicePort;
 @end
 
 

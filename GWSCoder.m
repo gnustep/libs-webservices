@@ -610,27 +610,9 @@ static NSCharacterSet	*ws = nil;
   return nil;
 }
 
-- (GWSService*) service
-{
-  return _service;
-}
-
 - (void) setDelegate: (id)delegate
 {
   _delegate = delegate;
-}
-
-- (void) setService: (GWSService*)service
-{
-  if (_service != service)
-    {
-      GWSService	*old = _service;
-
-      _service = nil;
-      [old setCoder: nil];
-      _service = service;
-      [_service setCoder: self];
-    }
 }
 
 - (void) setTimeZone: (NSTimeZone*)timeZone
@@ -654,6 +636,13 @@ static NSCharacterSet	*ws = nil;
 @end
 
 @implementation NSObject (GWSCoder)
+- (id) decodeWithCoder: (GWSCoder*)coder
+                  item: (GWSElement*)item
+                 named: (NSString*)name
+                 index: (unsigned)index
+{
+  return nil;
+}
 - (GWSElement*) encodeWithCoder: (GWSCoder*)coder
                            item: (id)item
                           named: (NSString*)name
@@ -661,10 +650,11 @@ static NSCharacterSet	*ws = nil;
 {
   return nil;
 }
-- (id) decodeWithCoder: (GWSCoder*)coder
-                  item: (GWSElement*)item
-                 named: (NSString*)name
-                 index: (unsigned)index
+- (NSString*) webServiceOperation
+{
+  return nil;
+}
+- (GWSPort*) webServicePort
 {
   return nil;
 }

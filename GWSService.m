@@ -29,20 +29,15 @@
 @implementation	GWSService (Private)
 - (void) _completed
 {
-  if (_fault != nil)
+  if (_operation != nil)
     {
-      [_fault release];
-      _fault = nil;
+      [_operation release];
+      _operation = nil;
     }
-  if (_input != nil)
+  if (_port != nil)
     {
-      [_input release];
-      _input = nil;
-    }
-  if (_output != nil)
-    {
-      [_output release];
-      _output = nil;
+      [_port release];
+      _port = nil;
     }
   if ([_delegate respondsToSelector: @selector(completedRPC:)])
     {
@@ -191,19 +186,9 @@
   return _documentation;
 }
 
-- (GWSElement*) fault
-{
-  return _fault;
-}
-
 - (id) init
 {
   return [self _initWithName: nil document: nil];
-}
-
-- (GWSElement*) input
-{
-  return _input;
 }
 
 - (NSMutableDictionary*) invokeMethod: (NSString*)method 
@@ -241,9 +226,14 @@
   return _name;
 }
 
-- (GWSElement*) output
+- (NSString*) webServiceOperation
 {
-  return _output;
+  return _operation;
+}
+
+- (GWSPort*) webServicePort
+{
+  return _port;
 }
 
 - (NSMutableDictionary*) result
@@ -265,11 +255,10 @@
 {
   NSMutableURLRequest   *request;
   NSData	        *data;
-  GWSElement		*fault = nil;
-  GWSElement		*ip = nil;
-  GWSElement		*op = nil;
+  NSString		*operationName = nil;
+  GWSPort		*port = nil;
 
-  if (_fault != nil || _input != nil || _output != nil)
+  if (_operation != nil)
     {
       [self _setProblem: @"Earlier operation still in progress"];
       return NO;
@@ -283,10 +272,8 @@
     {
       NSRange		r;
       NSString		*portName;
-      NSString		*operationName;
       NSEnumerator	*enumerator;
       GWSElement	*elem;
-      GWSPort		*port;
       GWSPortType	*portType;
       GWSBinding	*binding;
       GWSElement	*operation;
@@ -386,38 +373,6 @@
 		}
 	      elem = [elem sibling];
 	    }
-
-	  /* Now get (and make a note of) the input and output messages.
- 	   */
-	  if ([[elem name] isEqualToString: @"input"])
-	    {
-	      ip = elem;
-	      elem = [elem sibling];
-	    }
-	  if ([[elem name] isEqualToString: @"output"])
-	    {
-	      op = elem;
-	      elem = [elem sibling];
-	    }
-	  if ([[elem name] isEqualToString: @"fault"])
-	    {
-	      op = elem;
-	      elem = [elem sibling];
-	    }
-
-	  /* Perform any extensibility setup for the input message.
-	   */
-	  for (elem = [ip firstChild]; elem != nil; elem = [elem sibling])
-	    {
-	      problem = [_document _setupService: self
-					    from: elem
-					      in: @"input"];
-	      if (problem != nil)
-		{
-		  [self _setProblem: problem];
-		  return NO;
-		}
-	    }
 	}
     }
 
@@ -438,9 +393,17 @@
     {
       return NO;	// Send already in progress.
     }
+
+  _operation = [operationName retain];
+  _port = [port retain];
+
   data = [_coder buildRequest: method parameters: parameters order: order];
   if (data == nil)
     {
+      [_operation release];
+      _operation = nil;
+      [_port release];
+      _port = nil;
       return NO;
     }
 
@@ -462,12 +425,6 @@
     }
   [request setHTTPBody: data];
 
-  /* Record information about the messages in progess.
-   */
-  _fault = [fault retain];
-  _input = [ip retain];
-  _output = [ip retain];
-
   _connection = [NSURLConnection alloc];
   _connection = [_connection initWithRequest: request delegate: self];
   [request release];
@@ -481,10 +438,13 @@
       GWSCoder   *old = _coder;
 
       _coder = nil;
-      [old setService: nil];
+      if ([old delegate] == (id)self)
+	{
+          [old setDelegate: nil];
+	}
       _coder = [aCoder retain];
       [old release];
-      [_coder setService: self];
+      [_coder setDelegate: self];
     }
 }
 

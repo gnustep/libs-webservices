@@ -38,6 +38,10 @@ extern "C" {
 @class  GWSDocument;
 @class  GWSElement;
 
+/** Encapsulates a WSDL port within a service.<br />
+ * The port provides access to the particular binding used to perform an
+ * operation.
+ */
 @interface	GWSPort : NSObject
 {
 @private
