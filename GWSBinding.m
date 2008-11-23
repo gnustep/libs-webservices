@@ -117,9 +117,9 @@
   return _documentation;
 }
 
-- (NSMutableArray*) extensibility
+- (NSArray*) extensibility
 {
-  return _extensibility;
+  return [[_extensibility copy] autorelease];
 }
 
 - (id) init
@@ -148,6 +148,31 @@
       [o release];
       [_documentation remove];
     }
+}
+
+- (void) setExtensibility: (NSArray*)extensibility
+{
+  NSMutableArray	*m;
+  unsigned		c;
+
+  c = [extensibility count];
+  while (c-- > 0)
+    {
+      NSString		*problem;
+      GWSElement	*element;
+
+      element = [extensibility objectAtIndex: c];
+      problem = [_document _validate: element in: @"binding"];
+      if (problem != nil)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"%@", problem];
+	}
+    }
+
+  m = [extensibility mutableCopy];
+  [_extensibility release];
+  _extensibility = m;
 }
 
 - (void) setTypeName: (NSString*)type

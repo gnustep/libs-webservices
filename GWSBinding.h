@@ -57,7 +57,7 @@ extern "C" {
 /** Returns the array of GWSElement objects representing the binding
  * extensibility.  Usually this is a soap:binding node.
  */
-- (NSMutableArray*) extensibility;
+- (NSArray*) extensibility;
 
 /** Returns the name of the receiver.
  */
@@ -70,6 +70,10 @@ extern "C" {
 /** Set the documentation for the receiver.
  */
 - (void) setDocumentation: (GWSElement*)documentation;
+
+/** Set the extensibility elements for this document.
+ */
+- (void) setExtensibility: (NSArray*)extensibility;
 
 /** Sets the type of the binding.  This should be the name of an
  * existing [GWSPortType] instance owned by the same [GWSDocument]

@@ -57,11 +57,15 @@ extern "C" {
 
 /** Return the extensibility for this port.
  */
-- (NSMutableArray*) extensibility;
+- (NSArray*) extensibility;
 
 /** Return the name of this port type.
  */
 - (NSString*) name;
+
+/** Set the extensibility elements for this document.
+ */
+- (void) setExtensibility: (NSArray*)extensibility;
 
 /** Return a tree representation of the receiver for output as part of
  * a WSDL document.

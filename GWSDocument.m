@@ -501,7 +501,7 @@ static NSLock			*extLock = nil;
             {
 	      NSString	*problem;
 
-	      problem = [self _validate: _elem in: [self name]];
+	      problem = [self _validate: _elem in: @"definitions"];
 	      if (problem != nil)
 		{
 		  [NSException raise: NSInvalidArgumentException
@@ -717,7 +717,7 @@ static NSLock			*extLock = nil;
       GWSElement	*element;
 
       element = [extensibility objectAtIndex: c];
-      problem = [self _validate: element in: [self name]];
+      problem = [self _validate: element in: @"definitions"];
       if (problem != nil)
 	{
 	  [NSException raise: NSInvalidArgumentException
