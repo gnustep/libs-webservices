@@ -567,11 +567,21 @@ static NSCharacterSet	*ws = nil;
 - (NSData*) buildFaultWithParameters: (NSDictionary*)parameters
                                order: (NSArray*)order
 {
-  [NSException raise: NSGenericException
-              format: @"[%@-%@] subclass should implement this",
-              NSStringFromClass([self class]),
-              NSStringFromSelector(_cmd)];
-  return nil;
+  NSData	*result = nil;
+
+  _fault = YES;
+  NS_DURING
+    {
+      result = [self buildRequest: nil parameters: parameters order: order];
+      _fault = NO;
+    }
+  NS_HANDLER
+    {
+      _fault = NO;
+      [localException raise];
+    }
+  NS_ENDHANDLER
+  return result;
 }
 
 - (NSData*) buildRequest: (NSString*)method 
@@ -601,6 +611,11 @@ static NSCharacterSet	*ws = nil;
   return _delegate;
 }
 
+- (BOOL) fault
+{
+  return _fault;
+}
+
 - (NSMutableDictionary*) parseMessage: (NSData*)data
 {
   [NSException raise: NSGenericException
@@ -613,6 +628,11 @@ static NSCharacterSet	*ws = nil;
 - (void) setDelegate: (id)delegate
 {
   _delegate = delegate;
+}
+
+- (void) setFault: (BOOL)flag
+{
+  _fault = flag;
 }
 
 - (void) setTimeZone: (NSTimeZone*)timeZone

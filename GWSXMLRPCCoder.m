@@ -42,132 +42,126 @@ static NSCharacterSet   *ws;
   ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
 }
 
-- (NSData*) buildFaultWithParameters: (NSDictionary*)parameters
-                               order: (NSArray*)order;
-{
-  NSMutableString       *ms;
-
-  ms = [self mutableString];
-  [ms setString: @""];
-
-  [ms appendString: @"<?xml version=\"1.0\"?>\n"];
-  // FIXME
-  [ms appendString: @"<methodResponse>"];
-  [self indent];
-  [self nl];
-  [ms appendString: @"<fault>"];
-  [self indent];
-  [self nl];
-  [ms appendString: @"<value>"];
-  [self _appendObject: parameters];
-  [self unindent];
-  [self nl];
-  [ms appendString: @"</value>"];
-  [self unindent];
-  [self nl];
-  [ms appendString: @"</fault>"];
-  [self unindent];
-  [self nl];
-  [ms appendString: @"</methodResponse>"];
-  return [ms dataUsingEncoding: NSUTF8StringEncoding];
-}
-
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
 {
-  NSMutableString       *ms;
-  unsigned	        c;
-  unsigned	        i;
+  NSMutableString       *ms = [self mutableString];
 
-  ms = [self mutableString];
-  [ms setString: @""];
-  
-  if ([order count] == 0)
+  [ms setString: @"<?xml version=\"1.0\"?>\n"];
+
+  if ([self fault])
     {
-      order = [parameters allKeys];
-    }
-  c = [order count];
-  if ([method length] == 0)
-    {
-      return nil;
+      // FIXME
+      [ms appendString: @"<methodResponse>"];
+      [self indent];
+      [self nl];
+      [ms appendString: @"<fault>"];
+      [self indent];
+      [self nl];
+      [ms appendString: @"<value>"];
+      [self _appendObject: parameters];
+      [self unindent];
+      [self nl];
+      [ms appendString: @"</value>"];
+      [self unindent];
+      [self nl];
+      [ms appendString: @"</fault>"];
+      [self unindent];
+      [self nl];
+      [ms appendString: @"</methodResponse>"];
     }
   else
     {
-      static NSCharacterSet	*illegal = nil;
-      NSRange			r;
+      unsigned	        c;
+      unsigned	        i;
 
-      if (illegal == nil)
+      if ([order count] == 0)
 	{
-	  NSMutableCharacterSet	*tmp = [NSMutableCharacterSet new];
+	  order = [parameters allKeys];
+	}
+      c = [order count];
+      if ([method length] == 0)
+	{
+	  return nil;
+	}
+      else
+	{
+	  static NSCharacterSet	*illegal = nil;
+	  NSRange		r;
 
-	  [tmp addCharactersInRange: NSMakeRange('0', 10)];
-	  [tmp addCharactersInRange: NSMakeRange('a', 26)];
-	  [tmp addCharactersInRange: NSMakeRange('A', 26)];
-	  [tmp addCharactersInString: @"_.:/"];
-	  [tmp invert];
-	  illegal = [tmp copy];
-	  [tmp release];
+	  if (illegal == nil)
+	    {
+	      NSMutableCharacterSet	*tmp = [NSMutableCharacterSet new];
+
+	      [tmp addCharactersInRange: NSMakeRange('0', 10)];
+	      [tmp addCharactersInRange: NSMakeRange('a', 26)];
+	      [tmp addCharactersInRange: NSMakeRange('A', 26)];
+	      [tmp addCharactersInString: @"_.:/"];
+	      [tmp invert];
+	      illegal = [tmp copy];
+	      [tmp release];
+	    }
+	  r = [method rangeOfCharacterFromSet: illegal];
+	  if (r.length > 0)
+	    {
+	      return nil;	// Bad method name.
+	    }
 	}
-      r = [method rangeOfCharacterFromSet: illegal];
-      if (r.length > 0)
-	{
-	  return nil;	// Bad method name.
-	}
-    }
-  [ms appendString: @"<?xml version=\"1.0\"?>\n"];
-  [ms appendString: @"<methodCall>"];
-  [self indent];
-  [self nl];
-  [ms appendString: @"<methodName>"];
-  [ms appendString: [self escapeXMLFrom: method]];
-  [ms appendString: @"</methodName>"];
-  [self nl];
-  if (c > 0)
-    {
-      [ms appendString: @"<params>"];
+      [ms appendString: @"<methodCall>"];
       [self indent];
-      for (i = 0; i < c; i++)
-      	{
-          NSString      *k = [order objectAtIndex: i];
-          id            v = [parameters objectForKey: k];
-          GWSElement    *e;
+      [self nl];
+      [ms appendString: @"<methodName>"];
+      [ms appendString: [self escapeXMLFrom: method]];
+      [ms appendString: @"</methodName>"];
+      [self nl];
+      if (c > 0)
+	{
+	  [ms appendString: @"<params>"];
+	  [self indent];
+	  for (i = 0; i < c; i++)
+	    {
+	      NSString      *k = [order objectAtIndex: i];
+	      id            v = [parameters objectForKey: k];
+	      GWSElement    *e;
 
-          if (v != nil)
-            {
-              [self nl];
-              [ms appendString: @"<param>"];
-              [self indent];
-              [self nl];
-              [ms appendString: @"<value>"];
-              [self indent];
-              e = [[self delegate] encodeWithCoder: self
-                                              item: v
-                                             named: k
-                                             index: i];
-              if (e == nil)
-                {
-                  [self _appendObject: v];
-                }
-              else
-                {
-                  [e encodeWith: self];
-                }
-              [self unindent];
-              [self nl];
-              [ms appendString: @"</value>"];
-              [self unindent];
-              [self nl];
-              [ms appendString: @"</param>"];
-            }
+	      if (v != nil)
+		{
+		  [self nl];
+		  [ms appendString: @"<param>"];
+		  [self indent];
+		  [self nl];
+		  [ms appendString: @"<value>"];
+		  [self indent];
+		  e = [[self delegate] encodeWithCoder: self
+						  item: v
+						 named: k
+						 index: i];
+		  if (e == nil)
+		    {
+		      [self _appendObject: v];
+		    }
+		  else
+		    {
+		      [e encodeWith: self];
+		    }
+		  [self unindent];
+		  [self nl];
+		  [ms appendString: @"</value>"];
+		  [self unindent];
+		  [self nl];
+		  [ms appendString: @"</param>"];
+		}
+	    }
+	  [self unindent];
+	  [self nl];
+	  [ms appendString: @"</params>"];
+	  [self unindent];
+	  [self nl];
 	}
-      [self unindent];
-      [self nl];
-      [ms appendString: @"</params>"];
-      [self unindent];
-      [self nl];
+      [ms appendString: @"</methodCall>"];
     }
-  [ms appendString: @"</methodCall>"];
+
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 

@@ -63,6 +63,7 @@ extern "C" {
   NSMutableDictionary   *_nmap;         // Mapping namespaces.
   NSTimeZone	        *_tz;           // Default timezone.
   BOOL		        _compact;
+  BOOL			_fault;		// YES while building a fault.
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
@@ -143,8 +144,7 @@ extern "C" {
  */
 - (id) delegate;
 
-/** <override-subclass />
- * Constructs an XML document for an RPC fault response with the
+/** Constructs an XML document for an RPC fault response with the
  * specified parameters.  The resulting document is returned
  * as an NSData object.<br />
  * For XMLRCP the two parameters should be faultCode (an integer)
@@ -152,6 +152,11 @@ extern "C" {
  * The order array may be empty or nil if the order of the parameters
  * is not important, otherwise it must contain the names of the parameters
  * in the order in which they are to be encoded.<br />
+ * This method simply calls -setFault: to say that a fault is being
+ * built, then calls -buildRequest:parameters:order: with a nil request
+ * name, and calls -setFault: again before returning the result.  If you
+ * override this method in a subclass, you should perform the same handling
+ * of the fault flag.<br />
  * This method is intended for use by applications acting as RPC servers.
  */
 - (NSData*) buildFaultWithParameters: (NSDictionary*)parameters
@@ -194,6 +199,11 @@ extern "C" {
                parameters: (NSDictionary*)parameters
                     order: (NSArray*)order;
 
+/** Returns a flag to say whether this coder is encoding/decoding
+ * a fault or not.
+ */
+- (BOOL) fault;
+
 /** <override-subclass />
  * Parses data containing an method call or message etc.<br />
  * The result dictionary may contain
@@ -215,6 +225,10 @@ extern "C" {
  */
 - (void) setDelegate: (id)delegate;
 
+/** Sets the fault flag to indicate that a fault is being encoded or decoded.
+ */
+- (void) setFault: (BOOL)flag;
+
 /**
  * Sets the time zone for use when sending/receiving date/time values.<br />
  * The XMLRPC specification says that timezone is server dependent so you
@@ -234,7 +248,7 @@ extern "C" {
 /** This informal protocol specifies the methods that a coder delegate
  * may implement in order to override general encoding/decoding of
  * service arguments.<br />
- * Generally the delegate is a GWSService instance.
+ * Generally the delegate is a [GWSService] instance.
  */
 @interface      NSObject(GWSCoder)
 

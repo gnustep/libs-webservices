@@ -63,6 +63,7 @@ NSString * const GWSSOAPMessageHeadersKey
   unsigned              c;
   unsigned              i;
 
+  [self setFault: YES];
   envelope = [[GWSElement alloc] initWithName: @"Envelope"
                                     namespace: nil
                                     qualified: @"soapenv:Envelope"
@@ -204,6 +205,7 @@ NSString * const GWSSOAPMessageHeadersKey
   ms = [self mutableString];
   [ms setString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"];
   [envelope encodeWith: self];
+  [self setFault: NO];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
