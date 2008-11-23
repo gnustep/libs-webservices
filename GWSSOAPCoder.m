@@ -50,165 +50,6 @@ NSString * const GWSSOAPMessageHeadersKey
 
 @implementation	GWSSOAPCoder
 
-- (NSData*) buildFaultWithParameters: (NSDictionary*)parameters
-                               order: (NSArray*)order;
-{
-  GWSElement            *envelope;
-  GWSElement            *header;
-  GWSElement            *body;
-  GWSElement            *fault;
-  NSString              *prefix;
-  NSString              *qualified;
-  NSMutableString       *ms;
-  unsigned              c;
-  unsigned              i;
-
-  [self setFault: YES];
-  envelope = [[GWSElement alloc] initWithName: @"Envelope"
-                                    namespace: nil
-                                    qualified: @"soapenv:Envelope"
-                                   attributes: nil];
-  [envelope autorelease];
-  [envelope setNamespace: @"http://schemas.xmlsoap.org/soap/envelope/"
-              forKey: @"soapenv"];
-  [envelope setNamespace: @"http://www.w3.org/2001/XMLSchema"
-              forKey: @"xsd"];
-  [envelope setNamespace: @"http://www.w3.org/2001/XMLSchema-instance"
-              forKey: @"xsi"];
-
-  if ([self delegate] != nil)
-    {
-      envelope = [[self delegate] coder: self willEncode: envelope];
-    }
-  if ([[envelope qualified] isEqualToString: @"Envelope"])
-    {
-      prefix = nil;
-    }
-  else
-    {
-      prefix = [envelope qualified];
-      prefix = [prefix substringToIndex: [prefix rangeOfString: @":"].location];
-    }
-
-  header = [parameters objectForKey: GWSSOAPMessageHeadersKey];
-  if ((id)header == (id)[NSNull null])
-    {
-      qualified = @"Header";
-      if (prefix != nil)
-        {
-          qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
-        }
-      header = [[GWSElement alloc] initWithName: @"Header"
-                                      namespace: nil
-                                      qualified: qualified
-                                 attributes: nil];
-      [envelope addChild: header];
-      [header release];
-    }
-  if ([self delegate] != nil)
-    {
-      GWSElement        *elem;
-
-      elem = [[self delegate] coder: self willEncode: header];
-      if (elem != header)
-        {
-          [header remove];
-          header = elem;
-          [envelope addChild: header];
-        }
-    }
-
-  qualified = @"Body";
-  if (prefix != nil)
-    {
-      qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
-    }
-  body = [[GWSElement alloc] initWithName: @"Body"
-                                namespace: nil
-                                qualified: qualified
-                               attributes: nil];
-  [envelope addChild: body];
-  [body release];
-  if ([self delegate] != nil)
-    {
-      GWSElement        *elem;
-
-      elem = [[self delegate] coder: self willEncode: body];
-      if (elem != body)
-        {
-          [body remove];
-          body = elem;
-          [envelope addChild: body];
-        }
-    }
-
-  qualified = @"Fault";
-  if (prefix != nil)
-    {
-      qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
-    }
-  fault = [[GWSElement alloc] initWithName: @"Fault"
-                                 namespace: nil
-                                 qualified: qualified
-                                attributes: nil];
-  [body addChild: fault];
-  [fault release];
-  if ([self delegate] != nil)
-    {
-      GWSElement        *elem;
-
-      elem = [[self delegate] coder: self willEncode: fault];
-      if (elem != fault)
-        {
-          [fault remove];
-          fault = elem;
-          [body addChild: fault];
-        }
-    }
-
-  if ([order count] == 0)
-    {
-      NSEnumerator      *kEnum = [parameters keyEnumerator];
-      NSString          *k;
-      NSMutableArray    *a = [NSMutableArray array];
-
-      while ((k = [kEnum nextObject]) != nil)
-        {
-          if ([k hasPrefix: @"GWSSOAP"])
-            {
-            }
-          else
-            {
-              [a addObject: k];
-            }
-        }
-      order = a;
-    }
-  c = [order count];
-  for (i = 0; i < c; i++)
-    {
-      NSString          *k = [order objectAtIndex: i];
-      id                v = [parameters objectForKey: k];
-      GWSElement        *e;
-
-      e = [[self delegate] encodeWithCoder: self
-                                      item: v
-                                     named: k
-                                     index: i];
-      if (e == nil)
-        {
-          e = [self _elementForObject: v named: k];
-        }
-      [fault addChild: e];
-    }
-
-  ms = [self mutableString];
-  [ms setString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"];
-  [envelope encodeWith: self];
-  [self setFault: NO];
-  return [ms dataUsingEncoding: NSUTF8StringEncoding];
-}
-
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
@@ -230,7 +71,7 @@ NSString * const GWSSOAPMessageHeadersKey
    * that the document is sent to.
    * We therefore check the method name only if we are doing an RPC.
    */
-  if (_style == GWSSOAPBodyEncodingStyleRPC)
+  if (_style == GWSSOAPBodyEncodingStyleRPC && [self fault] == NO)
     {
       if ([method length] == 0)
 	{
@@ -274,7 +115,7 @@ NSString * const GWSSOAPMessageHeadersKey
               forKey: @"xsi"];
 
   /* Check the method namespace ... if we have a URI and a name then we
-   * want to spedcify the namespace in the envelope.
+   * want to specify the namespace in the envelope.
    */
   nsName = [parameters objectForKey: GWSSOAPMethodNamespaceNameKey];
   nsURI = [parameters objectForKey: GWSSOAPMethodNamespaceURIKey];
@@ -349,106 +190,173 @@ NSString * const GWSSOAPMessageHeadersKey
         }
     }
 
-  if (_style == GWSSOAPBodyEncodingStyleRPC)
+  if ([self fault] == YES)
     {
-      if (nsName == nil)
-        {
-          qualified = method;
-        }
-      else
-        {
-          qualified = [NSString stringWithFormat: @"%@:%@", nsName, method];
-        }
-      container = [[GWSElement alloc] initWithName: method
-                                         namespace: nsName
-                                         qualified: qualified
-                                        attributes: nil];
-      [body addChild: container];
-      [container release];
-      qualified = @"encodingStyle";
+      GWSElement	*fault;
+
+      qualified = @"Fault";
       if (prefix != nil)
-        {
-          qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
-        }
-      [container setAttribute: @"http://schemas.xmlsoap.org/soap/encoding/"
-                       forKey: qualified];
-
-      if (nsURI != nil && nsName == nil)
-        {
-          /* We have a namespace but no name ... make it the default namespace
-           * for the body.
-           */
-          [container setNamespace: nsURI forKey: @""];
-        }
-
+	{
+	  qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
+	}
+      fault = [[GWSElement alloc] initWithName: @"Fault"
+				     namespace: nil
+				     qualified: qualified
+				    attributes: nil];
+      [body addChild: fault];
+      [fault release];
       if ([self delegate] != nil)
-        {
-          GWSElement        *elem;
+	{
+	  GWSElement        *elem;
 
-          elem = [[self delegate] coder: self willEncode: container];
-          if (elem != container)
-            {
-              [container remove];
-              container = elem;
-              [body addChild: container];
-            }
-        }
-    }
-  else if (_style == GWSSOAPBodyEncodingStyleWrapped)
-    {
-      NSLog(@"FIXME GWSSOAPBodyEncodingStyleWrapped not implemented");
-      container = body;
+	  elem = [[self delegate] coder: self willEncode: fault];
+	  if (elem != fault)
+	    {
+	      [fault remove];
+	      fault = elem;
+	      [body addChild: fault];
+	    }
+	}
+
+      if ([order count] == 0)
+	{
+	  NSEnumerator      *kEnum = [parameters keyEnumerator];
+	  NSString          *k;
+	  NSMutableArray    *a = [NSMutableArray array];
+
+	  while ((k = [kEnum nextObject]) != nil)
+	    {
+	      if ([k hasPrefix: @"GWSSOAP"])
+		{
+		}
+	      else
+		{
+		  [a addObject: k];
+		}
+	    }
+	  order = a;
+	}
+      c = [order count];
+      for (i = 0; i < c; i++)
+	{
+	  NSString          *k = [order objectAtIndex: i];
+	  id                v = [parameters objectForKey: k];
+	  GWSElement        *e;
+
+	  e = [[self delegate] encodeWithCoder: self
+					  item: v
+					 named: k
+					 index: i];
+	  if (e == nil)
+	    {
+	      e = [self _elementForObject: v named: k];
+	    }
+	  [fault addChild: e];
+	}
     }
   else
     {
-      container = body;    // Direct encoding inside the body.
-    }
-
-  if ([order count] == 0)
-    {
-      NSEnumerator      *kEnum = [parameters keyEnumerator];
-      NSString          *k;
-      NSMutableArray    *a = [NSMutableArray array];
-
-      while ((k = [kEnum nextObject]) != nil)
-        {
-          if ([k hasPrefix: @"GWSSOAP"] == YES)
-            {
-              if ([k isEqual: GWSSOAPBodyEncodingStyleKey])
-                {
-                  NSString      *v = [parameters objectForKey: k];
-
-                  [self setOperationStyle: v];
-                }
-            }
-          else
-            {
-              [a addObject: k];
-            }
-        }
-      order = a;
-    }
-  c = [order count];
-  for (i = 0; i < c; i++)
-    {
-      NSString          *k = [order objectAtIndex: i];
-      id                v = [parameters objectForKey: k];
-      GWSElement        *e;
-
-      if (v == nil)
+      if (_style == GWSSOAPBodyEncodingStyleRPC)
 	{
-	  [NSException raise: NSInvalidArgumentException
-		      format: @"Value '%@' (order %u) missing", k, i];
+	  if (nsName == nil)
+	    {
+	      qualified = method;
+	    }
+	  else
+	    {
+	      qualified = [NSString stringWithFormat: @"%@:%@", nsName, method];
+	    }
+	  container = [[GWSElement alloc] initWithName: method
+					     namespace: nsName
+					     qualified: qualified
+					    attributes: nil];
+	  [body addChild: container];
+	  [container release];
+	  qualified = @"encodingStyle";
+	  if (prefix != nil)
+	    {
+	      qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
+	    }
+	  [container setAttribute: @"http://schemas.xmlsoap.org/soap/encoding/"
+			   forKey: qualified];
+
+	  if (nsURI != nil && nsName == nil)
+	    {
+	      /* We have a namespace but no name ... make it the default namespace
+	       * for the body.
+	       */
+	      [container setNamespace: nsURI forKey: @""];
+	    }
+
+	  if ([self delegate] != nil)
+	    {
+	      GWSElement        *elem;
+
+	      elem = [[self delegate] coder: self willEncode: container];
+	      if (elem != container)
+		{
+		  [container remove];
+		  container = elem;
+		  [body addChild: container];
+		}
+	    }
 	}
-      e = [[self delegate] encodeWithCoder: self
-                                      item: v
-                                     named: k
-                                     index: i];
-      if (e == nil)
-        {
-          e = [self _elementForObject: v named: k];
-        }
-      [container addChild: e];
+      else if (_style == GWSSOAPBodyEncodingStyleWrapped)
+	{
+	  NSLog(@"FIXME GWSSOAPBodyEncodingStyleWrapped not implemented");
+	  container = body;
+	}
+      else
+	{
+	  container = body;    // Direct encoding inside the body.
+	}
+
+      if ([order count] == 0)
+	{
+	  NSEnumerator      *kEnum = [parameters keyEnumerator];
+	  NSString          *k;
+	  NSMutableArray    *a = [NSMutableArray array];
+
+	  while ((k = [kEnum nextObject]) != nil)
+	    {
+	      if ([k hasPrefix: @"GWSSOAP"] == YES)
+		{
+		  if ([k isEqual: GWSSOAPBodyEncodingStyleKey])
+		    {
+		      NSString      *v = [parameters objectForKey: k];
+
+		      [self setOperationStyle: v];
+		    }
+		}
+	      else
+		{
+		  [a addObject: k];
+		}
+	    }
+	  order = a;
+	}
+      c = [order count];
+      for (i = 0; i < c; i++)
+	{
+	  NSString          *k = [order objectAtIndex: i];
+	  id                v = [parameters objectForKey: k];
+	  GWSElement        *e;
+
+	  if (v == nil)
+	    {
+	      [NSException raise: NSInvalidArgumentException
+			  format: @"Value '%@' (order %u) missing", k, i];
+	    }
+	  e = [[self delegate] encodeWithCoder: self
+					  item: v
+					 named: k
+					 index: i];
+	  if (e == nil)
+	    {
+	      e = [self _elementForObject: v named: k];
+	    }
+	  [container addChild: e];
+	}
     }
 
   ms = [self mutableString];
