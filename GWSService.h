@@ -207,8 +207,9 @@ extern "C" {
 
 /**
  * Sets the value of the SOAPAction header to be sent with a request.<br />
- * Most servers use an empty string for this (so this is the default).<br />
- * Setting a nil value suppresses the sending of this header.
+ * Setting an nil string value suppresses the sending of this header.<br />
+ * Most servers expect two double quotes characters for this,
+ * so you should probably set @&quot;\&quot;\&quot;&quot; as the action.<br />
  */
 - (void) setSOAPAction: (NSString*)action;
 

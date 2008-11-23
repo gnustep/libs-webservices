@@ -287,7 +287,11 @@
 
 	  /* The SOAP action is optional.
 	   */
-	  if (action != nil)
+	  if (action == nil)
+	    {
+	      [service setSOAPAction: @"\"\""];
+	    }
+	  else
 	    {
 	      [service setSOAPAction: action];
 	    }
