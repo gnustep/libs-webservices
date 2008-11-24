@@ -112,6 +112,11 @@ static NSCharacterSet	*ws = nil;
   [super dealloc];
 }
 
+- (BOOL) debug
+{
+  return _debug;
+}
+
 - (NSData*) decodeBase64From: (NSString*)str
 {
   NSData        *source = [str dataUsingEncoding: NSASCIIStringEncoding];
@@ -402,6 +407,7 @@ static NSCharacterSet	*ws = nil;
       _ms = [NSMutableString new];
       _stack = [NSMutableArray new];
       _nmap = [NSMutableDictionary new];
+      _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
     }
   return self;
 }
@@ -551,6 +557,11 @@ static NSCharacterSet	*ws = nil;
 - (void) setCompact: (BOOL)flag
 {
   _compact = flag;
+}
+
+- (void) setDebug: (BOOL)flag
+{
+  _debug = flag;
 }
 
 - (void) unindent

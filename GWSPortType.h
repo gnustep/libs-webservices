@@ -54,9 +54,18 @@ extern "C" {
  */
 - (NSString*) name;
 
+/** Return the named operation.
+ */
+- (GWSElement*) operationWithName: (NSString*)name
+			   create: (BOOL)shouldCreate;
+
 /** Returns the dictionary of GWSElement nodes representing operations.
  */
-- (NSMutableDictionary*) operations;
+- (NSDictionary*) operations;
+
+/** Remove a named operation.
+ */
+- (void) removeOperationNamed: (NSString*)name;
 
 /** Set the documentation for the receiver.
  */

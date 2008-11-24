@@ -30,7 +30,7 @@
 
 - (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
-		    in: (NSString*)section
+		    in: (id)section
 {
   return nil;
 }
@@ -38,7 +38,7 @@
 - (NSString*) setupService: (GWSService*)service
 		      from: (GWSElement*)node
 		       for: (GWSDocument*)document
-			in: (NSString*)section
+		        in: (id)section
 {
   return nil;
 }
@@ -48,16 +48,17 @@
 @implementation	GWSSOAPExtensibility
 - (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
-		    in: (NSString*)section
+		    in: (id)section
 {
   NSString	*name = [node name];
+  NSString	*pName = [[node parent] name];
+  NSDictionary	*a = [node attributes];
 
-  if ([section isEqualToString: @"binding"])
+  if ([section isKindOfClass: [GWSBinding class]])
     {
       // This is a binding element inside a document
       if ([name isEqualToString: @"binding"])
 	{
-	  NSDictionary	*a = [node attributes];
 	  NSString	*style;
 	  NSString	*transport;
 
@@ -84,46 +85,7 @@
 		@"unsupported transport mechanism: '%@'", transport];
 	    }
 	}
-      else
-	{
-	  return [NSString stringWithFormat:
-	    @"unknown SOAP extensibility: '%@' in binding", name];
-	}
-    }
-  else if ([section isEqualToString: @"input"]
-    || [section isEqualToString: @"output"])
-    {
-      NSDictionary	*a = [node attributes];
-      NSString		*use = [a objectForKey: @"use"];
-
-      if ([name isEqualToString: @"body"])
-	{
-	}
-      else if ([name isEqualToString: @"header"])
-	{
-	}
-      else
-	{
-	  return [NSString stringWithFormat:
-	    @"unknown SOAP extensibility: '%@' in %@", name, section];
-	}
-      if ([use isEqualToString: @"literal"])
-	{
-	}
-      else if ([use isEqualToString: @"encoded"])
-	{
-	}
-      else
-	{
-	  return [NSString stringWithFormat:
-	    @"bad SOAP 'use' value: '%@' in %@ %@", use, section, name];
-	}
-    }
-  else if ([section isEqualToString: @"operation"])
-    {
-      /* This is an operation element inside a portType element
-       */
-      if ([name isEqualToString: @"operation"])
+      else if ([name isEqualToString: @"operation"])
 	{
 	  NSString	*style;
 
@@ -138,13 +100,98 @@
 		@"bad SOAP style: '%@' in operation", style];
 	    }
 	}
+      else if ([pName isEqualToString: @"input"]
+        ||[pName isEqualToString: @"output"])
+	{
+	  NSString		*use = [a objectForKey: @"use"];
+
+	  if ([name isEqualToString: @"body"])
+	    {
+	    }
+	  else if ([name isEqualToString: @"header"])
+	    {
+	      NSString	*part = [a objectForKey: @"part"];
+	      NSString	*messageName = [a objectForKey: @"message"];
+
+	      /* If there is no 'message' attribute, we must be using the
+	       * message defined by the abstract portType  for this operation.
+	       */
+	      if (part != nil && messageName == nil)
+		{
+		  NSString	*name;
+		  GWSElement	*elem;
+
+		  /* This is in binding/operation/input/header, so the name
+		   * of our parent's parent is the operation name.
+		   */
+		  name = [[[elem parent] parent] name];
+		  elem = [[(GWSBinding*)section type]
+		    operationWithName: name create: NO];
+		  if (elem == nil)
+		    {
+		      return [NSString stringWithFormat:
+			@"No operation '%@' found in binding", name];
+		    }
+		  elem = [elem firstChild];
+		  while (elem != nil && [[elem name] isEqual: @"input"] == NO)
+		    {
+		      elem = [elem sibling];
+		    }
+		  if (elem != nil)
+		    {
+		      messageName
+			= [[elem attributes] objectForKey: @"message"];
+		    }
+		  if (messageName == nil)
+		    {
+		      return [NSString stringWithFormat:
+			@"No message for '%@' found in binding", name];
+		    }
+		}
+	      if (part && messageName)
+		{
+		  GWSMessage	*message;
+
+		  message = [document messageWithName: messageName create: NO];
+		  if (message == nil)
+		    {
+		      return [NSString stringWithFormat:
+			@"Unable to find message '%@'", messageName];
+		    }
+		  else
+		    {
+		      NSString	*pName;
+
+		      pName = [message elementOfPartNamed: part];
+		      if (pName == nil)
+			{
+			  return [NSString stringWithFormat:
+			    @"Unable to find part '%@' in message '%@'",
+			    part, messageName];
+			}
+		    }
+		}
+	    }
+	  else
+	    {
+	      return [NSString stringWithFormat:
+		@"unknown SOAP extensibility: '%@' in %@", name, section];
+	    }
+
+	  if ([use isEqualToString: @"literal"] == NO
+	    && [use isEqualToString: @"encoded"] == NO)
+	    {
+	      return [NSString stringWithFormat:
+		@"bad SOAP 'use' value: '%@' in %@ %@", use, section, name];
+	    }
+	}
       else
 	{
 	  return [NSString stringWithFormat:
-	    @"unknown SOAP extensibility: '%@' in operation", name];
+	    @"unknown SOAP extensibility: '%@' in binding", name];
 	}
     }
-  else if ([section isEqualToString: @"port"])
+  else if ([section isKindOfClass: [GWSPort class]] == YES)
     {
       /* This is a port element inside a service element inside a document
        */
@@ -180,10 +227,12 @@
 - (NSString*) setupService: (GWSService*)service
 		      from: (GWSElement*)node
 		       for: (GWSDocument*)document
-			in: (NSString*)section
+			in: (id)section
 {
   NSString	*problem;
   NSString	*name;
+  NSString	*pName;
+  NSDictionary	*a;
   GWSSOAPCoder	*c;
 
   /* To avoid checking things in two places, we do all the checking in the
@@ -209,10 +258,12 @@
     }
 
   name = [node name];
+  pName = [[node parent] name];
+  a = [node attributes];
 
   /* Now we do section specific setup.
    */
-  if ([section isEqualToString: @"binding"])
+  if ([section isKindOfClass: [GWSBinding class]])
     {
       /* Binding setup 
        */
@@ -238,34 +289,7 @@
 	    {
 	    }
 	}
-    }
-  else if ([section isEqualToString: @"input"]
-    || [section isEqualToString: @"output"])
-    {
-      NSDictionary	*a = [node attributes];
-      NSString		*use = [a objectForKey: @"use"];
-
-      if ([name isEqualToString: @"body"])
-	{
-	}
-      else if ([name isEqualToString: @"header"])
-	{
-	}
-
-      if ([use isEqualToString: @"literal"])
-	{
-	  [c setUseLiteral: YES];
-	}
-      else
-	{
-	  [c setUseLiteral: NO];
-	}
-    }
-  else if ([section isEqualToString: @"operation"])
-    {
-      /* This is an operation element inside a portType element
-       */
-      if ([name isEqualToString: @"operation"])
+      else if ([name isEqualToString: @"operation"])
 	{
 	  NSDictionary	*attributes = [node attributes];
 	  NSString	*style = [attributes objectForKey: @"style"];
@@ -296,8 +320,111 @@
 	      [service setSOAPAction: action];
 	    }
 	}
+      else if ([pName isEqualToString: @"input"]
+        ||[pName isEqualToString: @"output"])
+	{
+	  NSDictionary	*a = [node attributes];
+	  NSString	*use = [a objectForKey: @"use"];
+
+	  if ([name isEqualToString: @"body"])
+	    {
+	      NSString			*namespace;
+	      NSMutableDictionary	*p;
+
+	      [p setObject: use forKey: GWSSOAPBodyUseKey];
+
+	      namespace = [a objectForKey: @"namespace"];
+	      if (namespace != nil)
+		{
+	          [p setObject: namespace forKey: GWSSOAPMethodNamespaceURIKey];
+		}
+	    }
+	  else if ([name isEqualToString: @"header"])
+	    {
+	      NSString	*part = [a objectForKey: @"part"];
+	      NSString	*messageName = [a objectForKey: @"message"];
+
+	      [[service webServiceParameters] setObject: use
+		forKey: GWSSOAPHeaderUseKey];
+
+	      /* If there is no 'message' attribute, we must be using the
+	       * message defined by the abstract portType  for this operation.
+	       */
+	      if (part != nil && messageName == nil)
+		{
+		  NSString		*name;
+		  GWSElement	*elem;
+
+		  name = [service webServiceOperation];
+		  elem = [[(GWSBinding*)section type]
+		    operationWithName: name create: NO];
+		  elem = [elem firstChild];
+		  while (elem != nil && [[elem name] isEqual: @"input"] == NO)
+		    {
+		      elem = [elem sibling];
+		    }
+		  if (elem != nil)
+		    {
+		      messageName
+			= [[elem attributes] objectForKey: @"message"];
+		    }
+		}
+	      if (part && messageName)
+		{
+		  GWSMessage	*message;
+
+		  message = [document messageWithName: messageName create: NO];
+		  if (message == nil)
+		    {
+		      NSLog(@"Unable to find message '%@'", messageName);
+		    }
+		  else
+		    {
+		      NSString	*pName;
+
+		      pName = [message elementOfPartNamed: part];
+		      if (pName == nil)
+			{
+			  NSLog(@"Unable to find part '%@' in message '%@'",
+			    part, messageName);
+			}
+		      else
+			{
+			  NSMutableDictionary	*m;
+			  id			o;
+
+			  m = [service webServiceParameters];
+			  o = [m objectForKey: pName];
+			  if (o == nil)
+			    {
+			      NSLog(@"Unable to find parameter '%@' for part"
+				@" '%@' in message '%@'",
+				pName, part, messageName);
+			    }
+			  else
+			    {
+			      o = [m objectForKey: GWSSOAPMessageHeadersKey];
+
+			      /* At last, we add the parameter name to the
+			       * array of header values to be encoded.
+			       */
+			      if ([o isKindOfClass: [NSMutableArray class]]
+				== NO)
+				{
+				  o = [NSMutableArray new];
+				  [m setObject: o
+					forKey: GWSSOAPMessageHeadersKey];
+				  [o release];
+				}
+			      [o addObject: pName];
+			    }
+			}
+		    }
+		}
+	    }
+	}
     }
-  else if ([section isEqualToString: @"port"])
+  else if ([section isKindOfClass: [GWSPort class]] == YES)
     {
       /* This is a port element inside a service element
        */

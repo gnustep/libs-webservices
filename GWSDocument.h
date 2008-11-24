@@ -106,6 +106,10 @@ extern "C" {
  */
 - (NSArray*) extensibility;
 
+/** Returns the registered exrtensibility object for the namespace.
+ */
+- (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL;
+
 /** Returns the current element when initializing the document from a
  * tree of elements, nil otherwise.  This is intended for use by
  * companion classes which are initializing themselves from this

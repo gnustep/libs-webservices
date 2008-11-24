@@ -51,17 +51,16 @@
 - (void) _remove;
 @end
 @interface      GWSDocument (Private)
-- (NSString*) _setupService: (GWSService*)service
-		       from: (GWSElement*)element
-		         in: (NSString*)section;
-- (NSString*) _validate: (GWSElement*)element in: (NSString*)section;
+- (NSString*) _validate: (GWSElement*)element in: (id)section;
 @end
 @interface      GWSMessage (Private)
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
 - (void) _remove;
 @end
 @interface      GWSPort (Private)
-- (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (id) _initWithName: (NSString*)name
+	    document: (GWSDocument*)document
+		from: (GWSElement*)elem;
 - (void) _remove;
 @end
 @interface      GWSPortType (Private)

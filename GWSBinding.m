@@ -48,7 +48,7 @@
         {
 	  NSString	*problem;
 
-	  problem = [_document _validate: elem in: @"binding"];
+	  problem = [_document _validate: elem in: self];
 	  if (problem != nil)
 	    {
 	      NSLog(@"Bad binding extensibility: % @", problem);
@@ -133,9 +133,32 @@
   return _name;
 }
 
-- (NSMutableDictionary*) operations
+- (GWSElement*) operationWithName: (NSString*)name
+			   create: (BOOL)shouldCreate
 {
-  return _operations;
+  GWSElement	*result = [_operations objectForKey: name];
+
+  if (result == nil && shouldCreate == YES)
+    {
+      GWSPortType	*type = [self type];
+      GWSElement	*base = [type operationWithName: name create: NO];
+
+      if (base != nil)
+	{
+// FIXME ... create here
+	}
+    }
+  return result;
+}
+
+- (NSDictionary*) operations
+{
+  return [[_operations copy] autorelease];
+}
+
+- (void) removeOperationNamed: (NSString*)name
+{
+  [_operations removeObjectForKey: name];
 }
 
 - (void) setDocumentation: (GWSElement*)documentation
@@ -162,7 +185,7 @@
       GWSElement	*element;
 
       element = [extensibility objectAtIndex: c];
-      problem = [_document _validate: element in: @"binding"];
+      problem = [_document _validate: element in: self];
       if (problem != nil)
 	{
 	  [NSException raise: NSInvalidArgumentException

@@ -28,22 +28,21 @@
 
 @implementation	GWSPort (Private)
 
-- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
+- (id) _initWithName: (NSString*)name
+	    document: (GWSDocument*)document
+		from: (GWSElement*)elem
 {
   if ((self = [super init]) != nil)
     {
-      GWSElement        *elem;
-
       _name = [name copy];
       _document = document;
-      elem = [_document initializing];
       _binding = [[[elem attributes] objectForKey: @"binding"] copy];
       elem = [elem firstChild];
       while (elem != nil)
         {
 	  NSString	*problem;
 
-	  problem = [_document _validate: elem in: @"port"];
+	  problem = [_document _validate: elem in: self];
 	  if (problem != nil)
 	    {
 	      NSLog(@"Bad port extensibility: % @", problem);
@@ -108,7 +107,7 @@
       GWSElement	*element;
 
       element = [extensibility objectAtIndex: c];
-      problem = [_document _validate: element in: @"port"];
+      problem = [_document _validate: element in: self];
       if (problem != nil)
 	{
 	  [NSException raise: NSInvalidArgumentException

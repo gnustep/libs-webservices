@@ -44,29 +44,8 @@ static NSLock			*extLock = nil;
   return name;
 }
 
-- (NSString*) _setupService: (GWSService*)service
-		       from: (GWSElement*)element
-			 in: (NSString*)section
-{
-  NSString		*n;
 
-  n = [element namespace];
-  if (n != nil)
-    {
-      GWSExtensibility	*e = [_ext objectForKey: n];
-
-      if (e != nil)
-	{
-	  return [e setupService: service
-			    from: element
-			     for: self
-			      in: section];
-	}
-    }
-  return nil;
-}
-
-- (NSString*) _validate: (GWSElement*)element in: (NSString*)section
+- (NSString*) _validate: (GWSElement*)element in: (id)section
 {
   NSString		*n;
 
@@ -221,6 +200,11 @@ static NSLock			*extLock = nil;
 - (GWSElement*) documentation
 {
   return _documentation;
+}
+
+- (GWSExtensibility*) extensibilityForNamespace: (NSString*)namespaceURL
+{
+  return [_ext objectForKey: namespaceURL];
 }
 
 - (NSArray*) extensibility
@@ -501,7 +485,7 @@ static NSLock			*extLock = nil;
             {
 	      NSString	*problem;
 
-	      problem = [self _validate: _elem in: @"definitions"];
+	      problem = [self _validate: _elem in: self];
 	      if (problem != nil)
 		{
 		  [NSException raise: NSInvalidArgumentException
@@ -717,7 +701,7 @@ static NSLock			*extLock = nil;
       GWSElement	*element;
 
       element = [extensibility objectAtIndex: c];
-      problem = [self _validate: element in: @"definitions"];
+      problem = [self _validate: element in: self];
       if (problem != nil)
 	{
 	  [NSException raise: NSInvalidArgumentException

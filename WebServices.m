@@ -31,6 +31,7 @@ NSString * const GWSFaultKey = @"GWSCoderFault";
 NSString * const GWSMethodKey = @"GWSCoderMethod";
 NSString * const GWSOrderKey = @"GWSCoderOrder";
 NSString * const GWSParametersKey = @"GWSCoderParameters";
+NSString * const GWSRequestDataKey = @"GWSCoderRequestData";
 NSString * const GWSResponseDataKey = @"GWSCoderResponseData";
 
 @implementation GWSType

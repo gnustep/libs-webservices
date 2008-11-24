@@ -68,10 +68,17 @@ NSString * const GWSOrderKey;
  */
 NSString * const GWSParametersKey;
 
+/** Key for the data sent to a remote system to perform a GWSService RPC
+ * operation.<br />
+ * This is present if debug was enabled for the service,
+ * but is omitted otherwise.
+ */
+NSString * const GWSRequestDataKey;
+
 /** Key for the data from a remote system returned in a result
- * of a GWSService RCP made to a web services server.<br />
- * This is present if the remote end returned data, but is omitted
- * otherwise.
+ * of a GWSService RPC made to a web services server.<br />
+ * This is present if and debug was enabled
+ * for the service, but is omitted otherwise.
  */
 NSString * const GWSResponseDataKey;
 
@@ -101,6 +108,16 @@ NSString * const GWSSOAPBodyEncodingStyleRPC;
  */
 NSString * const GWSSOAPBodyEncodingStyleWrapped;
 
+/** Key for the 'use' style to be used for the SOAP body.<br />
+ * The value of this key may be 'literal' or 'encoded'.
+ */
+NSString * const GWSSOAPBodyUseKey;
+
+/** Key for the 'use' style to be used for the SOAP header.<br />
+ * The value of this key may be 'literal' or 'encoded'.
+ */
+NSString * const GWSSOAPHeaderUseKey;
+
 /** Key for the URI to be used as the namespace for the method.  If the
  * GWSSOAPMethodNamespaceNameKey is not used, this namespace URI is set
  * as the default namespace for the method.
@@ -114,11 +131,15 @@ NSString * const GWSSOAPMethodNamespaceURIKey;
  */
 NSString * const GWSSOAPMethodNamespaceNameKey;
 
-/** Key for a header element for a soap message.  The headers for
+/** Key for the header element for a soap message.  An array of headers for
  * for the message may be provided by setting a value for this key
  * in the parameters dictionary.<br />
+ * The headers in the array may be instances of the [GWSElement] class to
+ * be added directly to the SOAP header, or my be strings naming WSDL
+ * message parts to be taken from the parameters dictionary and added to
+ * the SOAP header rather than the SOAP body.<br /> 
  * As a special case you may set an instance of [NSNull] rather than
- * an instance of [GWSElement] for this key, in which case the coder
+ * an NSArray for this key, in which case the coder
  * will generate an empty header element which the coder's delegate
  * can then modify.<br />
  * If no value is set for this key, the header element is omitted.

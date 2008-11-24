@@ -100,8 +100,11 @@ extern "C" {
   GWSCoder              *_coder;
   NSString		*_SOAPAction;
   BOOL			_compact;
+  BOOL			_debug;
   NSString		*_operation;
   GWSPort		*_port;
+  NSMutableDictionary	*_parameters;
+  NSData		*_request;
 }
 
 /**
@@ -109,6 +112,12 @@ extern "C" {
  * instance.<br />
  */
 - (GWSCoder*) coder;
+
+/** Returns YES if debug is enabled, NO otherwise.  The default value of this
+ * is obtained from the GWSDebug user default (or NO if no default
+ * is set), but may also be adjusted by a call to the -setDebug: method.
+ */
+- (BOOL) debug;
 
 /**
  * Returns the delegate previously set by the -setDelegate: method.<br />
@@ -137,16 +146,6 @@ extern "C" {
 /** Returns the name of this WSDL service.
  */
 - (NSString*) name;
-
-/** Returns the name of the current operation being performed,
- * or nil if there is no operation in progress.
- */
-- (NSString*) webServiceOperation;
-
-/** Returns the port of the current operation being performed,
- * or nil if there is no operation in progress.
- */
-- (GWSPort*) webServicePort;
 
 /**
  * Returns the result of the last method call, or nil if there has been
@@ -191,6 +190,11 @@ extern "C" {
  * as the delegate of the new coder.
  */
 - (void) setCoder: (GWSCoder*)aCoder;
+
+/** Specifies whether debug information is enabled.  See -debug for more
+ * information.
+ */
+- (void) setDebug: (BOOL)flag;
 
 /**
  * Sets the delegate object which will receive callbacks when an RPC
@@ -264,6 +268,30 @@ extern "C" {
  * a WSDL document.
  */
 - (GWSElement*) tree;
+
+/** Returns the name of the current operation being performed,
+ * or nil if there is no operation in progress.<br />
+ * In conjunction with -webServicePort this method can be used to look
+ * up all the details of the WSDL definition of the operation being
+ * performed.
+ */
+- (NSString*) webServiceOperation;
+
+/** Returns the parameter dictionary of the current operation being performed,
+ * or nil if there is no operation in progress.<br />
+ * This method can be used to determine exactly what data is being passed
+ * in the current operation.
+ */
+- (NSMutableDictionary*) webServiceParameters;
+
+/** Returns the port of the current operation being performed,
+ * or nil if there is no operation in progress.<br />
+ * In conjunction with -webServiceOperation this method can be used to look
+ * up all the details of the WSDL definition of the operation being
+ * performed.
+ */
+- (GWSPort*) webServicePort;
+
 @end
 
 /**

@@ -33,6 +33,7 @@ extern "C" {
 #endif
 
 @class  NSString;
+@class  GWSBinding;
 @class  GWSDocument;
 @class  GWSElement;
 @class  GWSService;
@@ -62,25 +63,25 @@ extern "C" {
 }
 
 /** Method to validate an extensibility node for the specified document.
- * The section argument is the name of the element in the document in
- * which the extensibility instance is being parsed (eg 'portType').<br />
+ * The section argument is the object on whose behalf the extensibility
+ * instance is being parsed (eg  a GWSPortType).<br />
  * This must return nil if the extensibility node is valid,
  * and a descriptive error message if it is not.
  */
 - (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
-		    in: (NSString*)section;
+		    in: (id)section;
 
 /** Method to set up a service for an operation based on the extensibility
  * node provided.<br />
- * The section argument is the name of the element in the document containing
- * the extensibility node to be used.<br />
+ * The section argument is the object on whose behalf the extensibility
+ * instance is to be used (eg  a GWSPortType).<br />
  * Returns nil on success and an error message on failure.
  */
 - (NSString*) setupService: (GWSService*)service
 		      from: (GWSElement*)node
 		       for: (GWSDocument*)document
-			in: (NSString*)section;
+			in: (id)section;
 
 @end
 

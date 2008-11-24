@@ -27,18 +27,33 @@
 #import "GWSPrivate.h"
 
 @implementation	GWSService (Private)
-- (void) _completed
+- (void) _clean
 {
   if (_operation != nil)
     {
       [_operation release];
       _operation = nil;
     }
+  if (_parameters != nil)
+    {
+      [_parameters release];
+      _parameters = nil;
+    }
   if (_port != nil)
     {
       [_port release];
       _port = nil;
     }
+  if (_request != nil)
+    {
+      [_request release];
+      _request = nil;
+    }
+}
+
+- (void) _completed
+{
+  [self _clean];
   if ([_delegate respondsToSelector: @selector(completedRPC:)])
     {
       [_delegate completedRPC: self];
@@ -51,6 +66,7 @@
     {
       GWSElement        *elem;
 
+      _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
       _name = [name copy];
       _document = document;
       elem = [_document initializing];
@@ -91,7 +107,8 @@
               GWSPort	*port;
 
               port = [[GWSPort alloc] _initWithName: name
-					   document: _document];
+					   document: _document
+					       from: elem];
               if (_ports == nil)
                 {
                   _ports = [NSMutableDictionary new];
@@ -110,10 +127,10 @@
         {
 	  NSString	*problem;
 
-	  problem = [_document _validate: elem in: @"port"];
+	  problem = [_document _validate: elem in: self];
 	  if (problem != nil)
 	    {
-	      NSLog(@"Bad port extensibility: % @", problem);
+	      NSLog(@"Bad service extensibility: % @", problem);
 	    }
           if (_extensibility == nil)
             {
@@ -126,10 +143,12 @@
     }
   return self;
 }
+
 - (void) _remove
 {
   _document = nil;
 }
+
 - (void) _setProblem: (NSString*)s
 {
   [_result release];
@@ -138,6 +157,25 @@
 						   count: 1];
 }
 
+- (NSString*) _setupFrom: (GWSElement*)element in: (id)section
+{
+  NSString	*n;
+
+  n = [element namespace];
+  if (n != nil)
+    {
+      GWSExtensibility	*e = [_document extensibilityForNamespace: n];
+
+      if (e != nil)
+	{
+	  return [e setupService: self
+			    from: element
+			     for: _document
+			      in: section];
+	}
+    }
+  return nil;
+}
 @end
 
 @implementation	GWSService
@@ -154,6 +192,7 @@
 
 - (void) dealloc
 {
+  [self _clean];
   [_coder release];
   _coder = nil;
   [_tz release];
@@ -174,6 +213,11 @@
   [_ports release];
   [_name release];
   [super dealloc];
+}
+
+- (BOOL) debug
+{
+  return _debug;
 }
 
 - (id) delegate
@@ -226,16 +270,6 @@
   return _name;
 }
 
-- (NSString*) webServiceOperation
-{
-  return _operation;
-}
-
-- (GWSPort*) webServicePort
-{
-  return _port;
-}
-
 - (NSMutableDictionary*) result
 {
   if (_timer == nil)
@@ -254,15 +288,17 @@
              timeout: (int)seconds
 {
   NSMutableURLRequest   *request;
-  NSData	        *data;
-  NSString		*operationName = nil;
-  GWSPort		*port = nil;
 
   if (_operation != nil)
     {
       [self _setProblem: @"Earlier operation still in progress"];
       return NO;
     }
+
+  /* Take a mutable copy of the parameters so that we can add keys to it
+   * to control encoding options.
+   */
+  _parameters = [parameters mutableCopy];
 
   /* If this is not a standalone service, we must set up information from
    * the parsed WSDL document.  Otherwise we just use whatever has been
@@ -282,13 +318,14 @@
       if (r.length == 1)
 	{
 	  portName = [method substringToIndex: r.location];
-	  operationName = [method substringFromIndex: NSMaxRange(r)];
+	  _operation = [method substringFromIndex: NSMaxRange(r)];
 	}
       else
 	{
 	  portName = nil;
-	  operationName = method;
+	  _operation = method;
 	}
+      [_operation retain];
 
       /* Look through the ports declared in this service for one matching
        * the port name and operation name.  Get details by looking up
@@ -296,13 +333,13 @@
        * is no binding for it.
        */
       enumerator = [_ports objectEnumerator];
-      while ((port = [enumerator nextObject]) != nil)
+      while ((_port = [enumerator nextObject]) != nil)
 	{
-	  binding = [port binding];
+	  binding = [_port binding];
 	  portType = [binding type];
 	  if (portType != nil)
 	    {
-	      operation = [[portType operations] objectForKey: operationName];
+	      operation = [[portType operations] objectForKey: _operation];
 	      if (operation != nil)
 		{
 		  if (portName == nil || [portName isEqual: [portType name]])
@@ -313,9 +350,11 @@
 		}
 	    }
 	}
+      [_port retain];
 
-      if (port == nil)
+      if (_port == nil)
 	{
+	  [self _clean];
 	  [self _setProblem: [NSString stringWithFormat:
 	    @"Unable to find port.operation matching '%@'", method]];
 	  return NO;
@@ -323,18 +362,18 @@
       else
 	{
 	  NSString	*problem;
+          NSArray	*order;
 
 	  /* Handle extensibility for port ...
 	   * With SOAP this supplies the URL that we should send to.
 	   */
-          enumerator = [[port extensibility] objectEnumerator];
+          enumerator = [[_port extensibility] objectEnumerator];
 	  while ((elem = [enumerator nextObject]) != nil)
 	    {
-	      problem = [_document _setupService: self
-					    from: elem
-					      in: @"port"];
+	      problem = [self _setupFrom: elem in: _port];
 	      if (problem != nil)
 		{
+		  [self _clean];
 		  [self _setProblem: problem];
 		  return NO;
 		}
@@ -346,43 +385,93 @@
           enumerator = [[binding extensibility] objectEnumerator];
 	  while ((elem = [enumerator nextObject]) != nil)
 	    {
-	      problem = [_document _setupService: self
-					    from: elem
-					      in: @"binding"];
+	      problem = [self _setupFrom: elem in: binding];
 	      if (problem != nil)
 		{
+		  [self _clean];
 		  [self _setProblem: problem];
 		  return NO;
 		}
 	    }
 
-	  /* Now look at operation specific information.
+	  /* Now look at operation specific parameter ordering defined in
+	   * the abstract operation in the portType. 
 	   */
-	  elem = [operation firstChild];
+	  order = [[[operation attributes] objectForKey: @"parameterOrder"]
+	    componentsSeparatedByString: @" "];
+	  if ([order count] > 0)
+	    {
+	      NSMutableArray	*m = [order mutableCopy];
+	      unsigned		c = [m count];
+
+	      while (c-- > 0)
+		{
+		  NSString	*s = [order objectAtIndex: c];
+
+		  if ([_parameters objectForKey: s] == nil)
+		    {
+		      /* Item is not present in parameters dictionary so
+		       * presumably it' an output parameter rather than
+		       * an input parameter ad we can ignore it.
+		       */
+		      [m removeObjectAtIndex: c];
+		    }
+		}
+	      if ([m count] > 0)
+		{
+		  /* Add the ordering information to the parameters dictionary
+		   * so that the coder will be able to use it.
+		   */
+		  [_parameters setObject: m forKey: GWSOrderKey];
+		}
+	      [m release];
+	    }
+
+	  /* Next we can examine the specific operation binding information.
+	   */
+	  elem = [binding operationWithName: _operation create: NO];
+	  elem = [elem firstChild];
 	  while (elem != nil
 	    && [[elem name] isEqualToString: @"input"] == NO
 	    && [[elem name] isEqualToString: @"output"] == NO)
 	    {
-	      problem = [_document _setupService: self
-					    from: elem
-					      in: @"operation"];
+	      problem = [self _setupFrom: elem in: binding];
 	      if (problem != nil)
 		{
+		  [self _clean];
 		  [self _setProblem: problem];
 		  return NO;
 		}
 	      elem = [elem sibling];
+	    }
+          if ([[elem name] isEqualToString: @"input"] == YES)
+	    {
+	      elem = [elem firstChild];
+	      while (elem != nil)
+		{
+		  problem = [self _setupFrom: elem in: binding];
+		  if (problem != nil)
+		    {
+		      [self _clean];
+		      [self _setProblem: problem];
+		      return NO;
+		    }
+		  elem = [elem sibling];
+		}
 	    }
 	}
     }
 
   if (_coder == nil)
     {
+      [self _clean];
       [self _setProblem: @"no coder set  (use -setCoder:)"];
       return NO;
     }
+  [_coder setDebug: [self debug]];
   if (_connectionURL == nil)
     {
+      [self _clean];
       [self _setProblem: @"no URL string set  (use -setURL:)"];
       return NO;
     }
@@ -391,21 +480,17 @@
 
   if (_timer != nil)
     {
+      [self _clean];
       return NO;	// Send already in progress.
     }
 
-  _operation = [operationName retain];
-  _port = [port retain];
-
-  data = [_coder buildRequest: method parameters: parameters order: order];
-  if (data == nil)
+  _request = [_coder buildRequest: method parameters: _parameters order: order];
+  if ([_request retain] == nil)
     {
-      [_operation release];
-      _operation = nil;
-      [_port release];
-      _port = nil;
+      [self _clean];
       return NO;
     }
+  
 
   _timer = [NSTimer scheduledTimerWithTimeInterval: seconds
 					    target: self
@@ -423,7 +508,7 @@
     {
       [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
     }
-  [request setHTTPBody: data];
+  [request setHTTPBody: _request];
 
   _connection = [NSURLConnection alloc];
   _connection = [_connection initWithRequest: request delegate: self];
@@ -451,6 +536,11 @@
 - (void) setCompact: (BOOL)flag
 {
   _compact = flag;
+}
+
+- (void) setDebug: (BOOL)flag
+{
+  _debug = flag;
 }
 
 - (void) setDelegate: (id)aDelegate
@@ -643,15 +733,37 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 						     count: 1];
     }
   NS_ENDHANDLER
-  if ([_response length] > 0)
+  if ([self debug] == YES)
     {
-      [_result setObject: _response forKey: GWSResponseDataKey];
+      if (_request != nil)
+	{
+	  [_result setObject: _request forKey: GWSRequestDataKey];
+	}
+      if (_response != nil)
+	{
+	  [_result setObject: _response forKey: GWSResponseDataKey];
+	}
     }
   [_result retain];
 
   [_timer invalidate];
   _timer = nil;
   [self _completed];
+}
+
+- (NSString*) webServiceOperation
+{
+  return _operation;
+}
+
+- (NSMutableDictionary*) webServiceParameters
+{
+  return _parameters;
+}
+
+- (GWSPort*) webServicePort
+{
+  return _port;
 }
 
 @end

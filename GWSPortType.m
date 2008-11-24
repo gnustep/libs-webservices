@@ -105,9 +105,20 @@
   return _name;
 }
 
-- (NSMutableDictionary*) operations
+- (GWSElement*) operationWithName: (NSString*)name create: (BOOL)shouldCreate
 {
-  return _operations;
+  return [_operations objectForKey: name];
+  // FIXME ... handle creation.
+}
+
+- (NSDictionary*) operations
+{
+  return [[_operations copy] autorelease];
+}
+
+- (void) removeOperationNamed: (NSString*)name
+{
+  [_operations removeObjectForKey: name];
 }
 
 - (void) setDocumentation: (GWSElement*)documentation

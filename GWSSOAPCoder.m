@@ -34,6 +34,10 @@ NSString * const GWSSOAPBodyEncodingStyleRPC
   = @"GWSSOAPBodyEncodingStyleRPC";
 NSString * const GWSSOAPBodyEncodingStyleWrapped
   = @"GWSSOAPBodyEncodingStyleWrapped";
+NSString * const GWSSOAPBodyUseKey
+  = @"GWSSOAPBodyUseKey";
+NSString * const GWSSOAPHeaderUseKey
+  = @"GWSSOAPHeaderUseKey";
 NSString * const GWSSOAPMethodNamespaceURIKey
   = @"GWSSOAPMethodNamespaceURIKey";
 NSString * const GWSSOAPMethodNamespaceNameKey
@@ -62,7 +66,9 @@ NSString * const GWSSOAPMessageHeadersKey
   GWSElement            *container;
   NSString              *prefix;
   NSString              *qualified;
+  NSString		*use;
   NSMutableString       *ms;
+  id			o;
   unsigned	        c;
   unsigned	        i;
 
@@ -138,8 +144,24 @@ NSString * const GWSSOAPMessageHeadersKey
       prefix = [prefix substringToIndex: [prefix rangeOfString: @":"].location];
     }
 
-  header = [parameters objectForKey: GWSSOAPMessageHeadersKey];
-  if ((id)header == [NSNull null])
+  /* See if we have a key in the parameters to specify how the header
+   * should be encoded.
+   */
+  use = [parameters objectForKey: GWSSOAPHeaderUseKey];
+  if ([use isEqualToString: @"literal"] == YES)
+    {
+      [self setUseLiteral: YES];
+    }
+  else if ([use isEqualToString: @"encoded"] == YES)
+    {
+      [self setUseLiteral: NO];
+    }
+
+  /* Now look for a value listing the headers to be encoded.
+   * If there is no value, we omit the SOAP header entirely.
+   */
+  o = [parameters objectForKey: GWSSOAPMessageHeadersKey];
+  if (o != nil)
     {
       qualified = @"Header";
       if (prefix != nil)
@@ -152,7 +174,55 @@ NSString * const GWSSOAPMessageHeadersKey
                                      attributes: nil];
       [envelope addChild: header];
       [header release];
+      if ([o isKindOfClass: [NSArray class]] && [o count] > 0)
+	{
+	  NSArray	*a = (NSArray*)o;
+
+          c = [a count];
+	  o = [a objectAtIndex: 0];
+	  if ([o isKindOfClass: [GWSElement class]] == YES)
+	    {
+	      /* The array contains XML nodes ... just add them to the
+	       * header we are going to write.
+	       */
+	      for (i = 0; i < c; i++)
+		{
+		  [header addChild: [a objectAtIndex: i]];
+		}
+	    }
+	  else
+	    {
+	      /* The array contains the names of values in the parameters
+	       * dictionary which actually need to be sent in the header.
+	       */
+	      for (i = 0; i < c; i++)
+		{
+		  NSString          *k = [a objectAtIndex: i];
+		  id                v = [parameters objectForKey: k];
+		  GWSElement        *e;
+
+		  if (v == nil)
+		    {
+		      [NSException raise: NSInvalidArgumentException
+				  format: @"Header '%@' missing", k];
+		    }
+		  e = [[self delegate] encodeWithCoder: self
+						  item: v
+						 named: k
+						 index: NSNotFound];
+		  if (e == nil)
+		    {
+		      e = [self _elementForObject: v named: k];
+		    }
+		  [header addChild: e];
+		}
+	    }
+	}
     }
+
+  /* Now we give the delegate a chance to entirely replace the header
+   * with an element of its own.
+   */
   if ([self delegate] != nil)
     {
       GWSElement        *elem;
@@ -164,6 +234,19 @@ NSString * const GWSSOAPMessageHeadersKey
           header = elem;
           [envelope addChild: header];
         }
+    }
+
+  /* See if we have a key in the parameters to specify how the body
+   * should be encoded.
+   */
+  use = [parameters objectForKey: GWSSOAPBodyUseKey];
+  if ([use isEqualToString: @"literal"] == YES)
+    {
+      [self setUseLiteral: YES];
+    }
+  else if ([use isEqualToString: @"encoded"] == YES)
+    {
+      [self setUseLiteral: NO];
     }
 
   qualified = @"Body";
@@ -275,15 +358,16 @@ NSString * const GWSSOAPMessageHeadersKey
 	  qualified = @"encodingStyle";
 	  if (prefix != nil)
 	    {
-	      qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
+	      qualified = [NSString stringWithFormat: @"%@:%@",
+		prefix, qualified];
 	    }
 	  [container setAttribute: @"http://schemas.xmlsoap.org/soap/encoding/"
 			   forKey: qualified];
 
 	  if (nsURI != nil && nsName == nil)
 	    {
-	      /* We have a namespace but no name ... make it the default namespace
-	       * for the body.
+	      /* We have a namespace but no name ... make it the default
+	       * namespace for the body.
 	       */
 	      [container setNamespace: nsURI forKey: @""];
 	    }

@@ -63,9 +63,19 @@ extern "C" {
  */
 - (NSString*) name;
 
+/** Return (and if required create) information about a particular operation
+ * (which must already be defined for the portType used by this binding.
+ */ 
+- (GWSElement*) operationWithName: (NSString*)name
+			   create: (BOOL)shouldCreate;
+
 /** Returns the dictionary of operations.
  */
-- (NSMutableDictionary*) operations;
+- (NSDictionary*) operations;
+
+/** Remoive named operation.
+ */
+- (void) removeOperationNamed: (NSString*)name;
 
 /** Set the documentation for the receiver.
  */

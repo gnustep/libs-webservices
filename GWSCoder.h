@@ -63,6 +63,7 @@ extern "C" {
   NSMutableDictionary   *_nmap;         // Mapping namespaces.
   NSTimeZone	        *_tz;           // Default timezone.
   BOOL		        _compact;
+  BOOL			_debug;		// YES if debug is enabled.
   BOOL			_fault;		// YES while building a fault.
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
@@ -79,6 +80,12 @@ extern "C" {
  * Return the value set by a prior call to -setCompact: (or NO ... the default).
  */
 - (BOOL) compact;
+
+/** Returns YES if debug is enabled, NO otherwise.  The default value of this
+ * is obtained from the GWSDebug user default (or NO if no default
+ * is set), but may also be adjusted by a call to the -setDebug: method.
+ */
+- (BOOL) debug;
 
 /** Decode the supplied base64 encoded data and return the result.
  */
@@ -124,6 +131,11 @@ extern "C" {
  * slow/low bandwidth connections), but sacrifices readability.
  */
 - (void) setCompact: (BOOL)flag;
+
+/** Specifies whether debug information is enabled.  See -debug for more
+ * information.
+ */
+- (void) setDebug: (BOOL)flag;
 
 /** Decrease the indentation level used while creating an XML document.
  * creating an XML document.
@@ -272,8 +284,7 @@ extern "C" {
  * instance containing the XML representing the encoded value.<br />
  * The name is the key used to identify the item in the parameters
  * dictionary and index is the position of the item in the ordering
- * array (or NSNotFound if the item is not part of the parameters
- * dictionary).<br />
+ * array (or NSNotFound).<br />
  * The delegate may use the [GWSElement-setLiteralValue:] method
  * to create and return an element which will appear as arbitrary
  * text in the output document.<br />
