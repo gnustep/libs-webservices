@@ -485,12 +485,16 @@
     }
 
   _request = [_coder buildRequest: method parameters: _parameters order: order];
-  if ([_request retain] == nil)
+  if (_request == nil)
     {
       [self _clean];
       return NO;
     }
-  
+  if (_delegate != nil)
+    {
+      _request = [_delegate webService: self willSendRequest: _request];
+    }
+  [_request retain];
 
   _timer = [NSTimer scheduledTimerWithTimeInterval: seconds
 					    target: self
@@ -722,6 +726,17 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
     }
   NS_DURING
     {
+      if (_delegate != nil)
+	{
+	  NSData	*data;
+
+	  data = [_delegate webService: self willHandleResponse: _response];
+	  if (data != _response)
+	    {
+	      [_response release];
+	      _response = [data retain];
+	    }
+	}
       _result = [_coder parseMessage: _response];
     }
   NS_HANDLER
@@ -771,5 +786,13 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 @implementation	GWSService (Delegate)
 - (void) completedRPC: (GWSService*)sender
 {
+}
+- (NSData*) webService: (GWSService*)sender willSendRequest: (NSData*)data
+{
+  return data;
+}
+- (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data
+{
+  return data;
 }
 @end

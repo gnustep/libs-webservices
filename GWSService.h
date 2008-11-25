@@ -308,6 +308,22 @@ extern "C" {
  * the method call from the sender.
  */
 - (void) completedRPC: (GWSService*)sender;
+
+/** <override-dummy />
+ * Called by the sender when it is about to send an encoded request to a
+ * remote server.  The delegate may return a different data item to be
+ * sent and/or take this opportunity to change the service settings
+ * (such as the URL to send to) before the data is actualy sent.
+ */
+- (NSData*) webService: (GWSService*)sender willSendRequest: (NSData*)data;
+
+/** <override-dummy />
+ * Called by the sender when it is about to handle response data from a
+ * remote server.  The delegate may return a different data item to be
+ * decoded and/or take this opportunity to change the service settings
+ * before the response is handled.
+ */
+- (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data;
 @end
 
 
