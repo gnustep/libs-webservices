@@ -63,6 +63,7 @@ main()
     nil] forKey: @"dict1"];
   [order addObject: @"dict1"];
   service = [document serviceWithName: @"SMSService" create: NO];
+  [service setDebug: YES];
   result = [service invokeMethod: @"sendSMS"
                       parameters: params
                            order: order
@@ -212,6 +213,7 @@ main()
   fprintf(stdout, "Expect this to produce an error ... it tries a request"
     " on the local web server:\n");
   service = [GWSService new]; 
+  [service setDebug: YES];
   [service setURL: @"http://localhost/"];
   [service setCoder: coder];
   result = [service invokeMethod: method

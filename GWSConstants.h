@@ -38,20 +38,20 @@ extern "C" {
  * dictionary, the value for this key (and NSError, NSException, or NSString)
  * will describe the nature of the problem.
  */
-NSString * const GWSErrorKey;
+extern NSString * const GWSErrorKey;
 
 /** Key for a fault dictionary returned in a response dictionary.<br />
  * The value for this key is nil unless a wsdl <em>fault</em>
  * was decoded into the dictionary.
  */
-NSString * const GWSFaultKey;
+extern NSString * const GWSFaultKey;
 
 /** Key for the method name in a request dictionary.<br />
  * The value of this key is nil unless the dictionary was the result of
  * decoding a request, in which case it is the name of the method/operation
  * requested.
  */
-NSString * const GWSMethodKey;
+extern NSString * const GWSMethodKey;
 
 /** Key for an ordering array in a request or response dictionary.<br />
  * If present in a decoded object, the value of this key is an
@@ -60,76 +60,76 @@ NSString * const GWSMethodKey;
  * specifying the order in which the members of the dictionary are to be
  * encoded.
  */
-NSString * const GWSOrderKey;
+extern NSString * const GWSOrderKey;
 
 /** Key for a parameters dictionary in a request or response dictionary.<br />
  * If present, the value of this key is an NSMutableDictionary containing
  * the decoded parameters.
  */
-NSString * const GWSParametersKey;
+extern NSString * const GWSParametersKey;
 
 /** Key for the data sent to a remote system to perform a GWSService RPC
  * operation.<br />
  * This is present if debug was enabled for the service,
  * but is omitted otherwise.
  */
-NSString * const GWSRequestDataKey;
+extern NSString * const GWSRequestDataKey;
 
 /** Key for the data from a remote system returned in a result
  * of a GWSService RPC made to a web services server.<br />
  * This is present if and debug was enabled
  * for the service, but is omitted otherwise.
  */
-NSString * const GWSResponseDataKey;
+extern NSString * const GWSResponseDataKey;
 
 
 /** Key for the encoding style to be used for the SOAP body.
  */
-NSString * const GWSSOAPBodyEncodingStyleKey;
+extern NSString * const GWSSOAPBodyEncodingStyleKey;
 
 /** SOAP body encoded in document style.  Setting this value for the
  * GWSSOAPBodyEncodingStyleKey in the parameters of a message being
  * encoded has the same effect as calling [GWSSOAPCoder-setOperationStyle:]
  * with an argument of GWSSOAPBodyEncodingStyleDocument.
  */
-NSString * const GWSSOAPBodyEncodingStyleDocument;
+extern NSString * const GWSSOAPBodyEncodingStyleDocument;
 
 /** SOAP body encoded in document style.  Setting this value for the
  * GWSSOAPBodyEncodingStyleKey in the parameters of a message being
  * encoded has the same effect as calling [GWSSOAPCoder-setOperationStyle:]
  * with an argument of GWSSOAPBodyEncodingStyleRPC.
  */
-NSString * const GWSSOAPBodyEncodingStyleRPC;
+extern NSString * const GWSSOAPBodyEncodingStyleRPC;
 
 /** SOAP body encoded in wrapped style.  Setting this value for the
  * GWSSOAPBodyEncodingStyleKey in the parameters of a message being
  * encoded has the same effect as calling [GWSSOAPCoder-setOperationStyle:]
  * with an argument of GWSSOAPBodyEncodingStyleWrapped.
  */
-NSString * const GWSSOAPBodyEncodingStyleWrapped;
+extern NSString * const GWSSOAPBodyEncodingStyleWrapped;
 
 /** Key for the 'use' style to be used for the SOAP body.<br />
  * The value of this key may be 'literal' or 'encoded'.
  */
-NSString * const GWSSOAPBodyUseKey;
+extern NSString * const GWSSOAPBodyUseKey;
 
 /** Key for the 'use' style to be used for the SOAP header.<br />
  * The value of this key may be 'literal' or 'encoded'.
  */
-NSString * const GWSSOAPHeaderUseKey;
+extern NSString * const GWSSOAPHeaderUseKey;
 
 /** Key for the URI to be used as the namespace for the method.  If the
  * GWSSOAPMethodNamespaceNameKey is not used, this namespace URI is set
  * as the default namespace for the method.
  */
-NSString * const GWSSOAPMethodNamespaceURIKey;
+extern NSString * const GWSSOAPMethodNamespaceURIKey;
 
 /** Key for the name to be used for the namespace of the method.<br />
  * If this is set in conjunction with GWSSOAPMethodNamespaceURIKey then
  * the appropriate namespace mapping is set up in the SOAP envelope.
  * In any case this name is used to qualify the method name.
  */
-NSString * const GWSSOAPMethodNamespaceNameKey;
+extern NSString * const GWSSOAPMethodNamespaceNameKey;
 
 /** Key for the header element for a soap message.  An array of headers for
  * for the message may be provided by setting a value for this key
@@ -144,7 +144,7 @@ NSString * const GWSSOAPMethodNamespaceNameKey;
  * can then modify.<br />
  * If no value is set for this key, the header element is omitted.
  */
-NSString * const GWSSOAPMessageHeadersKey;
+extern NSString * const GWSSOAPMessageHeadersKey;
 
 #if	defined(__cplusplus)
 }
