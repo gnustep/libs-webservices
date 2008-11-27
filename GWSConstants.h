@@ -131,15 +131,14 @@ extern NSString * const GWSSOAPMethodNamespaceURIKey;
  */
 extern NSString * const GWSSOAPMethodNamespaceNameKey;
 
-/** Key for the header element for a soap message.  An array of headers for
+/** Key for the header element for a soap message.<br />
+ * An array of headers (specified as [GWSElement] instances) for
  * for the message may be provided by setting a value for this key
  * in the parameters dictionary.<br />
- * The headers in the array may be instances of the [GWSElement] class to
- * be added directly to the SOAP header, or my be strings naming WSDL
- * message parts to be taken from the parameters dictionary and added to
- * the SOAP header rather than the SOAP body.<br /> 
- * As a special case you may set an instance of [NSNull] rather than
- * an NSArray for this key, in which case the coder
+ * Alternatively, a dictionary of message parts (like the parameters
+ * dictionary itsself) may be specified for the contents of the header.<br />
+ * And finally, you may set an instance of [NSNull] rather than
+ * an array or dictionary for this key, in which case the coder
  * will generate an empty header element which the coder's delegate
  * can then modify.<br />
  * If no value is set for this key, the header element is omitted.

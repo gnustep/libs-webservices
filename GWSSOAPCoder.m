@@ -179,43 +179,54 @@ NSString * const GWSSOAPMessageHeadersKey
 	  NSArray	*a = (NSArray*)o;
 
           c = [a count];
-	  o = [a objectAtIndex: 0];
-	  if ([o isKindOfClass: [GWSElement class]] == YES)
+	  /* The array contains XML nodes ... just add them to the
+	   * header we are going to write.
+	   */
+	  for (i = 0; i < c; i++)
 	    {
-	      /* The array contains XML nodes ... just add them to the
-	       * header we are going to write.
-	       */
-	      for (i = 0; i < c; i++)
+	      o = [a objectAtIndex: i];
+	      if ([o isKindOfClass: [GWSElement class]] == NO)
 		{
-		  [header addChild: [a objectAtIndex: i]];
+		  [NSException raise: NSInvalidArgumentException
+			      format: @"Header element %d wrong class: '%@'",
+		    i, NSStringFromClass([o class])];
 		}
+	      [header addChild: o];
 	    }
-	  else
-	    {
-	      /* The array contains the names of values in the parameters
-	       * dictionary which actually need to be sent in the header.
-	       */
-	      for (i = 0; i < c; i++)
-		{
-		  NSString          *k = [a objectAtIndex: i];
-		  id                v = [parameters objectForKey: k];
-		  GWSElement        *e;
+	}
+      else if ([o isKindOfClass: [NSDictionary class]] && [o count] > 0)
+	{
+	  NSDictionary	*d = (NSDictionary*)o;
+	  NSArray	*a = [o objectForKey: GWSOrderKey];
 
-		  if (v == nil)
-		    {
-		      [NSException raise: NSInvalidArgumentException
-				  format: @"Header '%@' missing", k];
-		    }
-		  e = [[self delegate] encodeWithCoder: self
-						  item: v
-						 named: k
-						 index: NSNotFound];
-		  if (e == nil)
-		    {
-		      e = [self _elementForObject: v named: k];
-		    }
-		  [header addChild: e];
+	  if (a == nil)
+	    {
+	      a = [d allKeys];
+	    }
+          c = [a count];
+	
+	  /* The dictionary contains header elements by name.
+	   */
+	  for (i = 0; i < c; i++)
+	    {
+	      NSString          *k = [a objectAtIndex: i];
+	      id                v = [d objectForKey: k];
+	      GWSElement        *e;
+
+	      if (v == nil)
+		{
+		  [NSException raise: NSInvalidArgumentException
+			      format: @"Header '%@' missing", k];
 		}
+	      e = [[self delegate] encodeWithCoder: self
+					      item: v
+					     named: k
+					     index: NSNotFound];
+	      if (e == nil)
+		{
+		  e = [self _elementForObject: v named: k];
+		}
+	      [header addChild: e];
 	    }
 	}
     }

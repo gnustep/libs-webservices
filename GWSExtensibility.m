@@ -341,86 +341,8 @@
 	    }
 	  else if ([name isEqualToString: @"header"])
 	    {
-	      NSString	*part = [a objectForKey: @"part"];
-	      NSString	*messageName = [a objectForKey: @"message"];
-
 	      [[service webServiceParameters] setObject: use
 		forKey: GWSSOAPHeaderUseKey];
-
-	      /* If there is no 'message' attribute, we must be using the
-	       * message defined by the abstract portType  for this operation.
-	       */
-	      if (part != nil && messageName == nil)
-		{
-		  NSString	*name;
-		  GWSElement	*elem;
-
-		  name = [service webServiceOperation];
-		  elem = [[(GWSBinding*)section type]
-		    operationWithName: name create: NO];
-		  elem = [elem firstChild];
-		  while (elem != nil && [[elem name] isEqual: @"input"] == NO)
-		    {
-		      elem = [elem sibling];
-		    }
-		  if (elem != nil)
-		    {
-		      messageName
-			= [[elem attributes] objectForKey: @"message"];
-		    }
-		}
-	      if (part && messageName)
-		{
-		  GWSMessage	*message;
-
-		  message = [document messageWithName: messageName create: NO];
-		  if (message == nil)
-		    {
-		      NSLog(@"Unable to find message '%@'", messageName);
-		    }
-		  else
-		    {
-		      NSString	*pName;
-
-		      pName = [message elementOfPartNamed: part];
-		      if (pName == nil)
-			{
-			  NSLog(@"Unable to find part '%@' in message '%@'",
-			    part, messageName);
-			}
-		      else
-			{
-			  NSMutableDictionary	*m;
-			  id			o;
-
-			  m = [service webServiceParameters];
-			  o = [m objectForKey: pName];
-			  if (o == nil)
-			    {
-			      NSLog(@"Unable to find parameter '%@' for part"
-				@" '%@' in message '%@'",
-				pName, part, messageName);
-			    }
-			  else
-			    {
-			      o = [m objectForKey: GWSSOAPMessageHeadersKey];
-
-			      /* At last, we add the parameter name to the
-			       * array of header values to be encoded.
-			       */
-			      if ([o isKindOfClass: [NSMutableArray class]]
-				== NO)
-				{
-				  o = [NSMutableArray new];
-				  [m setObject: o
-					forKey: GWSSOAPMessageHeadersKey];
-				  [o release];
-				}
-			      [o addObject: pName];
-			    }
-			}
-		    }
-		}
 	    }
 	}
     }

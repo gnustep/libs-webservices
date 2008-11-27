@@ -361,7 +361,8 @@ extern "C" {
  * <p>Dictionaries passed to/from the SOAP coder may contain special keys
  * with the <code>GWSSOAP</code> prefix which control the coding rather
  * than specifying values to be coded (this is in addition to the special
- * <code>GWSOrderKey</code> used for ordering fields in a complex type).<br />
+ * <ref type="constant" id="GWSOrderKey"> * GWSOrderKey</ref>
+ * used for ordering fields in a complex type).<br />
  * See the section on constants for a description of what these keys are
  * used for.
  * </p>
@@ -433,7 +434,7 @@ extern "C" {
 - (GWSElement*) coder: (GWSSOAPCoder*)coder willDecode: (GWSElement*)element;
 
 /** This method is used to inform the delegate of the proposed
- * GWSElement instance used to encode SOAP Envelope, Header, Body, Fault
+ * [GWSElement] instance used to encode SOAP Envelope, Header, Body, Fault
  * or method elements.<br />
  * The proposed instance will not have any children at the point
  * where this method is called (they are added later in the
@@ -445,7 +446,8 @@ extern "C" {
  * NB. A Fault or Body will obviously only be provided where the message
  * contain such an element, and the Header will only be provided where
  * the message has been told to contain headers by use of the
- * GWSSOAPMessageHeadersKey in the parameters dictionary.
+ * <ref type="constant" id="GWSSOAPMessageHeadersKey">
+ * GWSSOAPMessageHeadersKey</ref> in the parameters dictionary.
  */
 - (GWSElement*) coder: (GWSSOAPCoder*)coder willEncode: (GWSElement*)element;
 @end
