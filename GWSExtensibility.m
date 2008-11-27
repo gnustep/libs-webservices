@@ -329,7 +329,7 @@
 	  if ([name isEqualToString: @"body"])
 	    {
 	      NSString			*namespace;
-	      NSMutableDictionary	*p;
+	      NSMutableDictionary	*p = [service webServiceParameters];
 
 	      [p setObject: use forKey: GWSSOAPBodyUseKey];
 
@@ -352,7 +352,7 @@
 	       */
 	      if (part != nil && messageName == nil)
 		{
-		  NSString		*name;
+		  NSString	*name;
 		  GWSElement	*elem;
 
 		  name = [service webServiceOperation];
