@@ -66,6 +66,7 @@
     {
       GWSElement        *elem;
 
+      _SOAPAction = @"";
       _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
       _name = [name copy];
       _document = document;
