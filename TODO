@@ -1,21 +1,19 @@
 Completely implement parsing of a WSDL document into a GWSDocument
-and related objects.
+and related objects (this is pretty close now).
 
-Implement generation of a WSDL document from a GWSDocument
+Add binding support so we can do the whole SOAP thing automatically
+over http, https etc (done, but needs more testing etc).
 
-Implement parsing of schema documents for SOAP type definitions.
+Implement generation of a WSDL document from a GWSDocument (actually, this works but could do with improving).
+
+Implement parsing of schema documents for SOAP type definitions (critical).
+
+Apply SOAP type definition information derived from WSDL/schemas to
+encoding/decoding SOAP messages in the 'literal' style.
 
 Add support for more of the basic xsi:... types.
 
 Improve support for handling arrays.
-
-Apply SOAP type definition information derived from WSDL/schemas to
-encoding/decoding SOAP messages in the 'literal' style. 
-
-Add support for encryption and signing of requests.
-
-Add binding support so we can do the whole SOAP thing automatically
-over http, https etc.
 
 Examples
 
@@ -29,4 +27,6 @@ allow graphical creation of a service definition (ie create methods and
 define the arguments and result of the method etc).  This should then allow
 a WSDL document describing the service to be renerated, and stub code for
 the server/clint to be produced.
+
+Add support for encryption and signing of requests.
 
