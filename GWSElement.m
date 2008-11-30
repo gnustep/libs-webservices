@@ -68,9 +68,14 @@
     }
 }
 
-- (NSMutableDictionary*) attributes
+- (NSString*) attributeForName: (NSString*)name
 {
-  return _attributes;
+  return [_attributes objectForKey: name];
+}
+
+- (NSDictionary*) attributes
+{
+  return [[_attributes copy] autorelease];
 }
 
 - (GWSElement*) childAtIndex: (unsigned)index
@@ -306,14 +311,41 @@
   return _namespace;
 }
 
-- (NSMutableDictionary*) namespaces
+- (NSString*) namespaceForPrefix: (NSString*)prefix
 {
-  return _namespaces;
+  NSString	*ns;
+
+  if (prefix == nil)
+    {
+      prefix = @"";
+    }
+  ns = [_namespaces objectForKey: prefix];
+  if (ns == nil)
+    {
+      ns = [_parent namespaceForPrefix: prefix];
+    }
+  return ns;
+}
+
+- (NSDictionary*) namespaces
+{
+  return [[_namespaces copy] autorelease];
 }
 
 - (GWSElement*) parent
 {
   return _parent;
+}
+
+- (NSString*) prefix
+{
+  NSRange	r = [_qualified rangeOfString: @":"];
+
+  if (r.length == 0)
+    {
+      return nil;
+    }
+  return [_qualified substringToIndex: r.location];
 }
 
 - (NSString*) qualified
@@ -372,8 +404,20 @@
     }
 }
 
+- (void) setName: (NSString*)name
+{
+  NSAssert([_name length] > 0, NSInvalidArgumentException);
+  name = [name copy];
+  [_name release];
+  _name = name;
+}
+
 - (void) setNamespace: (NSString*)uri forKey: (NSString*)key
 {
+  if (key == nil)
+    {
+      key = @"";
+    }
   if (uri == nil)
     {
       if (_namespaces != nil)
@@ -393,6 +437,62 @@
           _namespaces = [[NSMutableDictionary alloc] initWithCapacity: 1];
         }
       [_namespaces setObject: uri forKey: key];
+    }
+}
+
+- (void) setPrefix: (NSString*)prefix
+{
+  NSString	*ns;
+
+  if (prefix == nil)
+    {
+      prefix = @"";
+    }
+  ns = [_parent namespaceForPrefix: prefix];
+  if (ns == nil)
+    {
+      [NSException raise: NSInvalidArgumentException
+		  format: @"No namespace found for prefix '%@'", prefix];
+    }
+  else
+    {
+      NSRange	r = [_qualified rangeOfString: @":"];
+
+      if ([prefix length] == 0)
+	{
+	  if (r.length > 0)
+	    {
+	      NSString	*tmp = [_qualified substringFromIndex: r.location];
+
+	      tmp = [prefix stringByAppendingString: tmp];
+	      [_qualified release];
+	      _qualified = [tmp retain];
+	      [_namespace release];
+	      _namespace = [ns retain];
+	    }
+	}
+      else
+	{
+	  if (r.length != [prefix length]
+	    || [prefix isEqual: [self prefix]] == NO)
+	    {
+	      NSString	*tmp;
+
+	      if (r.length > 0)
+		{
+		  tmp = [_qualified substringFromIndex: NSMaxRange(r)];
+		}
+	      else
+		{
+		  tmp = _qualified;
+		}
+	      tmp = [prefix stringByAppendingFormat: @":%@", tmp];
+	      [_qualified release];
+	      _qualified = [tmp retain];
+	      [_namespace release];
+	      _namespace = [ns retain];
+	    }
+	}
     }
 }
 

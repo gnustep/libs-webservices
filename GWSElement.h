@@ -76,10 +76,15 @@ extern "C" {
  */
 - (void) addChild: (GWSElement*)child;
 
+/** Returns the value of the named attribute, or nil if no such attribute
+ * has been specified in the receiver.
+ */
+- (NSString*) attributeForName: (NSString*)name;
+
 /** Returns the attributes of the receiver, or nil if no attributes
  * dictionary exists.
  */
-- (NSMutableDictionary*) attributes;
+- (NSDictionary*) attributes;
 
 /** Returns the child of the receiver at the specified index in the list
  * of children. Raises an exception if the index does not lie in the list.
@@ -167,24 +172,41 @@ extern "C" {
  */
 - (id) mutableCopyWithZone: (NSZone*)aZone;
 
-/** Returns the name of the receiver (as set when it was initialised).
+/** Returns the name of the receiver (as set when it was initialised,
+ * or by using the -setName: method).
  */
 - (NSString*) name;
 
-/** Returns the namespace URI of the receiver (as set when it was initialised).
+/** Returns the namespace URI of the receiver (as set when it was
+ * initialised or changed using setPrefix:).
  */
 - (NSString*) namespace;
 
+/** Returns the namespace URL for the specified prefix buy looking at
+ * the namespace declarations in the receiver and its parents.  If the
+ * prefix is empty, this returns the default namespace URL.<br />
+ * returns nil if no matching namespace is found.
+ */
+- (NSString*) namespaceForPrefix: (NSString*)prefix;
+
 /** Returns the namespaces mappings introduced by this element.
  */
-- (NSMutableDictionary*) namespaces;
+- (NSDictionary*) namespaces;
 
 /** Returns the parent of this element.
  */
 - (GWSElement*) parent;
 
+/** Returns the prefix identifying the namespace of the receiver.<br />
+ * The -qualified name of the receiver consists of the -prefix and
+ * the -name separated by a single colon.<br />* 
+ * Returns nil if the receiver has no prefix.
+ */
+- (NSString*) prefix;
+
 /** Returns the fully qualified name of the receiver
- * (as set when it was initialised).
+ * (as set when it was initialised, or using the -setName: and -setPrefix:
+ * methods).
  */
 - (NSString*) qualified;
 
@@ -207,9 +229,24 @@ extern "C" {
  */
 - (void) setLiteralValue: (NSString*)xml;
 
-/** Sets the namespace URI for the specified prefix key.
+/** Sets the name of the receiver to the specified value.
+ */
+- (void) setName: (NSString*)name;
+
+/** Sets the namespace URI for the specified prefix key.<br />
+ * If the uri is nil, this removes any existing mapping for the key.<br />
+ * If the key is empty or nil, this sets the default namespace.
  */
 - (void) setNamespace: (NSString*)uri forKey: (NSString*)key;
+
+/** Sets the namespace prefix of the receiver to the specified value,
+ * which must be empty or a namespace prefix declared in one of the
+ * parent elements of the receiver.<br />
+ * Changing the prefix also changes the namespace of the receiver ...
+ * setting an empty/nil prefix causes the receiver to use the default
+ * namespace of a parent element.
+ */
+- (void) setPrefix: (NSString*)prefix;
 
 /**
  * Returns the next sibling of the receiver.  In conjunction with the

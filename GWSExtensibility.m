@@ -124,7 +124,7 @@
 		  /* This is in binding/operation/input/header, so the name
 		   * of our parent's parent is the operation name.
 		   */
-		  name = [[[elem parent] parent] name];
+		  name = [[[node parent] parent] name];
 		  elem = [[(GWSBinding*)section type]
 		    operationWithName: name create: NO];
 		  if (elem == nil)
