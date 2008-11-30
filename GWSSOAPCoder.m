@@ -38,12 +38,16 @@ NSString * const GWSSOAPBodyUseKey
   = @"GWSSOAPBodyUseKey";
 NSString * const GWSSOAPHeaderUseKey
   = @"GWSSOAPHeaderUseKey";
-NSString * const GWSSOAPMethodNamespaceURIKey
-  = @"GWSSOAPMethodNamespaceURIKey";
-NSString * const GWSSOAPMethodNamespaceNameKey
-  = @"GWSSOAPMethodNamespaceNameKey";
+NSString * const GWSSOAPNamespaceURIKey
+  = @"GWSSOAPNamespaceURIKey";
+NSString * const GWSSOAPNamespaceNameKey
+  = @"GWSSOAPNamespaceNameKey";
 NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
+NSString * const GWSSOAPUseEncoded
+  = @"encoded";
+NSString * const GWSSOAPUseLiteral
+  = @"literal";
 
 @interface      GWSSOAPCoder (Private)
 
@@ -114,20 +118,20 @@ NSString * const GWSSOAPMessageHeadersKey
                                    attributes: nil];
   [envelope autorelease];
   [envelope setNamespace: @"http://schemas.xmlsoap.org/soap/envelope/"
-              forKey: @"soapenv"];
+               forPrefix: @"soapenv"];
   [envelope setNamespace: @"http://www.w3.org/2001/XMLSchema"
-              forKey: @"xsd"];
+               forPrefix: @"xsd"];
   [envelope setNamespace: @"http://www.w3.org/2001/XMLSchema-instance"
-              forKey: @"xsi"];
+               forPrefix: @"xsi"];
 
   /* Check the method namespace ... if we have a URI and a name then we
    * want to specify the namespace in the envelope.
    */
-  nsName = [parameters objectForKey: GWSSOAPMethodNamespaceNameKey];
-  nsURI = [parameters objectForKey: GWSSOAPMethodNamespaceURIKey];
+  nsName = [parameters objectForKey: GWSSOAPNamespaceNameKey];
+  nsURI = [parameters objectForKey: GWSSOAPNamespaceURIKey];
   if (_style == GWSSOAPBodyEncodingStyleRPC && nsName != nil && nsURI != nil)
     {
-      [envelope setNamespace: nsURI forKey: nsName];
+      [envelope setNamespace: nsURI forPrefix: nsName];
     }
 
   if ([self delegate] != nil)
@@ -148,11 +152,11 @@ NSString * const GWSSOAPMessageHeadersKey
    * should be encoded.
    */
   use = [parameters objectForKey: GWSSOAPHeaderUseKey];
-  if ([use isEqualToString: @"literal"] == YES)
+  if ([use isEqualToString: GWSSOAPUseLiteral] == YES)
     {
       [self setUseLiteral: YES];
     }
-  else if ([use isEqualToString: @"encoded"] == YES)
+  else if ([use isEqualToString: GWSSOAPUseEncoded] == YES)
     {
       [self setUseLiteral: NO];
     }
@@ -161,7 +165,11 @@ NSString * const GWSSOAPMessageHeadersKey
    * If there is no value, we omit the SOAP header entirely.
    */
   o = [parameters objectForKey: GWSSOAPMessageHeadersKey];
-  if (o != nil)
+  if (o == nil)
+    {
+      header = nil;
+    }
+  else
     {
       qualified = @"Header";
       if (prefix != nil)
@@ -223,7 +231,7 @@ NSString * const GWSSOAPMessageHeadersKey
     }
 
   /* Now we give the delegate a chance to entirely replace the header
-   * with an element of its own.
+   * (which may be nil) with an element of its own.
    */
   if ([self delegate] != nil)
     {
@@ -242,11 +250,11 @@ NSString * const GWSSOAPMessageHeadersKey
    * should be encoded.
    */
   use = [parameters objectForKey: GWSSOAPBodyUseKey];
-  if ([use isEqualToString: @"literal"] == YES)
+  if ([use isEqualToString: GWSSOAPUseLiteral] == YES)
     {
       [self setUseLiteral: YES];
     }
-  else if ([use isEqualToString: @"encoded"] == YES)
+  else if ([use isEqualToString: GWSSOAPUseEncoded] == YES)
     {
       [self setUseLiteral: NO];
     }
@@ -362,7 +370,7 @@ NSString * const GWSSOAPMessageHeadersKey
 	      /* We have a namespace but no name ... make it the default
 	       * namespace for the body.
 	       */
-	      [container setNamespace: nsURI forKey: @""];
+	      [container setNamespace: nsURI forPrefix: @""];
 	    }
 
 	  if ([self delegate] != nil)
@@ -838,8 +846,23 @@ NSString * const GWSSOAPMessageHeadersKey
   if (dictionary == YES)
     {
       NSArray   *order = [o objectForKey: GWSOrderKey];
+      NSString	*namespace = [o objectForKey: GWSSOAPNamespaceURIKey];
+      NSString	*prefix = [o objectForKey: GWSSOAPNamespaceNameKey];
       unsigned  count;
       unsigned  i;
+
+      if (namespace != nil)
+	{
+	  /* We have been told to specify a new namespace ... so do it.
+	   */
+	  [e setNamespace: namespace forPrefix: prefix];
+	}
+      else if (prefix != nil)
+	{
+	  /* We have been given a namespace prefix for this element.
+	   */
+	  [e setPrefix: prefix];
+	}
 
       if ([order count] == 0)
         {
@@ -851,6 +874,13 @@ NSString * const GWSSOAPMessageHeadersKey
           NSString      *k = [order objectAtIndex: i];
           id            v = [o objectForKey: k];
 
+	  if ([k hasPrefix: @"GWSSOAP"] == YES)
+	    {
+	      /* This is not an element to encode.
+	       */
+	      continue;
+	    }
+          v = [o objectForKey: k];
 	  if (v == nil)
 	    {
 	      [NSException raise: NSInvalidArgumentException

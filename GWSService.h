@@ -185,9 +185,9 @@ extern "C" {
 /** Sets the coder to be used by the receiver for encoding to XML and
  * decoding from XML.  If this is not called, the receiver creates a
  * coder as needed.<br />
- * Calling this method removes the receiver as the delegate of its
- * previous coder (if it ewas the delegate of a coder) and sets it
- * as the delegate of the new coder.
+ * Calling this method sets the receiver as the delegate of the coder,
+ * or raises an NSInvalidArgumentException if the coder already had a
+ * different delegate.
  */
 - (void) setCoder: (GWSCoder*)aCoder;
 

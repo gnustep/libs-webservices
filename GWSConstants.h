@@ -118,18 +118,26 @@ extern NSString * const GWSSOAPBodyUseKey;
  */
 extern NSString * const GWSSOAPHeaderUseKey;
 
-/** Key for the URI to be used as the namespace for the method.  If the
- * GWSSOAPMethodNamespaceNameKey is not used, this namespace URI is set
- * as the default namespace for the method.
+/** Constant 'encoded' for body/header use.
  */
-extern NSString * const GWSSOAPMethodNamespaceURIKey;
+extern NSString * const GWSSOAPBodyUseEncoded;
 
-/** Key for the name to be used for the namespace of the method.<br />
- * If this is set in conjunction with GWSSOAPMethodNamespaceURIKey then
- * the appropriate namespace mapping is set up in the SOAP envelope.
- * In any case this name is used to qualify the method name.
+/** Constant 'literal' for body/header use.
  */
-extern NSString * const GWSSOAPMethodNamespaceNameKey;
+extern NSString * const GWSSOAPBodyUseLiteral;
+
+/** Key for the URI to be used as the namespace for the current element.
+ * If the GWSSOAPNamespaceNameKey is not used, this namespace URI is set
+ * as the default namespace for the current element.
+ */
+extern NSString * const GWSSOAPNamespaceURIKey;
+
+/** Key for the name to be used for the namespace of the current element.<br />
+ * If this is set in conjunction with GWSSOAPNamespaceURIKey then
+ * the appropriate namespace mapping is set up in the SOAP envelope.
+ * In any case this name is used to qualify the current element name.
+ */
+extern NSString * const GWSSOAPNamespaceNameKey;
 
 /** Key for the header element for a soap message.<br />
  * An array of headers (specified as [GWSElement] instances) for

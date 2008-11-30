@@ -336,7 +336,7 @@
 	      namespace = [a objectForKey: @"namespace"];
 	      if (namespace != nil)
 		{
-	          [p setObject: namespace forKey: GWSSOAPMethodNamespaceURIKey];
+	          [p setObject: namespace forKey: GWSSOAPNamespaceURIKey];
 		}
 	    }
 	  else if ([name isEqualToString: @"header"])

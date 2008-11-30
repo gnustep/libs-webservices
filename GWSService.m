@@ -527,6 +527,11 @@
     {
       GWSCoder   *old = _coder;
 
+      if ([aCoder delegate] != nil)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"Coder already had a delegate"];
+	}
       _coder = nil;
       if ([old delegate] == (id)self)
 	{

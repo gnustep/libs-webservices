@@ -514,7 +514,7 @@ static NSCharacterSet	*ws = nil;
 
       while ((k = [ne nextObject]) != nil)
         {
-          [e setNamespace: [_nmap objectForKey: k] forKey: k];
+          [e setNamespace: [_nmap objectForKey: k] forPrefix: k];
         }
       [_nmap removeAllObjects];
     }

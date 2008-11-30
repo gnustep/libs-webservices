@@ -428,17 +428,17 @@
   _name = name;
 }
 
-- (void) setNamespace: (NSString*)uri forKey: (NSString*)key
+- (void) setNamespace: (NSString*)uri forPrefix: (NSString*)prefix
 {
-  if (key == nil)
+  if (prefix == nil)
     {
-      key = @"";
+      prefix = @"";
     }
-  if (uri == nil)
+  if ([uri length] == 0)
     {
       if (_namespaces != nil)
         {
-          [_namespaces removeObjectForKey: key];
+          [_namespaces removeObjectForKey: prefix];
           if ([_namespaces count] == 0)
             {
               [_namespaces release];
@@ -452,7 +452,7 @@
         {
           _namespaces = [[NSMutableDictionary alloc] initWithCapacity: 1];
         }
-      [_namespaces setObject: uri forKey: key];
+      [_namespaces setObject: uri forKey: prefix];
     }
 }
 
@@ -464,7 +464,7 @@
     {
       prefix = @"";
     }
-  ns = [_parent namespaceForPrefix: prefix];
+  ns = [self namespaceForPrefix: prefix];
   if (ns == nil)
     {
       [NSException raise: NSInvalidArgumentException
@@ -478,13 +478,13 @@
 	{
 	  if (r.length > 0)
 	    {
-	      NSString	*tmp = [_qualified substringFromIndex: r.location];
+	      NSString	*tmp = [_qualified substringFromIndex: NSMaxRange(r)];
 
-	      tmp = [prefix stringByAppendingString: tmp];
 	      [_qualified release];
 	      _qualified = [tmp retain];
+	      [ns retain];
 	      [_namespace release];
-	      _namespace = [ns retain];
+	      _namespace = ns;
 	    }
 	}
       else
@@ -505,8 +505,9 @@
 	      tmp = [prefix stringByAppendingFormat: @":%@", tmp];
 	      [_qualified release];
 	      _qualified = [tmp retain];
+	      [ns retain];
 	      [_namespace release];
-	      _namespace = [ns retain];
+	      _namespace = ns;
 	    }
 	}
     }

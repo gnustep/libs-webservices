@@ -238,18 +238,18 @@ extern "C" {
  */
 - (void) setName: (NSString*)name;
 
-/** Sets the namespace URI for the specified prefix key.<br />
- * If the uri is nil, this removes any existing mapping for the key.<br />
- * If the key is empty or nil, this sets the default namespace.
+/** Sets the namespace URI for the specified prefix.<br />
+ * If the uri is nil, this removes any existing mapping for the prefix.<br />
+ * If the prefix is empty or nil, this sets the default namespace.
  */
-- (void) setNamespace: (NSString*)uri forKey: (NSString*)key;
+- (void) setNamespace: (NSString*)uri forPrefix: (NSString*)prefix;
 
 /** Sets the namespace prefix of the receiver to the specified value,
- * which must be empty or a namespace prefix declared in one of the
- * parent elements of the receiver.<br />
+ * which must be empty or a namespace prefix declared in the receiver
+ * or one of the its parent elements.<br />
  * Changing the prefix also changes the namespace of the receiver ...
  * setting an empty/nil prefix causes the receiver to use the default
- * namespace of a parent element.
+ * namespace.
  */
 - (void) setPrefix: (NSString*)prefix;
 

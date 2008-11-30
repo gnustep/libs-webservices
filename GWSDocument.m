@@ -778,7 +778,7 @@ static NSLock			*extLock = nil;
     {
       if ([key length] > 0)
         {
-          [tree setNamespace: [_namespaces objectForKey: key] forKey: key];
+          [tree setNamespace: [_namespaces objectForKey: key] forPrefix: key];
         }
     }
 
