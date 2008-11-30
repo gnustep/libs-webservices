@@ -267,33 +267,29 @@ extern "C" {
 /** This method is called to ask the delegate to decode the specified
  * element and return the result.  If the delegate does not wish to
  * decode the element, it should simply return nil.<br />
- * The name and index arguments provide context for decoding, allowing the
+ * The name and ctxt arguments provide context for decoding, allowing the
  * delegate to better understand how the element should be decoded... the
- * index is the position of the item in the ordered list of items being
- * decoded, and the name is the identifier that will be used for the item.<br />
+ * ctxt is the parent element of the item being decoded, and the name is
+ * the identifier that will be used for the item.<br />
  * The default implementation returns nil.
  */
 - (id) decodeWithCoder: (GWSCoder*)coder
                   item: (GWSElement*)item
-                 named: (NSString*)name
-                 index: (unsigned)index;
+                 named: (NSString*)name;
+
 /** This method is called to ask the delegate to encode the specified item
- * with the given name and array index where appropriate.<br />
- * The delegate must return nil if it does not wish to encode the item
- * itsself, otherwise it must return an autoreleased [GWSElement]
- * instance containing the XML representing the encoded value.<br />
- * The name is the key used to identify the item in the parameters
- * dictionary and index is the position of the item in the ordering
- * array (or NSNotFound).<br />
- * The delegate may use the [GWSElement-setLiteralValue:] method
- * to create and return an element which will appear as arbitrary
- * text in the output document.<br />
- * The default implementation returns nil.
+ * with the given name into the parent context.<br />
+ * The delegate must return NO if it does not wish to encode the item
+ * itsself, otherwise it must return YES after adding the new element
+ * as a child of ctxt.<br />
+ * The name is the key used to identify the item in in its current
+ * context (normally the name of the element it will be encoded to).<br />
+ * The default implementation returns NO.
  */
-- (GWSElement*) encodeWithCoder: (GWSCoder*)coder
-                           item: (id)item
-                          named: (NSString*)name
-                          index: (unsigned)index;
+- (BOOL) encodeWithCoder: (GWSCoder*)coder
+		    item: (id)item
+		   named: (NSString*)name
+		      in: (GWSElement*)ctxt;
 
 /** Returns the name of the operation that the receiver is being
  * used to implement.

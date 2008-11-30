@@ -337,6 +337,22 @@
   return _parent;
 }
 
+- (NSMutableArray*) path
+{
+  NSMutableArray	*path;
+
+  if (_parent == nil)
+    {
+      path = [NSMutableArray arrayWithCapacity: 10];
+    }
+  else
+    {
+      path = [_parent path];
+    }
+  [path addObject: [self name]];
+  return path;
+}
+
 - (NSString*) prefix
 {
   NSRange	r = [_qualified rangeOfString: @":"];

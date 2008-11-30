@@ -197,6 +197,11 @@ extern "C" {
  */
 - (GWSElement*) parent;
 
+/** Convenience method to return the names of the elements containing
+ * the receiver (including the name of the receiver as the last item).
+ */
+- (NSMutableArray*) path;
+
 /** Returns the prefix identifying the namespace of the receiver.<br />
  * The -qualified name of the receiver consists of the -prefix and
  * the -name separated by a single colon.<br />* 

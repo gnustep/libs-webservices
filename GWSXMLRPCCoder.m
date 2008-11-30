@@ -46,6 +46,7 @@ static NSCharacterSet   *ws;
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
 {
+  GWSElement		*container = [GWSElement new];
   NSMutableString       *ms = [self mutableString];
 
   [ms setString: @"<?xml version=\"1.0\"?>\n"];
@@ -133,17 +134,18 @@ static NSCharacterSet   *ws;
 		  [self nl];
 		  [ms appendString: @"<value>"];
 		  [self indent];
-		  e = [[self delegate] encodeWithCoder: self
-						  item: v
-						 named: k
-						 index: i];
-		  if (e == nil)
+		  [[self delegate] encodeWithCoder: self
+					      item: v
+					     named: k
+					        in: container];
+		  if ((e = [container firstChild]) == nil)
 		    {
 		      [self _appendObject: v];
 		    }
 		  else
 		    {
 		      [e encodeWith: self];
+		      [e remove];
 		    }
 		  [self unindent];
 		  [self nl];
@@ -161,7 +163,7 @@ static NSCharacterSet   *ws;
 	}
       [ms appendString: @"</methodCall>"];
     }
-
+  [container remove];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -169,6 +171,7 @@ static NSCharacterSet   *ws;
                parameters: (NSDictionary*)parameters
                     order: (NSArray*)order;
 {
+  GWSElement		*container = [GWSElement new];
   NSMutableString       *ms;
   unsigned	        c;
   unsigned	        i;
@@ -202,17 +205,18 @@ static NSCharacterSet   *ws;
           [self nl];
           [ms appendString: @"<value>"];
           [self indent];
-          e = [[self delegate] encodeWithCoder: self
-                                          item: v
-                                         named: @"Result"
-                                         index: 0];
-          if (e == nil)
+          [[self delegate] encodeWithCoder: self
+				      item: v
+				     named: @"Result"
+					in: container];
+          if ((e = [container firstChild]) == nil)
             {
               [self _appendObject: v];
             }
           else
             {
               [e encodeWith: self];
+	      [e remove];
             }
           [self unindent];
           [ms appendString: @"</value>"];
@@ -227,6 +231,7 @@ static NSCharacterSet   *ws;
   [self unindent];
   [self nl];
   [ms appendString: @"</methodResponse>"];
+  [container release];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -502,8 +507,7 @@ static NSCharacterSet   *ws;
                   name = [NSString stringWithFormat: @"Arg%u", i];
                   o = [[self delegate] decodeWithCoder: self
                                                   item: [elem firstChild]
-                                                 named: name
-                                                 index: i];
+                                                 named: name];
                   if (o == nil)
                     {
                       o = [self _parseValue: [elem firstChild]];
@@ -548,8 +552,7 @@ static NSCharacterSet   *ws;
 
               o = [[self delegate] decodeWithCoder: self
                                               item: [elem firstChild]
-                                             named: @"Result"
-                                             index: 0];
+                                             named: @"Result"];
               if (o == nil)
                 {
                   o = [self _parseValue: [elem firstChild]];

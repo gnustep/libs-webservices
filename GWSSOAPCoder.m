@@ -47,7 +47,7 @@ NSString * const GWSSOAPMessageHeadersKey
 
 @interface      GWSSOAPCoder (Private)
 
-- (GWSElement*) _elementForObject: (id)o named: (NSString*)name;
+- (void) _createElementFor: (id)o named: (NSString*)name in: (GWSElement*)ctct;
 - (id) _simplify: (GWSElement*)elem;
 
 @end
@@ -211,22 +211,13 @@ NSString * const GWSSOAPMessageHeadersKey
 	    {
 	      NSString          *k = [a objectAtIndex: i];
 	      id                v = [d objectForKey: k];
-	      GWSElement        *e;
 
 	      if (v == nil)
 		{
 		  [NSException raise: NSInvalidArgumentException
 			      format: @"Header '%@' missing", k];
 		}
-	      e = [[self delegate] encodeWithCoder: self
-					      item: v
-					     named: k
-					     index: NSNotFound];
-	      if (e == nil)
-		{
-		  e = [self _elementForObject: v named: k];
-		}
-	      [header addChild: e];
+	      [self _createElementFor: v named: k in: header];
 	    }
 	}
     }
@@ -335,17 +326,8 @@ NSString * const GWSSOAPMessageHeadersKey
 	{
 	  NSString          *k = [order objectAtIndex: i];
 	  id                v = [parameters objectForKey: k];
-	  GWSElement        *e;
 
-	  e = [[self delegate] encodeWithCoder: self
-					  item: v
-					 named: k
-					 index: i];
-	  if (e == nil)
-	    {
-	      e = [self _elementForObject: v named: k];
-	    }
-	  [fault addChild: e];
+	  [self _createElementFor: v named: k in: fault];
 	}
     }
   else
@@ -435,22 +417,13 @@ NSString * const GWSSOAPMessageHeadersKey
 	{
 	  NSString          *k = [order objectAtIndex: i];
 	  id                v = [parameters objectForKey: k];
-	  GWSElement        *e;
 
 	  if (v == nil)
 	    {
 	      [NSException raise: NSInvalidArgumentException
 			  format: @"Value '%@' (order %u) missing", k, i];
 	    }
-	  e = [[self delegate] encodeWithCoder: self
-					  item: v
-					 named: k
-					 index: i];
-	  if (e == nil)
-	    {
-	      e = [self _elementForObject: v named: k];
-	    }
-	  [container addChild: e];
+	  [self _createElementFor: v named: k in: container];
 	}
     }
 
@@ -645,8 +618,7 @@ NSString * const GWSSOAPMessageHeadersKey
 
                       arg = [[self delegate] decodeWithCoder: self
                                                         item: elem
-                                                       named: n
-                                                       index: i];
+                                                       named: n];
                       if (arg == nil)
                         {
                           /*
@@ -693,8 +665,7 @@ NSString * const GWSSOAPMessageHeadersKey
               [o addObject: n];
               arg = [[self delegate] decodeWithCoder: self
                                                 item: elem
-                                               named: n
-                                               index: i];
+                                               named: n];
               if (arg == nil)
                 {
                   arg = [self _simplify: elem];
@@ -743,7 +714,9 @@ NSString * const GWSSOAPMessageHeadersKey
 
 @implementation GWSSOAPCoder (Private)
 
-- (GWSElement*) _elementForObject: (id)o named: (NSString*)name
+- (void) _createElementFor: (id)o
+		     named: (NSString*)name
+		        in: (GWSElement*)ctxt
 {
   GWSElement    *e;
   NSString      *q;     // Qualified name
@@ -754,7 +727,12 @@ NSString * const GWSSOAPMessageHeadersKey
 
   if (o == nil)
     {
-      return nil;
+      [NSException raise: NSInvalidArgumentException
+		  format: @"Value for '%@' (in %@) is nil", name, ctxt];
+    }
+  if ([[self delegate] encodeWithCoder: self item: o named: name in: ctxt])
+    {
+      return;
     }
 
   x = nil;
@@ -854,6 +832,9 @@ NSString * const GWSSOAPMessageHeadersKey
     {
       [e addContent: c];
     }
+  [ctxt addChild: e];
+  [e release];
+
   if (dictionary == YES)
     {
       NSArray   *order = [o objectForKey: GWSOrderKey];
@@ -875,7 +856,7 @@ NSString * const GWSSOAPMessageHeadersKey
 	      [NSException raise: NSInvalidArgumentException
 			  format: @"Parameter '%@' (order %u) missing", k, i];
 	    }
-	  [e addChild: [self _elementForObject: v named: k]];
+	  [self _createElementFor: v named: k in: e];
         }
     }
   if (array == YES)
@@ -890,10 +871,9 @@ NSString * const GWSSOAPMessageHeadersKey
           id            v = [o objectAtIndex: i];
 
           k = [NSString stringWithFormat: @"Arg%u", i];
-          [e addChild: [self _elementForObject: v named: k]];
+	  [self _createElementFor: v named: k in: e];
         }
     }
-  return [e autorelease];
 }
 
 - (id) _simplify: (GWSElement*)elem

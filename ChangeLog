@@ -1,6 +1,11 @@
-08-11-18 Richard Frith-Macdonald  <rfm@gnu.org>
+30-11-18 Richard Frith-Macdonald  <rfm@gnu.org>
 
-	* Loads of tweaks/improvements to have a GWSService object setup
+	Add more features to GWSElement for namespace management.
+	Change delegate encoding/decoding methods to provide better context.
+
+28-11-18 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	Loads of tweaks/improvements to have a GWSService object setup
 	itsself and its coder to perform an operation based on the information
 	parsed from a WSDL document.  The idea is to avoid the programmer
 	having to setup the options and the URL to port to etc.

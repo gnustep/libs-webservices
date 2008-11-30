@@ -670,16 +670,15 @@ static NSCharacterSet	*ws = nil;
 - (id) decodeWithCoder: (GWSCoder*)coder
                   item: (GWSElement*)item
                  named: (NSString*)name
-                 index: (unsigned)index
 {
   return nil;
 }
-- (GWSElement*) encodeWithCoder: (GWSCoder*)coder
-                           item: (id)item
-                          named: (NSString*)name
-                          index: (unsigned)index
+- (BOOL) encodeWithCoder: (GWSCoder*)coder
+		    item: (id)item
+		   named: (NSString*)name
+		      in: (GWSElement*)ctxt
 {
-  return nil;
+  return NO;
 }
 - (NSString*) webServiceOperation
 {
