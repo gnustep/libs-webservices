@@ -444,11 +444,11 @@ static NSCharacterSet	*ws = nil;
       [_ms appendString: @"\n"];
       if ((index = _level) > 0)
         {
-          if (index >= sizeof(indentations)/sizeof(*indentations))
+          if (index > sizeof(indentations)/sizeof(*indentations))
             {
-              index = sizeof(indentations)/sizeof(*indentations) - 1;
+              index = sizeof(indentations)/sizeof(*indentations);
             }
-          [_ms appendString: indentations[index]];
+          [_ms appendString: indentations[index - 1]];
         }
     }
 }

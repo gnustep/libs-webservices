@@ -143,14 +143,7 @@
       NSMutableString   *xml = [coder mutableString];
 
       [xml appendString: @"</"];
-      if (_qualified == nil)
-        {
-          [xml appendString: _name];
-        }
-      else
-        {
-          [xml appendString: _qualified];
-        }
+      [xml appendString: _qualified];
       [xml appendString: @">"];
     }
 }
@@ -162,14 +155,7 @@
       NSMutableString   *xml = [coder mutableString];
 
       [xml appendString: @"<"];
-      if (_qualified == nil)
-        {
-          [xml appendString: _name];
-        }
-      else
-        {
-          [xml appendString: _qualified];
-        }
+      [xml appendString: _qualified];
       if ([_attributes count] > 0)
         {
           NSEnumerator      *e = [_attributes keyEnumerator];
@@ -267,7 +253,14 @@
 
       _name = [name copyWithZone: z];
       _namespace = [namespace copyWithZone: z];
-      _qualified = [qualified copyWithZone: z];
+      if (qualified == nil)
+	{
+	  _qualified = [_name retain];
+	}
+      else
+	{
+	  _qualified = [qualified copyWithZone: z];
+	}
       if ([attributes count] > 0)
         {
           _attributes = [attributes mutableCopyWithZone: z];
