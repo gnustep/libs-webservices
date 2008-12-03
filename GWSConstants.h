@@ -83,28 +83,41 @@ extern NSString * const GWSRequestDataKey;
 extern NSString * const GWSResponseDataKey;
 
 
-/** Key for the encoding style to be used for the SOAP body.
+/** Key for the encoding style to be used for the SOAP body.<br />
+ * The value of this may be one of
+ * <list>
+ * <item><ref type="constant" id="GWSSOAPBodyEncodingStyleDocument">
+ * GWSSOAPBodyEncodingStyleDocument</ref></item>
+ * <item><ref type="constant" id="GWSSOAPBodyEncodingStyleRPC">
+ * GWSSOAPBodyEncodingStyleRPC</ref></item>
+ * <item><ref type="constant" id="GWSSOAPBodyEncodingStyleWrapped">
+ * GWSSOAPBodyEncodingStyleWrapped</ref></item>
+ * </list>
  */
 extern NSString * const GWSSOAPBodyEncodingStyleKey;
 
-/** SOAP body encoded in document style.  Setting this value for the
- * GWSSOAPBodyEncodingStyleKey in the parameters of a message being
- * encoded has the same effect as calling [GWSSOAPCoder-setOperationStyle:]
+/** This means that the SOAP body is encoded in document style.<br />
+ * Setting this value for the GWSSOAPBodyEncodingStyleKey in the
+ * parameters of a message being encoded has the same effect as
+ * calling [GWSSOAPCoder-setOperationStyle:]
  * with an argument of GWSSOAPBodyEncodingStyleDocument.
  */
 extern NSString * const GWSSOAPBodyEncodingStyleDocument;
 
-/** SOAP body encoded in document style.  Setting this value for the
- * GWSSOAPBodyEncodingStyleKey in the parameters of a message being
- * encoded has the same effect as calling [GWSSOAPCoder-setOperationStyle:]
+/** This means that the SOAP body is encoded in RPC style.<br />
+ * Setting this value for the GWSSOAPBodyEncodingStyleKey in the
+ * parameters of a message being encoded has the same effect as
+ * calling [GWSSOAPCoder-setOperationStyle:]
  * with an argument of GWSSOAPBodyEncodingStyleRPC.
  */
 extern NSString * const GWSSOAPBodyEncodingStyleRPC;
 
-/** SOAP body encoded in wrapped style.  Setting this value for the
- * GWSSOAPBodyEncodingStyleKey in the parameters of a message being
- * encoded has the same effect as calling [GWSSOAPCoder-setOperationStyle:]
- * with an argument of GWSSOAPBodyEncodingStyleWrapped.
+/** This means that the SOAP body is encoded in wrapped style.<br />
+ * Setting this value for the GWSSOAPBodyEncodingStyleKey in the
+ * parameters of a message being encoded has the same effect as
+ * calling [GWSSOAPCoder-setOperationStyle:]
+ * with an argument of GWSSOAPBodyEncodingStyleWrapped.<br />
+ * NB. This encoding style is not yet implemented.
  */
 extern NSString * const GWSSOAPBodyEncodingStyleWrapped;
 
@@ -115,16 +128,24 @@ extern NSString * const GWSSOAPBodyUseKey;
 
 /** Key for the 'use' style to be used for the SOAP header.<br />
  * The value of this key may be 'literal' or 'encoded'.
+ * <ref type="constant" id="GWSSOAPUseEncoded">GWSSOAPUseEncoded</ref> or
+ * <ref type="constant" id="GWSSOAPUseLiteral">GWSSOAPUseLiteral</ref>
  */
 extern NSString * const GWSSOAPHeaderUseKey;
 
-/** Constant 'encoded' for body/header use.
+/** Constant 'encoded' for body/header use.<br />
+ * If data is 'encoded', each element of the data has a 'type' attribute
+ * which provides type information allowing the element contents to be
+ * be decoded.
  */
-extern NSString * const GWSSOAPBodyUseEncoded;
+extern NSString * const GWSSOAPUseEncoded;
 
-/** Constant 'literal' for body/header use.
+/** Constant 'literal' for body/header use.<br />
+ * If data is 'literal', the contents of elements are decoded by implicit
+ * type knowledge depending on the element name and its position within 
+ * the XML document.
  */
-extern NSString * const GWSSOAPBodyUseLiteral;
+extern NSString * const GWSSOAPUseLiteral;
 
 /** Key for the URI to be used as the namespace for the current element.
  * If the GWSSOAPNamespaceNameKey is not used, this namespace URI is set

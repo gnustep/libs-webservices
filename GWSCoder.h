@@ -361,11 +361,25 @@ extern "C" {
  * <p>Dictionaries passed to/from the SOAP coder may contain special keys
  * with the <code>GWSSOAP</code> prefix which control the coding rather
  * than specifying values to be coded (this is in addition to the special
- * <ref type="constant" id="GWSOrderKey"> * GWSOrderKey</ref>
+ * <ref type="constant" id="GWSOrderKey">GWSOrderKey</ref>
  * used for ordering fields in a complex type).<br />
- * See the section on constants for a description of what these keys are
- * used for.
+ * See the section on constants for a description of what the keys below are
+ * used for:
  * </p>
+ * <list>
+ * <item><ref type="constant"
+ * id="GWSSOAPBodyEncodingStyleKey">GWSSOAPBodyEncodingStyleKey</ref></item>
+ * <item><ref type="constant"
+ * id="GWSSOAPBodyUseKey">GWSSOAPBodyUseKey</ref></item>
+ * <item><ref type="constant"
+ * id="GWSSOAPHeaderUseKey">GWSSOAPHeaderUseKey</ref></item>
+ * <item><ref type="constant"
+ * id="GWSSOAPMessageHeadersKey">GWSSOAPMessageHeadersKey</ref></item>
+ * <item><ref type="constant"
+ * id="GWSSOAPNamespaceNameKey">GWSSOAPNamespaceNameKey</ref></item>
+ * <item><ref type="constant"
+ * id="GWSSOAPNamespaceURIKey">GWSSOAPNamespaceURIKey</ref></item>
+ * </list>
  */
 @interface GWSSOAPCoder : GWSCoder
 {
