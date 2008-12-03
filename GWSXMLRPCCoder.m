@@ -48,6 +48,17 @@ static NSCharacterSet   *ws;
 {
   GWSElement		*container = [GWSElement new];
   NSMutableString       *ms = [self mutableString];
+  id			o;
+
+  o = [parameters objectForKey: GWSOrderKey];
+  if (o != nil)
+    {
+      if (order != nil)
+	{
+	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
+	}
+      order = o;
+    }
 
   [ms setString: @"<?xml version=\"1.0\"?>\n"];
 
@@ -175,7 +186,18 @@ static NSCharacterSet   *ws;
   NSMutableString       *ms;
   unsigned	        c;
   unsigned	        i;
+  id			o;
   
+  o = [parameters objectForKey: GWSOrderKey];
+  if (o != nil)
+    {
+      if (order != nil)
+	{
+	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
+	}
+      order = o;
+    }
+
   ms = [self mutableString];
   [ms setString: @""];
 
