@@ -76,6 +76,16 @@ NSString * const GWSSOAPUseLiteral
   unsigned	        c;
   unsigned	        i;
 
+  o = [parameters objectForKey: GWSOrderKey];
+  if (o != nil)
+    {
+      if (order != nil)
+	{
+	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
+	}
+      order = o;
+    }
+
   /* The method name is required for RPC operations ...
    * for document style operations the method is implicit in the URL
    * that the document is sent to.
