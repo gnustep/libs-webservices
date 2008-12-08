@@ -181,13 +181,27 @@ NSString * const GWSSOAPUseLiteral
     }
   else
     {
+      NSString	*hdrNamespace = nil;
+      NSString	*hdrPrefix = prefix;
+
+      /* Get namespace and prefix from dictionary if possible.
+       */
+      if ([o isKindOfClass: [NSDictionary class]])
+	{
+          hdrNamespace = [o objectForKey: GWSSOAPNamespaceURIKey];
+	  if ([o objectForKey: GWSSOAPNamespaceNameKey] != nil)
+	    {
+	      hdrPrefix = [o objectForKey: GWSSOAPNamespaceNameKey];
+	    }
+	}
       qualified = @"Header";
-      if (prefix != nil)
+      if (hdrPrefix != nil)
         {
-          qualified = [NSString stringWithFormat: @"%@:%@", prefix, qualified];
+          qualified = [NSString stringWithFormat: @"%@:%@",
+	    hdrPrefix, qualified];
         }
       header = [[GWSElement alloc] initWithName: @"Header"
-                                      namespace: nil
+                                      namespace: hdrNamespace
                                       qualified: qualified
                                      attributes: nil];
       [envelope addChild: header];
@@ -215,19 +229,33 @@ NSString * const GWSSOAPUseLiteral
       else if ([o isKindOfClass: [NSDictionary class]] && [o count] > 0)
 	{
 	  NSDictionary	*d = (NSDictionary*)o;
-	  NSArray	*a = [o objectForKey: GWSOrderKey];
+	  NSArray	*order = [o objectForKey: GWSOrderKey];
 
-	  if (a == nil)
+	  if ([order count] == 0)
 	    {
-	      a = [d allKeys];
+	      NSEnumerator      *kEnum = [d keyEnumerator];
+	      NSString          *k;
+	      NSMutableArray    *a = [NSMutableArray array];
+
+	      while ((k = [kEnum nextObject]) != nil)
+		{
+		  if ([k hasPrefix: @"GWSSOAP"])
+		    {
+		    }
+		  else
+		    {
+		      [a addObject: k];
+		    }
+		}
+	      order = a;
 	    }
-          c = [a count];
+          c = [order count];
 	
 	  /* The dictionary contains header elements by name.
 	   */
 	  for (i = 0; i < c; i++)
 	    {
-	      NSString          *k = [a objectAtIndex: i];
+	      NSString          *k = [order objectAtIndex: i];
 	      id                v = [d objectForKey: k];
 
 	      if (v == nil)

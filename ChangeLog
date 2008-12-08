@@ -1,3 +1,7 @@
+08-12-18 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m: Add support for namespace name and prefix in header.
+
 30-11-18 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Add more features to GWSElement for namespace management.
