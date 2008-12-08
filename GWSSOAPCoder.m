@@ -201,9 +201,16 @@ NSString * const GWSSOAPUseLiteral
 	    hdrPrefix, qualified];
         }
       header = [[GWSElement alloc] initWithName: @"Header"
-                                      namespace: hdrNamespace
+                                      namespace: hdrPrefix
                                       qualified: qualified
                                      attributes: nil];
+      if (hdrNamespace != nil && hdrPrefix == nil)
+	{
+	  /* We have a namespace but no name ... make it the default
+	   * namespace for the body.
+	   */
+	  [header setNamespace: hdrNamespace forPrefix: @""];
+	}
       [envelope addChild: header];
       [header release];
       if ([o isKindOfClass: [NSArray class]] && [o count] > 0)
