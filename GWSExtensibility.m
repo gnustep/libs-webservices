@@ -325,11 +325,11 @@
 	{
 	  NSDictionary	*a = [node attributes];
 	  NSString	*use = [a objectForKey: @"use"];
+          NSMutableDictionary	*p = [service webServiceParameters];
 
 	  if ([name isEqualToString: @"body"])
 	    {
-	      NSString			*namespace;
-	      NSMutableDictionary	*p = [service webServiceParameters];
+	      NSString	*namespace;
 
 	      [p setObject: use forKey: GWSSOAPBodyUseKey];
 
@@ -341,8 +341,7 @@
 	    }
 	  else if ([name isEqualToString: @"header"])
 	    {
-	      [[service webServiceParameters] setObject: use
-		forKey: GWSSOAPHeaderUseKey];
+	      [p setObject: use forKey: GWSSOAPHeaderUseKey];
 	    }
 	}
     }
