@@ -48,6 +48,8 @@ NSString * const GWSSOAPUseEncoded
   = @"encoded";
 NSString * const GWSSOAPUseLiteral
   = @"literal";
+NSString * const GWSSOAPValueKey
+  = @"GWSSOAPValueKey";
 
 @interface      GWSSOAPCoder (Private)
 
@@ -213,27 +215,7 @@ NSString * const GWSSOAPUseLiteral
 	}
       [envelope addChild: header];
       [header release];
-      if ([o isKindOfClass: [NSArray class]] && [o count] > 0)
-	{
-	  NSArray	*a = (NSArray*)o;
-
-          c = [a count];
-	  /* The array contains XML nodes ... just add them to the
-	   * header we are going to write.
-	   */
-	  for (i = 0; i < c; i++)
-	    {
-	      o = [a objectAtIndex: i];
-	      if ([o isKindOfClass: [GWSElement class]] == NO)
-		{
-		  [NSException raise: NSInvalidArgumentException
-			      format: @"Header element %d wrong class: '%@'",
-		    i, NSStringFromClass([o class])];
-		}
-	      [header addChild: o];
-	    }
-	}
-      else if ([o isKindOfClass: [NSDictionary class]] && [o count] > 0)
+      if ([o isKindOfClass: [NSDictionary class]] && [o count] > 0)
 	{
 	  NSDictionary	*d = (NSDictionary*)o;
 	  NSArray	*order = [o objectForKey: GWSOrderKey];
@@ -246,10 +228,7 @@ NSString * const GWSSOAPUseLiteral
 
 	      while ((k = [kEnum nextObject]) != nil)
 		{
-		  if ([k hasPrefix: @"GWSSOAP"])
-		    {
-		    }
-		  else
+		  if ([k hasPrefix: @"GWSSOAP"] == NO)
 		    {
 		      [a addObject: k];
 		    }
@@ -364,10 +343,7 @@ NSString * const GWSSOAPUseLiteral
 
 	  while ((k = [kEnum nextObject]) != nil)
 	    {
-	      if ([k hasPrefix: @"GWSSOAP"])
-		{
-		}
-	      else
+	      if ([k hasPrefix: @"GWSSOAP"] == NO)
 		{
 		  [a addObject: k];
 		}
@@ -775,6 +751,8 @@ NSString * const GWSSOAPUseLiteral
   NSString      *q;     // Qualified name
   NSString      *x;     // xsi:type if any
   NSString      *c;     // Content if any
+  NSString	*nsURI = nil;
+  NSString	*nsName = nil;
   BOOL          array = NO;
   BOOL          dictionary = NO;
 
@@ -791,6 +769,17 @@ NSString * const GWSSOAPUseLiteral
   x = nil;
   c = nil;
   q = name;
+
+  /* If this is a dictionary describing a single value, rather than a
+   * complex value, we can get the information we need now.
+   */
+  if (YES == [o isKindOfClass: [NSDictionary class]]
+    && [o objectForKey: GWSSOAPValueKey] != nil)
+    {
+      nsURI = [o objectForKey: GWSSOAPNamespaceURIKey];
+      nsName = [o objectForKey: GWSSOAPNamespaceNameKey];
+      o = [o objectForKey: GWSSOAPValueKey];
+    }
 
   if (YES == [o isKindOfClass: [NSString class]])
     {
@@ -873,10 +862,19 @@ NSString * const GWSSOAPUseLiteral
         }
       c = [o description];
     }
+
+  if (nsName != nil)
+    {
+      q = [NSString stringWithFormat: @"%@:%@", nsName, name];
+    }
   e = [[GWSElement alloc] initWithName: name
                              namespace: nil
                              qualified: q
                             attributes: nil];
+  if (nsURI != nil)
+    {
+      [e setNamespace: nsURI forPrefix: @""];
+    }
   if (x != nil)
     {
       [e setAttribute: x forKey: @"xsi:type"];

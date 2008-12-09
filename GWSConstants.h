@@ -147,33 +147,56 @@ extern NSString * const GWSSOAPUseEncoded;
  */
 extern NSString * const GWSSOAPUseLiteral;
 
-/** Key for the URI to be used as the namespace for the current element.
- * If the GWSSOAPNamespaceNameKey is not used, this namespace URI is set
- * as the default namespace for the current element.
- */
-extern NSString * const GWSSOAPNamespaceURIKey;
-
-/** Key for the name to be used for the namespace of the current element.<br />
- * If this is set in conjunction with GWSSOAPNamespaceURIKey then
- * the appropriate namespace mapping is set up in the SOAP envelope.
- * In any case this name is used to qualify the current element name.
- */
-extern NSString * const GWSSOAPNamespaceNameKey;
-
 /** Key for the header element for a soap message.<br />
- * An array of headers (specified as [GWSElement] instances) for
- * for the message may be provided by setting a value for this key
- * in the parameters dictionary.<br />
- * Alternatively, a dictionary of message parts (like the parameters
- * dictionary itsself) may be specified for the contents of the header.<br />
- * And finally, you may set an instance of [NSNull] rather than
- * an array or dictionary for this key, in which case the coder
- * will generate an empty header element which the coder's delegate
- * can then modify.<br />
+ * A dictionary of message parts (like the parameters dictionary itsself)
+ * may be specified for the contents of the header.<br />
+ * Alternatively, you may some object other than a populated dictionary
+ * for this key, in which case the coder will generate an empty header
+ * element which the coder's delegate can then modify.<br />
  * If no value is set for this key, the header element is omitted.
  */
 extern NSString * const GWSSOAPMessageHeadersKey;
 
+/** Key for the URI to be used as the default namespace for the
+ * current element (and all elements within it, unless overriden).<br />
+ * As a special case at the SOAP Body, Fault, or Header level,
+ * if this key is used in conjunction with the GWSSOAPNamespaceNameKey,
+ * a mapping is set up in the SOAP Envelope to match the name to the URI.
+ * This behavior is in addition to the normal behaqvior of setting the
+ * default namespace.
+ */
+extern NSString * const GWSSOAPNamespaceURIKey;
+
+/** Key for the name to be used for the namespace of the current element
+ * (ie as the namespace prefix before the element name).<br />
+ * For instance.
+ * <example>
+ * foo = {
+ *   GWSSOAPnamespaceNameKey = "xxx";
+ * };
+ * </example>
+ * means that the element is encoded as 'xxx:foo' rather than just 'foo'.<br />
+ * This has a special meaning at the level of the SOAP Body, Fault, or
+ * Header dictionary.  In these cases it does not set the namespace prefix
+ * for that element, but is instead used in conjunction with the
+ * GWSSOAPNamespaceURIKey to set up a namespace mapping in the SOAP Envelope.
+ */
+extern NSString * const GWSSOAPNamespaceNameKey;
+
+/** If this key is present in a dictionary, then instead of treating the
+ * dictionary as a complex type, the value referenced by this key is
+ * encoded, and other values in the dictionary (eg. GWSSOAPNamespaceURIKey)
+ * are used to modify the encoding of that value.<br />
+ * eg.
+ * <example>
+ * foo = {
+ *   GWSSOAPValueKey = "hello";
+ *   GWSSOAPNamespaceURIKey = "http://foo/xxx.xsd";
+ * };
+ * </example>
+ * would encode '&lt;foo "xmlns=http://foo/xxx.xsd"&gt;hello&lt;/foo&gt;'.
+ */
+extern NSString * const GWSSOAPValueKey;
 #if	defined(__cplusplus)
 }
 #endif
