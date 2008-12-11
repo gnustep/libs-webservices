@@ -224,18 +224,20 @@ main()
     @"mypass", @"password",
     nil];
 
-  /* Now we store that as a part called 'signin'
+  /* Now we store that as a part called 'signin' and set the headers to
+   * use literal encoding.
    */
   o = [NSDictionary dictionaryWithObjectsAndKeys:
     o, @"signin",
+    GWSSOAPUseLiteral, GWSSOAPUseKey,
     nil];
 
   /* Now let's set that as a header for a little message containing a single
-   * value (called 'parameter') where the headers use literal encoding.
+   * value (called 'parameter') with 'use' encoded.
    */
   o = [NSDictionary dictionaryWithObjectsAndKeys:
     o, GWSSOAPMessageHeadersKey,
-    GWSSOAPUseLiteral, GWSSOAPHeaderUseKey,
+    GWSSOAPUseEncoded, GWSSOAPUseKey,
     @"an argument", @"parameter",
     nil];
 

@@ -34,10 +34,6 @@ NSString * const GWSSOAPBodyEncodingStyleRPC
   = @"GWSSOAPBodyEncodingStyleRPC";
 NSString * const GWSSOAPBodyEncodingStyleWrapped
   = @"GWSSOAPBodyEncodingStyleWrapped";
-NSString * const GWSSOAPBodyUseKey
-  = @"GWSSOAPBodyUseKey";
-NSString * const GWSSOAPHeaderUseKey
-  = @"GWSSOAPHeaderUseKey";
 NSString * const GWSSOAPNamespaceURIKey
   = @"GWSSOAPNamespaceURIKey";
 NSString * const GWSSOAPNamespaceNameKey
@@ -46,6 +42,8 @@ NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
 NSString * const GWSSOAPUseEncoded
   = @"encoded";
+NSString * const GWSSOAPUseKey
+  = @"GWSSOAPUseKey";
 NSString * const GWSSOAPUseLiteral
   = @"literal";
 NSString * const GWSSOAPValueKey
@@ -164,19 +162,6 @@ NSString * const GWSSOAPValueKey
       prefix = [prefix substringToIndex: [prefix rangeOfString: @":"].location];
     }
 
-  /* See if we have a key in the parameters to specify how the header
-   * should be encoded.
-   */
-  use = [parameters objectForKey: GWSSOAPHeaderUseKey];
-  if ([use isEqualToString: GWSSOAPUseLiteral] == YES)
-    {
-      [self setUseLiteral: YES];
-    }
-  else if ([use isEqualToString: GWSSOAPUseEncoded] == YES)
-    {
-      [self setUseLiteral: NO];
-    }
-
   /* Now look for a value listing the headers to be encoded.
    * If there is no value, we omit the SOAP header entirely.
    */
@@ -223,6 +208,19 @@ NSString * const GWSSOAPValueKey
 	{
 	  NSDictionary	*d = (NSDictionary*)o;
 	  NSArray	*order = [o objectForKey: GWSOrderKey];
+
+	  /* See if we have a key in the parameters to specify how the header
+	   * should be encoded.
+	   */
+	  use = [d objectForKey: GWSSOAPUseKey];
+	  if ([use isEqualToString: GWSSOAPUseLiteral] == YES)
+	    {
+	      [self setUseLiteral: YES];
+	    }
+	  else if ([use isEqualToString: GWSSOAPUseEncoded] == YES)
+	    {
+	      [self setUseLiteral: NO];
+	    }
 
 	  if ([order count] == 0)
 	    {
@@ -277,7 +275,7 @@ NSString * const GWSSOAPValueKey
   /* See if we have a key in the parameters to specify how the body
    * should be encoded.
    */
-  use = [parameters objectForKey: GWSSOAPBodyUseKey];
+  use = [parameters objectForKey: GWSSOAPUseKey];
   if ([use isEqualToString: GWSSOAPUseLiteral] == YES)
     {
       [self setUseLiteral: YES];

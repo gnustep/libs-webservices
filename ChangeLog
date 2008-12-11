@@ -3,6 +3,8 @@
 	Simplify extensions handling by combining validation and service setup
 	as there is a whole lot of common code.
 	Add example of encoding with header information.
+	Remove GWSCoderHeaderUseKey and GWSCoderBodyUseKey and replace both
+	with GWSCoderUseKey to avoid confusion.
 
 2008-12-08 Richard Frith-Macdonald  <rfm@gnu.org>
 

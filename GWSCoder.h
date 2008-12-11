@@ -388,15 +388,13 @@ extern "C" {
  * <item><ref type="constant"
  * id="GWSSOAPBodyEncodingStyleKey">GWSSOAPBodyEncodingStyleKey</ref></item>
  * <item><ref type="constant"
- * id="GWSSOAPBodyUseKey">GWSSOAPBodyUseKey</ref></item>
- * <item><ref type="constant"
- * id="GWSSOAPHeaderUseKey">GWSSOAPHeaderUseKey</ref></item>
- * <item><ref type="constant"
  * id="GWSSOAPMessageHeadersKey">GWSSOAPMessageHeadersKey</ref></item>
  * <item><ref type="constant"
  * id="GWSSOAPNamespaceNameKey">GWSSOAPNamespaceNameKey</ref></item>
  * <item><ref type="constant"
  * id="GWSSOAPNamespaceURIKey">GWSSOAPNamespaceURIKey</ref></item>
+ * <item><ref type="constant"
+ * id="GWSSOAPUseKey">GWSSOAPUseKey</ref></item>
  * </list>
  */
 @interface GWSSOAPCoder : GWSCoder

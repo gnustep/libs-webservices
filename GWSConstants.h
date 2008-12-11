@@ -121,26 +121,23 @@ extern NSString * const GWSSOAPBodyEncodingStyleRPC;
  */
 extern NSString * const GWSSOAPBodyEncodingStyleWrapped;
 
-/** Key for the 'use' style to be used for the SOAP body.<br />
- * The value of this key may be 'literal' or 'encoded'.
- */
-extern NSString * const GWSSOAPBodyUseKey;
-
-/** Key for the 'use' style to be used for the SOAP header.<br />
+/** Key for the 'use' style to be used for the SOAP Body, Header or Fault
+ * (depending on whether it is in the top level parameters dictionary or
+ * in the header parameters).<br />
  * The value of this key may be 'literal' or 'encoded'.
  * <ref type="constant" id="GWSSOAPUseEncoded">GWSSOAPUseEncoded</ref> or
  * <ref type="constant" id="GWSSOAPUseLiteral">GWSSOAPUseLiteral</ref>
  */
-extern NSString * const GWSSOAPHeaderUseKey;
+extern NSString * const GWSSOAPUseKey;
 
-/** Constant 'encoded' for body/header use.<br />
+/** Constant 'encoded' for Body/Header use.<br />
  * If data is 'encoded', each element of the data has a 'type' attribute
  * which provides type information allowing the element contents to be
  * be decoded.
  */
 extern NSString * const GWSSOAPUseEncoded;
 
-/** Constant 'literal' for body/header use.<br />
+/** Constant 'literal' for Body/Header use.<br />
  * If data is 'literal', the contents of elements are decoded by implicit
  * type knowledge depending on the element name and its position within 
  * the XML document.

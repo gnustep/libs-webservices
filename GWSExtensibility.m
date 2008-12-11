@@ -144,7 +144,7 @@
 
 	  if ([name isEqualToString: @"body"])
 	    {
-	      [p setObject: use forKey: GWSSOAPBodyUseKey];
+	      [p setObject: use forKey: GWSSOAPUseKey];
 	      if (namespace != nil)
 		{
 	          [p setObject: namespace forKey: GWSSOAPNamespaceURIKey];
@@ -153,8 +153,6 @@
 	  else if ([name isEqualToString: @"header"])
 	    {
 	      id	h;
-
-	      [p setObject: use forKey: GWSSOAPHeaderUseKey];
 
 	      /* If we have a non-empty headers dictionary,
 	       * we can set it up.  Otherwise we must assume that
@@ -175,6 +173,8 @@
 		      [p setObject: h forKey: GWSSOAPMessageHeadersKey];
 		      [h release];
 		    }
+
+	          [h setObject: use forKey: GWSSOAPUseKey];
 
 		  /* Set the default namespace for the contents of Header
 		   * if known.
