@@ -43,18 +43,36 @@ extern "C" {
 @class  GWSService;
 
 /**
- * The GWSCoder class is a semi-abstract class for handling encoding to
+ * <p>The GWSCoder class is a semi-abstract class for handling encoding to
  * XML and decoding from XML for a group of services.<br />
  * With its standard instance variables and helper functions it really
  * just provides a convenient mechanism to store data in a mutable
  * string, but in conjunction with [GWSElement] it can be used to
  * serialize a tree of elements to a string and will parse an XML
  * document ninto a tree of elements.<br />
- * Often (for RPC and messaging), the actual encoding/decoding is
+ * Usually (for RPC and messaging), the actual encoding/decoding is
  * handled by a concrete subclass.<br />
  * Instances of these classes are not expected to be re-entrant or
  * thread-safe, so you need to create an instance for each thread
- * in which you are working.<br />
+ * in which you are working.
+ * </p>
+ * <p>With Web Services, the design of the XML specification is that
+ * services have an abstract definition and then also a concrete
+ * binding to a particular implementation (generally SOAP).<br />
+ * Within the GWS classes a similar separation is implemented at the
+ * level of the coders, with the idea being that coders can be used
+ * separately and their operation can be driven entirely from the
+ * parameter dictionary passed to them (with various special keys
+ * in the dictionary controlling behavior).<br />
+ * Thus to send a message for a particular service, the basic parameters
+ * are placed in a dictionary by the application, and that dictionary is
+ * then passed to the GWSService which invokes extensibility classes to
+ * modify the dictionary contents by adding additional keys/values to tell
+ * the coder how to handle them.<br />
+ * A programmer wishing to use the coder without web services support to,
+ * simply send an RPC, merely needs to supply any required additional
+ * key/value pairs themselves rather than having a web service do it.
+ * </p>
  */
 @interface	GWSCoder : NSObject
 {
