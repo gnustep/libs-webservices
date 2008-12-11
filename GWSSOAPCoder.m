@@ -119,6 +119,10 @@ NSString * const GWSSOAPValueKey
 	  r = [method rangeOfCharacterFromSet: illegal];
 	  if (r.length > 0)
 	    {
+	      if ([self debug])
+		{
+		  NSLog(@"Illegal character in method name '%@'", method);
+		}
 	      return nil;	// Bad method name.
 	    }
 	}

@@ -41,6 +41,7 @@ main()
   NSMutableArray        *norder;
   NSMutableDictionary   *nparams;
   NSDictionary          *result;
+  id			o;
 
   pool = [NSAutoreleasePool new];
 
@@ -148,8 +149,9 @@ main()
 
 
   coder = [GWSSOAPCoder new];
+  [coder setDebug: YES];
 
-  /* Test encoding and decoding of a SOAP request.
+  /* Test encoding and decoding of a very simple SOAP request.
    */
   params = [NSMutableDictionary dictionaryWithCapacity: 8];
   order = [NSMutableArray arrayWithCapacity: 8];
@@ -208,6 +210,42 @@ main()
           fprintf(stdout, "PASS\n");
         }
     }
+
+  /* Now an example of encoding a complex SOAP message manually ..
+   */
+
+  /* First stage ... let's build a complex type with a specific
+   * order of the elements and a specific namespace.
+   */
+  o = [NSDictionary dictionaryWithObjectsAndKeys:
+    @"urn://here.there/", GWSSOAPNamespaceURIKey,
+    [NSArray arrayWithObjects: @"username", @"password", nil], GWSOrderKey,
+    @"myname", @"username",
+    @"mypass", @"password",
+    nil];
+
+  /* Now we store that as a part called 'signin'
+   */
+  o = [NSDictionary dictionaryWithObjectsAndKeys:
+    o, @"signin",
+    nil];
+
+  /* Now let's set that as a header for a little message containing a single
+   * value (called 'parameter') where the headers use literal encoding.
+   */
+  o = [NSDictionary dictionaryWithObjectsAndKeys:
+    o, GWSSOAPMessageHeadersKey,
+    GWSSOAPUseLiteral, GWSSOAPHeaderUseKey,
+    @"an argument", @"parameter",
+    nil];
+
+  /* Now build and display the result.
+   */
+  xml = [coder buildRequest: @"method"
+                 parameters: o
+                      order: nil];
+  fprintf(stdout, "\nENCODED ... %*.*s\n\n\n",
+    [xml length], [xml length], (char*)[xml bytes]);
 
 
   fprintf(stdout, "Expect this to produce an error ... it tries a request"

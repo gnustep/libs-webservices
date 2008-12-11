@@ -31,14 +31,7 @@
 - (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
 		    in: (id)section
-{
-  return nil;
-}
-
-- (NSString*) setupService: (GWSService*)service
-		      from: (GWSElement*)node
-		       for: (GWSDocument*)document
-		        in: (id)section
+		 setup: (GWSService*)service
 {
   return nil;
 }
@@ -49,10 +42,24 @@
 - (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
 		    in: (id)section
+		 setup: (GWSService*)service
 {
   NSString	*name = [node name];
   NSString	*pName = [[node parent] name];
   NSDictionary	*a = [node attributes];
+  GWSSOAPCoder	*c;
+
+  /* If we are setting up from a SOAP element, we must be doing a SOAP
+   * message of some sort, so we can check to see that the service has
+   * the correct type of coder.
+   */
+  c = (GWSSOAPCoder*)[service coder];
+  if (service != nil && [c isKindOfClass: [GWSSOAPCoder class]] == NO)
+    {
+      c = [GWSSOAPCoder new];
+      [service setCoder: c];
+      [c release];
+    }
 
   if ([section isKindOfClass: [GWSBinding class]])
     {
@@ -64,9 +71,13 @@
 
 	  style = [a objectForKey: @"style"];
 	  if (style == nil
-	    || [style isEqualToString: @"document"]
-	    || [style isEqualToString: @"rpc"])
+	    || [style isEqualToString: @"document"])
 	    {
+	      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
+	    }
+	  else if ([style isEqualToString: @"rpc"])
+	    {
+	      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
 	    }
 	  else
 	    {
@@ -87,102 +98,162 @@
 	}
       else if ([name isEqualToString: @"operation"])
 	{
-	  NSString	*style;
+	  NSString	*style = [a objectForKey: @"style"];
+	  NSString	*action = [a objectForKey: @"soapAction"];
 
-	  /* No mandatory attributes.
+	  /* A missing style defaults to 'document'
 	   */
-	  style = [[node attributes] objectForKey: @"style"];
-	  if (style != nil 
-	    && [style isEqualToString: @"document"] == NO
-	    && [style isEqualToString: @"rpc"] == NO)
+	  if (style == nil || [style isEqualToString: @"document"] == YES)
+	    {
+	      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
+	    }
+	  else if ([style isEqualToString: @"rpc"])
+	    {
+	      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
+	    }
+	  else
 	    {
 	      return [NSString stringWithFormat:
 		@"bad SOAP style: '%@' in operation", style];
+	    }
+
+	  /* A missing action defaults to '""'
+	   */
+	  if (action == nil)
+	    {
+	      [service setSOAPAction: @"\"\""];
+	    }
+	  else
+	    {
+	      [service setSOAPAction: action];
 	    }
 	}
       else if ([pName isEqualToString: @"input"]
         ||[pName isEqualToString: @"output"])
 	{
 	  NSString		*use = [a objectForKey: @"use"];
-
-	  if ([name isEqualToString: @"body"])
-	    {
-	    }
-	  else if ([name isEqualToString: @"header"])
-	    {
-	      NSString	*part = [a objectForKey: @"part"];
-	      NSString	*messageName = [a objectForKey: @"message"];
-
-	      /* If there is no 'message' attribute, we must be using the
-	       * message defined by the abstract portType  for this operation.
-	       */
-	      if (part != nil && messageName == nil)
-		{
-		  NSString	*name;
-		  GWSElement	*elem;
-
-		  /* This is in binding/operation/input/header, so the name
-		   * of our parent's parent is the operation name.
-		   */
-		  name = [[[node parent] parent] name];
-		  elem = [[(GWSBinding*)section type]
-		    operationWithName: name create: NO];
-		  if (elem == nil)
-		    {
-		      return [NSString stringWithFormat:
-			@"No operation '%@' found in binding", name];
-		    }
-		  elem = [elem firstChild];
-		  while (elem != nil && [[elem name] isEqual: @"input"] == NO)
-		    {
-		      elem = [elem sibling];
-		    }
-		  if (elem != nil)
-		    {
-		      messageName
-			= [[elem attributes] objectForKey: @"message"];
-		    }
-		  if (messageName == nil)
-		    {
-		      return [NSString stringWithFormat:
-			@"No message for '%@' found in binding", name];
-		    }
-		}
-	      if (part && messageName)
-		{
-		  GWSMessage	*message;
-
-		  message = [document messageWithName: messageName create: NO];
-		  if (message == nil)
-		    {
-		      return [NSString stringWithFormat:
-			@"Unable to find message '%@'", messageName];
-		    }
-		  else
-		    {
-		      NSString	*pName;
-
-		      pName = [message elementOfPartNamed: part];
-		      if (pName == nil)
-			{
-			  return [NSString stringWithFormat:
-			    @"Unable to find part '%@' in message '%@'",
-			    part, messageName];
-			}
-		    }
-		}
-	    }
-	  else
-	    {
-	      return [NSString stringWithFormat:
-		@"unknown SOAP extensibility: '%@' in %@", name, section];
-	    }
+	  NSString		*namespace = [a objectForKey: @"namespace"];
+          NSMutableDictionary	*p = [service webServiceParameters];
 
 	  if ([use isEqualToString: @"literal"] == NO
 	    && [use isEqualToString: @"encoded"] == NO)
 	    {
 	      return [NSString stringWithFormat:
 		@"bad SOAP 'use' value: '%@' in %@ %@", use, section, name];
+	    }
+
+	  if ([name isEqualToString: @"body"])
+	    {
+	      [p setObject: use forKey: GWSSOAPBodyUseKey];
+	      if (namespace != nil)
+		{
+	          [p setObject: namespace forKey: GWSSOAPNamespaceURIKey];
+		}
+	    }
+	  else if ([name isEqualToString: @"header"])
+	    {
+	      id	h;
+
+	      [p setObject: use forKey: GWSSOAPHeaderUseKey];
+
+	      /* If we have a non-empty headers dictionary,
+	       * we can set it up.  Otherwise we must assume that
+	       * the coder's delegate is going to provide the headers.
+	       */
+	      h = [p objectForKey: GWSSOAPMessageHeadersKey];
+	      if ([h isKindOfClass: [NSDictionary class]] == YES
+		&& [h count] > 0)
+		{
+		  NSString	*part;
+		  NSString	*messageName;
+
+		  /* Ensure the header info can be modified.
+		   */
+		  if ([h isKindOfClass: [NSMutableDictionary class]] == NO)
+		    {
+		      h = [h mutableCopy];
+		      [p setObject: h forKey: GWSSOAPMessageHeadersKey];
+		      [h release];
+		    }
+
+		  /* Set the default namespace for the contents of Header
+		   * if known.
+		   */
+		  if (namespace != nil)
+		    {
+		      [h setObject: namespace forKey: GWSSOAPNamespaceURIKey];
+		    }
+
+		  /* If there is no 'message' attribute,
+		   * we must be using the message defined
+		   * by the abstract portType for this operation.
+		   */
+		  part = [a objectForKey: @"part"];
+		  messageName = [a objectForKey: @"message"];
+		  if (part != nil && messageName == nil)
+		    {
+		      NSString		*name;
+		      GWSElement	*elem;
+
+		      /* This is in binding/operation/input/header, so the name
+		       * of our parent's parent is the operation name.
+		       */
+		      name = [[[node parent] parent] name];
+		      elem = [[(GWSBinding*)section type]
+			operationWithName: name create: NO];
+		      if (elem == nil)
+			{
+			  return [NSString stringWithFormat:
+			    @"No operation '%@' found in binding", name];
+			}
+		      elem = [elem firstChild];
+		      while (elem != nil
+			&& [[elem name] isEqual: @"input"] == NO)
+			{
+			  elem = [elem sibling];
+			}
+		      if (elem != nil)
+			{
+			  messageName
+			    = [[elem attributes] objectForKey: @"message"];
+			}
+		      if (messageName == nil)
+			{
+			  return [NSString stringWithFormat:
+			    @"No message for '%@' found in binding", name];
+			}
+		    }
+		  if (part && messageName)
+		    {
+		      GWSMessage	*message;
+
+		      message = [document messageWithName: messageName
+						   create: NO];
+		      if (message == nil)
+			{
+			  return [NSString stringWithFormat:
+			    @"Unable to find message '%@'", messageName];
+			}
+		      else
+			{
+			  NSString	*pName;
+
+			  pName = [message elementOfPartNamed: part];
+			  if (pName == nil)
+			    {
+			      return [NSString stringWithFormat:
+				@"Unable to find part '%@' in message '%@'",
+				part, messageName];
+			    }
+			}
+		    }
+
+		}
+	    }
+	  else
+	    {
+	      return [NSString stringWithFormat:
+		@"unknown SOAP extensibility: '%@' in %@", name, section];
 	    }
 	}
       else
@@ -213,145 +284,13 @@
 		  return [NSString stringWithFormat:
 		    @"bad location '%@' in SOAP port address: '%@'", location];
 		}
+	      [service setURL: location];
 	    }
 	}
       else
 	{
 	  return [NSString stringWithFormat:
 	    @"unknown SOAP extensibility: '%@' in port", name];
-	}
-    }
-  return nil;
-}
-
-- (NSString*) setupService: (GWSService*)service
-		      from: (GWSElement*)node
-		       for: (GWSDocument*)document
-			in: (id)section
-{
-  NSString	*problem;
-  NSString	*name;
-  NSString	*pName;
-  NSDictionary	*a;
-  GWSSOAPCoder	*c;
-
-  /* To avoid checking things in two places, we do all the checking in the
-   * validation method, and call that method from here so that we know we
-   * have good data to set up the service.
-   **/
-  problem = [self validate: node for: document in: section];
-  if (problem != nil)
-    {
-      return problem;
-    }
-
-  /* If we are setting up from a SOAP element, we must be doing a SOAP
-   * message of some sort, so we can check to see that the service has
-   * the correct type of coder.
-   */
-  c = (GWSSOAPCoder*)[service coder];
-  if ([c isKindOfClass: [GWSSOAPCoder class]] == NO)
-    {
-      c = [GWSSOAPCoder new];
-      [service setCoder: c];
-      [c release];
-    }
-
-  name = [node name];
-  pName = [[node parent] name];
-  a = [node attributes];
-
-  /* Now we do section specific setup.
-   */
-  if ([section isKindOfClass: [GWSBinding class]])
-    {
-      /* Binding setup 
-       */
-      if ([name isEqualToString: @"binding"])
-	{
-	  NSDictionary	*a = [node attributes];
-	  NSString	*style;
-	  NSString	*transport;
-
-	  style = [a objectForKey: @"style"];
-	  if (style == nil || [style isEqualToString: @"document"])
-	    {
-	      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
-	    }
-	  else
-	    {
-	      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
-	    }
-
-	  transport = [a objectForKey: @"transport"];
-	  if (transport == nil || [transport isEqualToString:
-	    @"http://schemas.xmlsoap.org/soap/http"])
-	    {
-	    }
-	}
-      else if ([name isEqualToString: @"operation"])
-	{
-	  NSDictionary	*attributes = [node attributes];
-	  NSString	*style = [attributes objectForKey: @"style"];
-	  NSString	*action = [attributes objectForKey: @"soapAction"];
-
-	  /* If present, the style overrides the one from the binding.
-	   */
-	  if (style != nil)
-	    {
-	      if ([style isEqualToString: @"rpc"])
-		{
-		  [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
-		}
-	      else
-		{
-		  [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
-		}
-	    }
-
-	  /* The SOAP action is optional.
-	   */
-	  if (action == nil)
-	    {
-	      [service setSOAPAction: @"\"\""];
-	    }
-	  else
-	    {
-	      [service setSOAPAction: action];
-	    }
-	}
-      else if ([pName isEqualToString: @"input"]
-        ||[pName isEqualToString: @"output"])
-	{
-	  NSDictionary	*a = [node attributes];
-	  NSString	*use = [a objectForKey: @"use"];
-          NSMutableDictionary	*p = [service webServiceParameters];
-
-	  if ([name isEqualToString: @"body"])
-	    {
-	      NSString	*namespace;
-
-	      [p setObject: use forKey: GWSSOAPBodyUseKey];
-
-	      namespace = [a objectForKey: @"namespace"];
-	      if (namespace != nil)
-		{
-	          [p setObject: namespace forKey: GWSSOAPNamespaceURIKey];
-		}
-	    }
-	  else if ([name isEqualToString: @"header"])
-	    {
-	      [p setObject: use forKey: GWSSOAPHeaderUseKey];
-	    }
-	}
-    }
-  else if ([section isKindOfClass: [GWSPort class]] == YES)
-    {
-      /* This is a port element inside a service element
-       */
-      if ([name isEqualToString: @"address"])
-	{
-	  [service setURL: [[node attributes] objectForKey: @"location"]];
 	}
     }
   return nil;

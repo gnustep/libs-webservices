@@ -56,7 +56,7 @@ static NSLock			*extLock = nil;
 
       if (e != nil)
 	{
-	  return [e validate: element for: self in: section];
+	  return [e validate: element for: self in: section setup: nil];
 	}
     }
   return nil;

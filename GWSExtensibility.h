@@ -66,22 +66,17 @@ extern "C" {
  * The section argument is the object on whose behalf the extensibility
  * instance is being parsed (eg  a GWSPortType).<br />
  * This must return nil if the extensibility node is valid,
- * and a descriptive error message if it is not.
+ * and a descriptive error message if it is not.<br />
+ * The optional service argument is, if present, a [GWSService] object
+ * which is about to send a message ... in this case the method should
+ * modify the parameters of the message adding in keys to specify how
+ * the parameters should be encoded and where/how the message should
+ * be sent.
  */
 - (NSString*) validate: (GWSElement*)node
 		   for: (GWSDocument*)document
-		    in: (id)section;
-
-/** Method to set up a service for an operation based on the extensibility
- * node provided.<br />
- * The section argument is the object on whose behalf the extensibility
- * instance is to be used (eg  a GWSPortType).<br />
- * Returns nil on success and an error message on failure.
- */
-- (NSString*) setupService: (GWSService*)service
-		      from: (GWSElement*)node
-		       for: (GWSDocument*)document
-			in: (id)section;
+		    in: (id)section
+		 setup: (GWSService*)service;
 
 @end
 

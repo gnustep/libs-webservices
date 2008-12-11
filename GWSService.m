@@ -169,10 +169,7 @@
 
       if (e != nil)
 	{
-	  return [e setupService: self
-			    from: element
-			     for: _document
-			      in: section];
+	  return [e validate: element for: _document in: section setup: self];
 	}
     }
   return nil;
