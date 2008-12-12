@@ -53,6 +53,17 @@
 
 - (void) _completed
 {
+  if ([self debug] == YES)
+    {
+      if (_request != nil)
+	{
+	  [_result setObject: _request forKey: GWSRequestDataKey];
+	}
+      if (_response != nil)
+	{
+	  [_result setObject: _response forKey: GWSResponseDataKey];
+	}
+    }
   [self _clean];
   if ([_delegate respondsToSelector: @selector(completedRPC:)])
     {
@@ -152,10 +163,11 @@
 
 - (void) _setProblem: (NSString*)s
 {
-  [_result release];
-  _result = [[NSMutableDictionary alloc] initWithObjects: &s
-						 forKeys: &GWSErrorKey
-						   count: 1];
+  if (_result == nil)
+    {
+      _result = [NSMutableDictionary new];
+    }
+  [_result setObject: s forKey: GWSErrorKey];
 }
 
 - (NSString*) _setupFrom: (GWSElement*)element in: (id)section
@@ -630,6 +642,7 @@
   _timer = nil;
   [self _setProblem: @"timed out"];
   [_connection cancel];
+  [self _completed];
 }
 
 - (NSTimeZone*) timeZone
@@ -751,17 +764,6 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 						     count: 1];
     }
   NS_ENDHANDLER
-  if ([self debug] == YES)
-    {
-      if (_request != nil)
-	{
-	  [_result setObject: _request forKey: GWSRequestDataKey];
-	}
-      if (_response != nil)
-	{
-	  [_result setObject: _response forKey: GWSResponseDataKey];
-	}
-    }
   [_result retain];
 
   [_timer invalidate];

@@ -148,6 +148,11 @@ extern "C" {
  */
 - (NSString*) name;
 
+/** Returns the namespace URI mapped to by the specified prefix,
+ * or nil if there is no such prefix know.
+ */
+- (NSString*) namespaceForPrefix: (NSString*)prefix;
+
 /** Returns the namespace prefix used for the WSDL namespace in this document,
  * or nil if there is no namespace prefix used.
  */

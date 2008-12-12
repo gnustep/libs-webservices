@@ -26,6 +26,55 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
+/** Function to look up and return a mutable dictionary from within a
+ * mutable dictionary.  If an immutable dictionary is found, it is
+ * converted to a mutable one.
+ */
+static NSMutableDictionary *
+mutable(NSMutableDictionary *d, NSString *k)
+{
+  id	o = [d objectForKey: k];
+
+  if ([o isKindOfClass: [NSDictionary class]] == NO)
+    {
+      return nil;
+    }
+  if ([o isKindOfClass: [NSMutableDictionary class]] == NO)
+    {
+      o = [o mutableCopy];
+      [d setObject: o forKey: k];
+      [o release];
+    }
+  return o;
+}
+
+/** Function to look up a non-dictionary value from within a
+ * mutable dictionary and convert it to a mutable dictionary
+ * containing the original.<br />
+ * If the value found is actually a dictionary, just
+ * returns that (made mutable if necessary).
+ */
+static NSMutableDictionary *
+promote(NSMutableDictionary *d, NSString *k)
+{
+  id	o = mutable(d, k);
+
+  if (o == nil)
+    {
+      o = [d objectForKey: k];
+      if (o != nil)
+	{
+	  o = [[NSMutableDictionary alloc] initWithObjectsAndKeys:
+	    o, GWSSOAPValueKey,
+	    nil];
+	  [d setObject: o forKey: k];
+	  [o release];
+	}
+    }
+  return o;
+}
+
+
 @implementation	GWSExtensibility
 
 - (NSString*) validate: (GWSElement*)node
@@ -134,120 +183,218 @@
 	  NSString		*use = [a objectForKey: @"use"];
 	  NSString		*namespace = [a objectForKey: @"namespace"];
           NSMutableDictionary	*p = [service webServiceParameters];
+	  NSString		*part;
+	  NSString		*messageName;
+	  GWSMessage		*message;
+	  BOOL			literal;
 
-	  if ([use isEqualToString: @"literal"] == NO
-	    && [use isEqualToString: @"encoded"] == NO)
+	  if ([use isEqualToString: @"literal"] == YES)
+	    {
+	      literal = YES;
+	    }
+	  else if ([use isEqualToString: @"encoded"] == YES)
+	    {
+	      literal = NO;
+	    }
+	  else
 	    {
 	      return [NSString stringWithFormat:
 		@"bad SOAP 'use' value: '%@' in %@ %@", use, section, name];
 	    }
 
+	  /* If there is no 'message' attribute (it's optional in a header
+	   * and not present in a body, we must be using the message defined
+	   * by the abstract portType for this operation.
+	   */
+	  messageName = [a objectForKey: @"message"];
+	  if (messageName == nil)
+	    {
+	      NSString		*name;
+	      GWSElement	*elem;
+
+	      /* This is in binding/operation/input/xxx, so the name
+	       * attribute of the operatio n element is the namer of
+	       * the operation we need to use.
+	       */
+	      name = [[[[node parent] parent] attributes]
+		objectForKey: @"name"];
+	      elem = [[(GWSBinding*)section type] operationWithName: name
+							     create: NO];
+	      if (elem == nil)
+		{
+		  return [NSString stringWithFormat:
+		    @"No operation '%@' found in binding", name];
+		}
+	      elem = [elem firstChild];
+	      while (elem != nil
+		&& [[elem name] isEqual: @"input"] == NO)
+		{
+		  elem = [elem sibling];
+		}
+	      if (elem != nil)
+		{
+		  messageName = [[elem attributes] objectForKey: @"message"];
+		}
+	      if (messageName == nil)
+		{
+		  return [NSString stringWithFormat:
+		    @"No message for '%@' found in binding", name];
+		}
+	    }
+	  message = [document messageWithName: messageName create: NO];
+	  if (message == nil)
+	    {
+	      return [NSString stringWithFormat:
+		@"Unable to find message '%@'", messageName];
+	    }
+
 	  if ([name isEqualToString: @"body"])
 	    {
+	      NSMutableArray	*order;
+	      NSArray		*parts;
+	      NSEnumerator	*enumerator;
+
 	      [p setObject: use forKey: GWSSOAPUseKey];
 	      if (namespace != nil)
 		{
 	          [p setObject: namespace forKey: GWSSOAPNamespaceURIKey];
 		}
+
+	      parts = [[a objectForKey: @"parts"]
+		componentsSeparatedByString: @" "];
+	      if ([parts count] == 0)
+		{
+		  return [NSString stringWithFormat:
+		    @"no parts in body in %@", section];
+		}
+	      order = [NSMutableArray arrayWithCapacity: [parts count]];
+	      enumerator = [parts objectEnumerator];
+	      while ((part = [enumerator nextObject]) != nil)
+		{
+		  NSString	*elementName;
+		  NSString	*prefix;
+		  NSArray	*a;
+
+		  elementName = [message elementOfPartNamed: part];
+		  if (elementName == nil)
+		    {
+		      return [NSString stringWithFormat:
+			@"Unable to find part '%@' in message '%@'",
+			part, messageName];
+		    }
+		  a = [elementName componentsSeparatedByString: @":"];
+		  if ([a count] == 2)
+		    {
+		      prefix = [a objectAtIndex: 0];
+		      elementName = [a lastObject];
+		    }
+		  else
+		    {
+		      prefix = nil;
+		    }
+		  if (p != nil)
+		    {
+		      /* FIXME ... what if there is no value for this
+		       * part ... which parts are mandatory?
+		       */
+		      if ([p objectForKey: elementName] != nil)
+			{
+			  [order addObject: elementName];
+			}
+		      if (prefix != nil &&  literal == YES)
+			{
+			  NSMutableDictionary	*v;
+			  NSString		*n;
+
+			  v = promote(p, elementName);
+			  n = [document namespaceForPrefix: prefix];
+			  [v setObject: n
+				forKey: GWSSOAPNamespaceURIKey];
+			}
+		    }
+		}
+	      if (p != nil)
+		{
+		  NSString	*n;
+
+		  [p setObject: order forKey: GWSOrderKey];
+		  enumerator = [p keyEnumerator];
+		  while ((n = [enumerator nextObject]) != nil)
+		    {
+		      if ([n isEqualToString: GWSOrderKey] == NO
+			&& [n hasPrefix: @"GWSSOAP"] == NO
+			&& [order containsObject: n] == NO)
+			{
+			  return [NSString stringWithFormat:
+			    @"Unknown value '%@' in message '%@'",
+			    n, messageName];
+			}
+		    }
+		}
 	    }
 	  else if ([name isEqualToString: @"header"])
 	    {
-	      id	h;
+	      NSMutableDictionary	*h;
 
 	      /* If we have a non-empty headers dictionary,
 	       * we can set it up.  Otherwise we must assume that
 	       * the coder's delegate is going to provide the headers.
 	       */
-	      h = [p objectForKey: GWSSOAPMessageHeadersKey];
-	      if ([h isKindOfClass: [NSDictionary class]] == YES
-		&& [h count] > 0)
+	      h = mutable(p, GWSSOAPMessageHeadersKey);
+	      if ([h count] > 0)
 		{
-		  NSString	*part;
-		  NSString	*messageName;
-
-		  /* Ensure the header info can be modified.
-		   */
-		  if ([h isKindOfClass: [NSMutableDictionary class]] == NO)
-		    {
-		      h = [h mutableCopy];
-		      [p setObject: h forKey: GWSSOAPMessageHeadersKey];
-		      [h release];
-		    }
-
 	          [h setObject: use forKey: GWSSOAPUseKey];
-
-		  /* Set the default namespace for the contents of Header
-		   * if known.
-		   */
 		  if (namespace != nil)
 		    {
 		      [h setObject: namespace forKey: GWSSOAPNamespaceURIKey];
 		    }
 
-		  /* If there is no 'message' attribute,
-		   * we must be using the message defined
-		   * by the abstract portType for this operation.
-		   */
 		  part = [a objectForKey: @"part"];
-		  messageName = [a objectForKey: @"message"];
-		  if (part != nil && messageName == nil)
+		  if (part)
 		    {
-		      NSString		*name;
-		      GWSElement	*elem;
+		      NSString	*elementName;
+		      NSString	*prefix;
+		      NSArray	*a;
 
-		      /* This is in binding/operation/input/header, so the name
-		       * of our parent's parent is the operation name.
-		       */
-		      name = [[[node parent] parent] name];
-		      elem = [[(GWSBinding*)section type]
-			operationWithName: name create: NO];
-		      if (elem == nil)
+		      elementName = [message elementOfPartNamed: part];
+		      if (elementName == nil)
 			{
 			  return [NSString stringWithFormat:
-			    @"No operation '%@' found in binding", name];
+			    @"Unable to find part '%@' in message '%@'",
+			    part, messageName];
 			}
-		      elem = [elem firstChild];
-		      while (elem != nil
-			&& [[elem name] isEqual: @"input"] == NO)
+		      a = [elementName componentsSeparatedByString: @":"];
+		      if ([a count] == 2)
 			{
-			  elem = [elem sibling];
-			}
-		      if (elem != nil)
-			{
-			  messageName
-			    = [[elem attributes] objectForKey: @"message"];
-			}
-		      if (messageName == nil)
-			{
-			  return [NSString stringWithFormat:
-			    @"No message for '%@' found in binding", name];
-			}
-		    }
-		  if (part && messageName)
-		    {
-		      GWSMessage	*message;
-
-		      message = [document messageWithName: messageName
-						   create: NO];
-		      if (message == nil)
-			{
-			  return [NSString stringWithFormat:
-			    @"Unable to find message '%@'", messageName];
+			  prefix = [a objectAtIndex: 0];
+			  elementName = [a lastObject];
 			}
 		      else
 			{
-			  NSString	*pName;
+			  prefix = nil;
+			}
+		      if (h != nil && prefix != nil)
+			{
+			  NSMutableDictionary	*v;
 
-			  pName = [message elementOfPartNamed: part];
-			  if (pName == nil)
+			  /* FIXME ... what if there is no value for this
+			   * header ... which headers are mandatory?
+			   */
+			  v = promote(h, elementName);
+			  if (literal == YES)
 			    {
-			      return [NSString stringWithFormat:
-				@"Unable to find part '%@' in message '%@'",
-				part, messageName];
+			      NSString	*n;
+
+			      n = [document namespaceForPrefix: prefix];
+			      [v setObject: n forKey: GWSSOAPNamespaceURIKey];
 			    }
 			}
 		    }
-
+		  else
+		    {
+		      return [NSString stringWithFormat:
+			@"no part in header in %@", section];
+		    }
 		}
 	    }
 	  else

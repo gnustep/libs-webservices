@@ -1,3 +1,7 @@
+2008-12-12 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	Add more soap argument setup and verification code.
+
 2008-12-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Simplify extensions handling by combining validation and service setup

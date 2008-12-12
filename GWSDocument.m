@@ -545,6 +545,11 @@ static NSLock			*extLock = nil;
   return _name;
 }
 
+- (NSString*) namespaceForPrefix: (NSString*)prefix
+{
+  return [_namespaces objectForKey: prefix];
+}
+
 - (NSString*) namespacePrefix
 {
   return _prefix;
