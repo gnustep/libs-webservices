@@ -309,6 +309,12 @@
    * to control encoding options.
    */
   _parameters = [parameters mutableCopy];
+  if (order != nil)
+    {
+      /* Store the ordering so that extensions can find it.
+       */
+      [_parameters setObject: order forKey: GWSOrderKey];
+    }
 
   /* If this is not a standalone service, we must set up information from
    * the parsed WSDL document.  Otherwise we just use whatever has been

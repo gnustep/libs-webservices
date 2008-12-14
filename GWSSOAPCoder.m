@@ -76,6 +76,8 @@ NSString * const GWSSOAPValueKey
   unsigned	        c;
   unsigned	        i;
 
+  /* Determine the order of the parameters in the message body.
+   */
   o = [parameters objectForKey: GWSOrderKey];
   if (o != nil)
     {
@@ -84,6 +86,21 @@ NSString * const GWSSOAPValueKey
 	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
 	}
       order = o;
+    }
+  if ([order count] == 0)
+    {
+      NSEnumerator      *kEnum = [parameters keyEnumerator];
+      NSString          *k;
+      NSMutableArray    *a = [NSMutableArray array];
+
+      while ((k = [kEnum nextObject]) != nil)
+	{
+	  if ([k hasPrefix: @"GWSSOAP"] == NO)
+	    {
+	      [a addObject: k];
+	    }
+	}
+      order = a;
     }
 
   /* The method name is required for RPC operations ...
@@ -163,11 +180,49 @@ NSString * const GWSSOAPValueKey
     }
 
   /* Now look for a value listing the headers to be encoded.
-   * If there is no value, we omit the SOAP header entirely.
+   * If there is no value, we see if there are header values provided in
+   * the parameters dictionary which are not part of the message body,
+   * and build a headers dictionary from them.
    */
   o = [parameters objectForKey: GWSSOAPMessageHeadersKey];
   if (o == nil)
     {
+      NSEnumerator     	*kEnum;
+      NSString         	*k;
+
+      kEnum = [parameters keyEnumerator];
+      while ((k = [kEnum nextObject]) != nil)
+	{
+	  if ([k isEqualToString: GWSOrderKey] == NO
+	    && [k hasPrefix: @"GWSSOAP"] == NO
+	    && [order containsObject: k] == NO)
+	    {
+	      if (o == nil)
+		{
+		  o = [NSMutableDictionary new];
+		}
+	      [o setObject: [parameters objectForKey: k] forKey: k];
+	    }
+	}
+      if (o != nil)
+	{
+	  NSMutableDictionary	*m = [parameters mutableCopy];
+
+	  kEnum = [m keyEnumerator];
+	  while ((k = [kEnum nextObject]) != nil)
+	    {
+	      [m removeObjectForKey: k];
+	    }
+	  [m setObject: o forKey: GWSSOAPMessageHeadersKey];
+	  [o release];
+	  parameters = [m autorelease];
+	}
+    }
+
+  if (o == nil)
+    {
+      /* If we still have no headers, just don't create a Header element.
+       */
       header = nil;
     }
   else
@@ -337,21 +392,6 @@ NSString * const GWSSOAPValueKey
 	    }
 	}
 
-      if ([order count] == 0)
-	{
-	  NSEnumerator      *kEnum = [parameters keyEnumerator];
-	  NSString          *k;
-	  NSMutableArray    *a = [NSMutableArray array];
-
-	  while ((k = [kEnum nextObject]) != nil)
-	    {
-	      if ([k hasPrefix: @"GWSSOAP"] == NO)
-		{
-		  [a addObject: k];
-		}
-	    }
-	  order = a;
-	}
       c = [order count];
       for (i = 0; i < c; i++)
 	{
@@ -419,30 +459,9 @@ NSString * const GWSSOAPValueKey
 	  container = body;    // Direct encoding inside the body.
 	}
 
-      if ([order count] == 0)
-	{
-	  NSEnumerator      *kEnum = [parameters keyEnumerator];
-	  NSString          *k;
-	  NSMutableArray    *a = [NSMutableArray array];
+      [self setOperationStyle:
+	[parameters objectForKey: GWSSOAPBodyEncodingStyleKey]];
 
-	  while ((k = [kEnum nextObject]) != nil)
-	    {
-	      if ([k hasPrefix: @"GWSSOAP"] == YES)
-		{
-		  if ([k isEqual: GWSSOAPBodyEncodingStyleKey])
-		    {
-		      NSString      *v = [parameters objectForKey: k];
-
-		      [self setOperationStyle: v];
-		    }
-		}
-	      else
-		{
-		  [a addObject: k];
-		}
-	    }
-	  order = a;
-	}
       c = [order count];
       for (i = 0; i < c; i++)
 	{
@@ -717,6 +736,10 @@ NSString * const GWSSOAPValueKey
 
 - (void) setOperationStyle: (NSString*)style
 {
+  if (style == nil)
+    {
+      return;
+    }
   if ([GWSSOAPBodyEncodingStyleDocument isEqualToString: style])
     {
       _style = GWSSOAPBodyEncodingStyleDocument;

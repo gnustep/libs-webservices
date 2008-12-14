@@ -335,66 +335,99 @@ promote(NSMutableDictionary *d, NSString *k)
 	  else if ([name isEqualToString: @"header"])
 	    {
 	      NSMutableDictionary	*h;
+	      BOOL			created = NO;
+	      unsigned			added = 0;
 
-	      /* If we have a non-empty headers dictionary,
-	       * we can set it up.  Otherwise we must assume that
-	       * the coder's delegate is going to provide the headers.
+	      /* Get headers dictionary from parameters or create it
+	       * if it's not present.
 	       */
 	      h = mutable(p, GWSSOAPMessageHeadersKey);
-	      if ([h count] > 0)
+	      if (h == nil)
 		{
-	          [h setObject: use forKey: GWSSOAPUseKey];
-		  if (namespace != nil)
+		  created = YES;
+		  h = [NSMutableDictionary new];
+		}
+
+	      [h setObject: use forKey: GWSSOAPUseKey];
+	      if (namespace != nil)
+		{
+		  [h setObject: namespace forKey: GWSSOAPNamespaceURIKey];
+		}
+	      part = [a objectForKey: @"part"];
+	      if (part)
+		{
+		  NSString	*elementName;
+		  NSString	*prefix;
+		  NSArray	*a;
+		  id		o;
+
+		  elementName = [message elementOfPartNamed: part];
+		  if (elementName == nil)
 		    {
-		      [h setObject: namespace forKey: GWSSOAPNamespaceURIKey];
+		      return [NSString stringWithFormat:
+			@"Unable to find part '%@' in message '%@'",
+			part, messageName];
 		    }
-
-		  part = [a objectForKey: @"part"];
-		  if (part)
+		  a = [elementName componentsSeparatedByString: @":"];
+		  if ([a count] == 2)
 		    {
-		      NSString	*elementName;
-		      NSString	*prefix;
-		      NSArray	*a;
-
-		      elementName = [message elementOfPartNamed: part];
-		      if (elementName == nil)
-			{
-			  return [NSString stringWithFormat:
-			    @"Unable to find part '%@' in message '%@'",
-			    part, messageName];
-			}
-		      a = [elementName componentsSeparatedByString: @":"];
-		      if ([a count] == 2)
-			{
-			  prefix = [a objectAtIndex: 0];
-			  elementName = [a lastObject];
-			}
-		      else
-			{
-			  prefix = nil;
-			}
-		      if (h != nil && prefix != nil)
-			{
-			  NSMutableDictionary	*v;
-
-			  /* FIXME ... what if there is no value for this
-			   * header ... which headers are mandatory?
-			   */
-			  v = promote(h, elementName);
-			  if (literal == YES)
-			    {
-			      NSString	*n;
-
-			      n = [document namespaceForPrefix: prefix];
-			      [v setObject: n forKey: GWSSOAPNamespaceURIKey];
-			    }
-			}
+		      prefix = [a objectAtIndex: 0];
+		      elementName = [a lastObject];
 		    }
 		  else
 		    {
-		      return [NSString stringWithFormat:
-			@"no part in header in %@", section];
+		      prefix = nil;
 		    }
+
+		  o = [h objectForKey: elementName];
+		  if (o == nil)
+		    {
+		      /* No value found in headers dictionary, perhaps it's in
+		       * the main parameters dictionary and we should move it.
+		       */
+		      o = [p objectForKey: elementName];
+		      if (o != nil && [[p objectForKey: GWSOrderKey]
+			containsObject: elementName] == NO)
+			{
+			  [h setObject: o forKey: elementName];
+			  [p removeObjectForKey: elementName];
+			}
+		    }
+		  /* FIXME ... what if there is no value ... is it ok to
+		   * just ignore it?
+		   */
+		  if (o != nil)
+		    {
+		      added++;
+
+		      /* If the element has a namespace and we are doing
+		       * use=literal then we should make sure that the
+		       * element is encoded with the namespace.
+		       */
+		      if (prefix != nil && literal == YES)
+			{
+			  NSString		*n;
+			  NSMutableDictionary	*v;
+
+			  n = [document namespaceForPrefix: prefix];
+			  v = promote(h, elementName);
+			  [v setObject: n forKey: GWSSOAPNamespaceURIKey];
+			}
+		    }
+
+		  if (created == YES)
+		    {
+		      if (added > 0)
+			{
+			  [p setObject: h forKey: GWSSOAPMessageHeadersKey];
+			} 
+		      [h release];
+		    }
+		}
+	      else
+		{
+		  return [NSString stringWithFormat:
+		    @"no part in header in %@", section];
 		}
 	    }
 	  else

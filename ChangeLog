@@ -1,3 +1,9 @@
+2008-12-14 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	For ease of use, allow soap header values to be placed in the params
+	directly rather than in a dictionary referenced by
+        GWSSOAPMessageheadersKey
+
 2008-12-12 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Add more soap argument setup and verification code.

@@ -145,12 +145,15 @@ extern NSString * const GWSSOAPUseEncoded;
 extern NSString * const GWSSOAPUseLiteral;
 
 /** Key for the header element for a soap message.<br />
- * A dictionary of message parts (like the parameters dictionary itsself)
- * may be specified for the contents of the header.<br />
- * Alternatively, you may some object other than a populated dictionary
- * for this key, in which case the coder will generate an empty header
- * element which the coder's delegate can then modify.<br />
- * If no value is set for this key, the header element is omitted.
+ * You usually do not need to create this directly.<br />
+ * This is a dictionary of message parts (like the parameters dictionary
+ * itsself) which is used to specify for the contents of the Header.<br />
+ * If you do not specify a value for this key, the coder will attempt to
+ * build a dictionary from any items in the parameters dictionary which
+ * are not used for the main message body.<br />
+ * If no value is set for this key (and the dictionary can't be built from
+ * headers present in the main parameters dictionary), the header element
+ * is omitted.
  */
 extern NSString * const GWSSOAPMessageHeadersKey;
 
