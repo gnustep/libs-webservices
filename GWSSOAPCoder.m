@@ -1095,11 +1095,13 @@ NSString * const GWSSOAPValueKey
   else
     {
       NSMutableArray            *ma;
+      NSMutableArray            *na;
       NSMutableDictionary       *md;
       unsigned                  i;
 
       md = [NSMutableDictionary dictionaryWithCapacity: c];
       ma = [NSMutableArray arrayWithCapacity: c];
+      na = [NSMutableArray arrayWithCapacity: c];
       for (i = 0; i < c; i++)
         {
           NSString      *n;
@@ -1110,12 +1112,15 @@ NSString * const GWSSOAPValueKey
           o = [self _simplify: elem];
           [md setObject: o forKey: n];
           [ma addObject: o];
+          [na addObject: n];
         }
       if ([md count] == c)
         {
           /* As the dictionary contains an entry for each object decoded,
            * then all objects had different names and this is a structure.
+	   * Set the order in case that is significant.
            */
+	  [md setObject: na forKey: GWSOrderKey];
           result = md;
         }
       else
