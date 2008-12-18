@@ -1094,43 +1094,83 @@ NSString * const GWSSOAPValueKey
     }
   else
     {
-      NSMutableArray            *ma;
-      NSMutableArray            *na;
-      NSMutableDictionary       *md;
+      NSMutableArray            *names;
+      NSMutableArray            *order;
+      NSMutableArray            *values;
+      NSCountedSet		*keys;
       unsigned                  i;
 
-      md = [NSMutableDictionary dictionaryWithCapacity: c];
-      ma = [NSMutableArray arrayWithCapacity: c];
-      na = [NSMutableArray arrayWithCapacity: c];
+      keys = [[NSCountedSet alloc] initWithCapacity: c];
+      names = [[NSMutableArray alloc] initWithCapacity: c];
+      order = [[NSMutableArray alloc] initWithCapacity: c];
+      values = [[NSMutableArray alloc] initWithCapacity: c];
       for (i = 0; i < c; i++)
         {
           NSString      *n;
-          id            o;
+          id            v;
 
           elem = [a objectAtIndex: i];
           n = [elem name];
-          o = [self _simplify: elem];
-          [md setObject: o forKey: n];
-          [ma addObject: o];
-          [na addObject: n];
+          v = [self _simplify: elem];
+	  [names addObject: n];
+	  if ([keys member: n] == nil)
+	    {
+	      [order addObject: n];
+	    }
+          [keys addObject: n];
+	  [values addObject: v];
         }
-      if ([md count] == c)
+      if ([keys count] == 0)
+	{
+	  /* As there is nothing decoded, we return an empty dictionary.
+	   */
+	  result = [NSMutableDictionary dictionary];
+	}
+      else if ([keys count] == 1 && [names count] > 1)
         {
-          /* As the dictionary contains an entry for each object decoded,
-           * then all objects had different names and this is a structure.
-	   * Set the order in case that is significant.
-           */
-	  [md setObject: na forKey: GWSOrderKey];
+	  /* As there is only a single name but multiple values,
+	   * this must be an array.
+	   */
+	  result = [[values retain] autorelease];
+	}
+      else
+	{
+          NSMutableDictionary	*md;
+
+	  /* This is a structure containing individual elements and/or
+	   * possibly arrays of elements.
+	   */
+	  md = [NSMutableDictionary dictionaryWithCapacity: [order count] + 1];
+	  c = [names count];
+	  for (i = 0; i < c; i++)
+	    {
+	      NSString	*n = [names objectAtIndex: i];
+	      unsigned	a = [keys countForObject: n];
+
+	      if (a == 1)
+		{
+		  [md setObject: [values objectAtIndex: i] forKey: n];
+		}
+	      else
+		{
+		  NSMutableArray	*ma = [md objectForKey: n];
+
+		  if (ma == nil)
+		    {
+		      ma = [[NSMutableArray alloc] initWithCapacity: a];
+		      [md setObject: ma forKey: n];
+		      [ma release];
+		    }
+		  [ma addObject: [values objectAtIndex: i]];
+		}
+	    }
+	  [md setObject: order forKey: GWSOrderKey];
           result = md;
         }
-      else
-        {
-          /* As the dictionary contains a different number of objects to
-           * the number decoded, some must have had the same name and we
-           * therefore have an array.
-           */
-          result = ma;
-        }
+      [keys release];
+      [names release];
+      [order release];
+      [values release];
     }
   return result;
 }

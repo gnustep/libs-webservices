@@ -1,3 +1,7 @@
+2008-12-18 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m: Fix error decoding complex types containing arrays.
+
 2008-12-14 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	For ease of use, allow soap header values to be placed in the params
