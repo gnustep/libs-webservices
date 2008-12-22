@@ -40,7 +40,7 @@ main()
   NSMutableDictionary   *params;
   NSMutableArray        *norder;
   NSMutableDictionary   *nparams;
-  NSDictionary          *result;
+  NSMutableDictionary   *result;
   id			o;
 
   pool = [NSAutoreleasePool new];
