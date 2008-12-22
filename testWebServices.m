@@ -30,6 +30,7 @@ int
 main()
 {
   NSAutoreleasePool     *pool;
+  NSAutoreleasePool     *inner;
   NSUserDefaults	*defs;
   GWSCoder              *coder;
   GWSService		*service;
@@ -53,6 +54,7 @@ main()
     ];
 
 
+  inner = [NSAutoreleasePool new];
   document = [[GWSDocument alloc] initWithContentsOfFile: @"SMS.wsdl"];
   
   params = [NSMutableDictionary dictionaryWithCapacity: 8];
@@ -74,10 +76,11 @@ main()
   xml = [document data];
   NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
   [document release];
-
+  [inner release];
 
   // [[NSRunLoop currentRunLoop] run];
 
+  inner = [NSAutoreleasePool new];
   coder = [GWSXMLRPCCoder new];
 
   /* Test encoding and decoding of an XMLRPC request.
@@ -145,9 +148,10 @@ main()
 
 
   [coder release];
+  [inner release];
 
 
-
+  inner = [NSAutoreleasePool new];
   coder = [GWSSOAPCoder new];
   [coder setDebug: YES];
 
@@ -216,10 +220,12 @@ main()
           fprintf(stdout, "PASS\n");
         }
     }
+  [inner release];
 
   /* Now an example of encoding a complex SOAP message manually ..
    */
 
+  inner = [NSAutoreleasePool new];
   /* First stage ... let's build a complex type with a specific
    * order of the elements and a specific namespace.
    */
@@ -254,14 +260,24 @@ main()
                       order: nil];
   fprintf(stdout, "\nENCODED ... %*.*s\n\n\n",
     [xml length], [xml length], (char*)[xml bytes]);
+  [inner release];
 
 
+  inner = [NSAutoreleasePool new];
   fprintf(stdout, "Expect this to produce an error ... it tries a request"
     " on the local web server:\n");
   service = [GWSService new]; 
   [service setDebug: YES];
   [service setURL: @"http://localhost/"];
   [service setCoder: coder];
+  params = [NSMutableDictionary dictionaryWithCapacity: 8];
+  order = [NSMutableArray arrayWithCapacity: 8];
+  [params setObject: @"hello<" forKey: @"string1"];
+  [order addObject: @"string1"];
+  [params setObject: [NSArray arrayWithObjects: @"a1", @"a2", @"a3", nil]
+    forKey: @"array1"];
+  [order addObject: @"array1"];
+  method = @"test";
   result = [service invokeMethod: method
                       parameters: params
                            order: order
@@ -270,6 +286,7 @@ main()
   [service release];
 
   [coder release];
+  [inner release];
 
   [pool release];
   return 0;
