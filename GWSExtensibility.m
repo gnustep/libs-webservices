@@ -264,8 +264,12 @@ promote(NSMutableDictionary *d, NSString *k)
 		componentsSeparatedByString: @" "];
 	      if ([parts count] == 0)
 		{
-		  return [NSString stringWithFormat:
-		    @"no parts in body in %@", section];
+		  parts = [message partNames];
+		  if ([parts count] == 0)
+		    {
+		      return [NSString stringWithFormat:
+		        @"no parts in body in %@", section];
+		    }
 		}
 	      order = [NSMutableArray arrayWithCapacity: [parts count]];
 	      enumerator = [parts objectEnumerator];

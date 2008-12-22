@@ -64,7 +64,7 @@ extern "C" {
  */
 - (NSString*) name;
 
-/** Return an array listing the names of al the parts defined for this
+/** Return an array listing the names of all the parts defined for this
  * message.
  */
 - (NSArray*) partNames;
