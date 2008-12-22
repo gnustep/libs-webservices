@@ -157,6 +157,9 @@ main()
   order = [NSMutableArray arrayWithCapacity: 8];
   [params setObject: @"hello<" forKey: @"string1"];
   [order addObject: @"string1"];
+  [params setObject: [NSArray arrayWithObjects: @"a1", @"a2", @"a3", nil]
+    forKey: @"array1"];
+  [order addObject: @"array1"];
   method = @"test";
   fprintf(stdout, "Request encode/decode ");
   [(GWSSOAPCoder*)coder setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
@@ -164,6 +167,9 @@ main()
                  parameters: params
                       order: order];
   result = [coder parseMessage: xml];
+  o = [[NSString alloc] initWithData: xml encoding: NSUTF8StringEncoding];
+  [result setObject: o forKey: @"EncodedDocument"];
+  [o release];
   norder = [result objectForKey: GWSOrderKey];
   nparams = [result objectForKey: GWSParametersKey];
   if (NO == [method isEqual: [result objectForKey: GWSMethodKey]])

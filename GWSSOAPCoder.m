@@ -684,6 +684,8 @@ NSString * const GWSSOAPValueKey
         }
       else
         {
+	  NSCountedSet	*cs;
+
           /* If the body contains a single element with no content,
            * we assume it is a method and its children are the
            * parameters.  Otherwise we assume that the parameters
@@ -698,10 +700,16 @@ NSString * const GWSSOAPValueKey
               [result setObject: [elem name] forKey: GWSMethodKey];
               children = [elem children];
             }
-          p = [[NSMutableDictionary alloc] initWithCapacity: c];
+          cs = [[NSCountedSet alloc] initWithCapacity: c];
+          c = [children count];
+          for (i = 0; i < c; i++)
+	    {
+	      [cs addObject: [[children objectAtIndex: i] name]];
+	    }
+          p = [[NSMutableDictionary alloc] initWithCapacity: [cs count]];
           [result setObject: p forKey: GWSParametersKey];
           [p release];
-          o = [[NSMutableArray alloc] initWithCapacity: c];
+          o = [[NSMutableArray alloc] initWithCapacity: [cs count]];
           [result setObject: o forKey: GWSOrderKey];
           [o release];
           c = [children count];
@@ -709,19 +717,45 @@ NSString * const GWSSOAPValueKey
             {
               id                arg;
               NSString          *n;
+	      unsigned		rCount;
 
               elem = [children objectAtIndex: i];
               n = [elem name];
-              [o addObject: n];
-              arg = [[self delegate] decodeWithCoder: self
-                                                item: elem
-                                               named: n];
-              if (arg == nil)
-                {
-                  arg = [self _simplify: elem];
-                }
-              [p setObject: arg forKey: n];
+	      if ((rCount = [cs countForObject: n]) == 1)
+		{
+		  [o addObject: n];
+		  arg = [[self delegate] decodeWithCoder: self
+						    item: elem
+						   named: n];
+		  if (arg == nil)
+		    {
+		      arg = [self _simplify: elem];
+		    }
+		  [p setObject: arg forKey: n];
+		}
+	      else
+		{
+		  NSMutableArray	*ma;
+
+		  ma = [p objectForKey: n];
+		  if (ma == nil)
+		    {
+		      ma = [[NSMutableArray alloc] initWithCapacity: rCount];
+		      [p setObject: ma forKey: n];
+		      [ma release];
+		      [o addObject: n];
+		    }
+		  arg = [[self delegate] decodeWithCoder: self
+						    item: elem
+						   named: n];
+		  if (arg == nil)
+		    {
+		      arg = [self _simplify: elem];
+		    }
+		  [ma addObject: arg];
+		}
             }
+	  [cs release];
         }
     }
   NS_HANDLER
@@ -888,89 +922,93 @@ NSString * const GWSSOAPValueKey
       c = [o description];
     }
 
-  if (nsName != nil)
-    {
-      q = [NSString stringWithFormat: @"%@:%@", nsName, name];
-    }
-  e = [[GWSElement alloc] initWithName: name
-                             namespace: nil
-                             qualified: q
-                            attributes: nil];
-  if (nsURI != nil)
-    {
-      [e setNamespace: nsURI forPrefix: @""];
-    }
-  if (x != nil)
-    {
-      [e setAttribute: x forKey: @"xsi:type"];
-    }
-  if (c != nil)
-    {
-      [e addContent: c];
-    }
-  [ctxt addChild: e];
-  [e release];
-
-  if (dictionary == YES)
-    {
-      NSArray   *order = [o objectForKey: GWSOrderKey];
-      NSString	*namespace = [o objectForKey: GWSSOAPNamespaceURIKey];
-      NSString	*prefix = [o objectForKey: GWSSOAPNamespaceNameKey];
-      unsigned  count;
-      unsigned  i;
-
-      if (namespace != nil)
-	{
-	  /* We have been told to specify a new namespace ... so do it.
-	   */
-	  [e setNamespace: namespace forPrefix: prefix];
-	}
-      else if (prefix != nil)
-	{
-	  /* We have been given a namespace prefix for this element.
-	   */
-	  [e setPrefix: prefix];
-	}
-
-      if ([order count] == 0)
-        {
-          order = [o allKeys];
-        }
-      count = [order count];
-      for (i = 0; i < count; i++)
-        {
-          NSString      *k = [order objectAtIndex: i];
-          id            v = [o objectForKey: k];
-
-	  if ([k hasPrefix: @"GWSSOAP"] == YES)
-	    {
-	      /* This is not an element to encode.
-	       */
-	      continue;
-	    }
-          v = [o objectForKey: k];
-	  if (v == nil)
-	    {
-	      [NSException raise: NSInvalidArgumentException
-			  format: @"Parameter '%@' (order %u) missing", k, i];
-	    }
-	  [self _createElementFor: v named: k in: e];
-        }
-    }
   if (array == YES)
     {
       unsigned  count;
       unsigned  i;
 
+      /* For an array, we simply create a sequence of elements with the
+       * same name for the items in the array.
+       */
       count = [o count];
       for (i = 0; i < count; i++)
         {
-          NSString      *k;
           id            v = [o objectAtIndex: i];
 
-          k = [NSString stringWithFormat: @"Arg%u", i];
-	  [self _createElementFor: v named: k in: e];
+	  [self _createElementFor: v named: name in: ctxt];
         }
+    }
+  else
+    {
+      if (nsName != nil)
+	{
+	  q = [NSString stringWithFormat: @"%@:%@", nsName, name];
+	}
+      e = [[GWSElement alloc] initWithName: name
+				 namespace: nil
+				 qualified: q
+				attributes: nil];
+      if (nsURI != nil)
+	{
+	  [e setNamespace: nsURI forPrefix: @""];
+	}
+      if (x != nil)
+	{
+	  [e setAttribute: x forKey: @"xsi:type"];
+	}
+      if (c != nil)
+	{
+	  [e addContent: c];
+	}
+      [ctxt addChild: e];
+      [e release];
+
+      if (dictionary == YES)
+	{
+	  NSArray   *order = [o objectForKey: GWSOrderKey];
+	  NSString  *namespace = [o objectForKey: GWSSOAPNamespaceURIKey];
+	  NSString  *prefix = [o objectForKey: GWSSOAPNamespaceNameKey];
+	  unsigned  count;
+	  unsigned  i;
+
+	  if (namespace != nil)
+	    {
+	      /* We have been told to specify a new namespace ... so do it.
+	       */
+	      [e setNamespace: namespace forPrefix: prefix];
+	    }
+	  else if (prefix != nil)
+	    {
+	      /* We have been given a namespace prefix for this element.
+	       */
+	      [e setPrefix: prefix];
+	    }
+
+	  if ([order count] == 0)
+	    {
+	      order = [o allKeys];
+	    }
+	  count = [order count];
+	  for (i = 0; i < count; i++)
+	    {
+	      NSString      *k = [order objectAtIndex: i];
+	      id            v = [o objectForKey: k];
+
+	      if ([k hasPrefix: @"GWSSOAP"] == YES)
+		{
+		  /* This is not an element to encode.
+		   */
+		  continue;
+		}
+	      v = [o objectForKey: k];
+	      if (v == nil)
+		{
+		  [NSException raise: NSInvalidArgumentException
+		    format: @"Parameter '%@' (order %u) missing", k, i];
+		}
+	      [self _createElementFor: v named: k in: e];
+	    }
+	}
     }
 }
 

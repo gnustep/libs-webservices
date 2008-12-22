@@ -1,3 +1,8 @@
+2008-12-22 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m: Fix support for encoding arrays and dedode arrays
+	directly inside methods.
+
 2008-12-18 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSSOAPCoder.m: Fix error decoding complex types containing arrays.
