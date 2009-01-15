@@ -62,6 +62,7 @@ NSString * const GWSSOAPValueKey
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
 {
+  NSAutoreleasePool	*pool;
   NSString              *nsName;
   NSString              *nsURI;
   GWSElement            *envelope;
@@ -75,6 +76,8 @@ NSString * const GWSSOAPValueKey
   id			o;
   unsigned	        c;
   unsigned	        i;
+
+  pool = [NSAutoreleasePool new];
 
   /* Determine the order of the parameters in the message body.
    */
@@ -143,11 +146,10 @@ NSString * const GWSSOAPValueKey
 	}
     }
 
-  envelope = [[GWSElement alloc] initWithName: @"Envelope"
-                                    namespace: nil
-                                    qualified: @"soapenv:Envelope"
-                                   attributes: nil];
-  [envelope autorelease];
+  envelope = [[[GWSElement alloc] initWithName: @"Envelope"
+                                     namespace: nil
+                                     qualified: @"soapenv:Envelope"
+                                    attributes: nil] autorelease];
   [envelope setNamespace: @"http://schemas.xmlsoap.org/soap/envelope/"
                forPrefix: @"soapenv"];
   [envelope setNamespace: @"http://www.w3.org/2001/XMLSchema"
@@ -480,6 +482,7 @@ NSString * const GWSSOAPValueKey
   ms = [self mutableString];
   [ms setString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"];
   [envelope encodeWith: self];
+  [pool release];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
