@@ -54,7 +54,7 @@ main()
 
   /* Test encoding and decoding of a SOAP request with a single string.
    */
-  test = [NSString stringWithFormat: @"http://localhost:%@/",
+  test = [NSString stringWithFormat: @"https://localhost:%@/",
     [defs stringForKey: @"Port"]];
   params = [NSMutableDictionary dictionaryWithCapacity: 8];
   order = [NSMutableArray arrayWithCapacity: 8];

@@ -91,6 +91,10 @@ main()
   [defs registerDefaults:
     [NSDictionary dictionaryWithObjectsAndKeys:
       @"12345", @"Port",
+      [NSDictionary dictionaryWithObjectsAndKeys:
+	@"server.crt", @"CertificateFile",
+	@"server.key", @"KeyFile",
+	nil], @"Security",
       nil]
     ];
 
@@ -98,7 +102,8 @@ main()
 
   handler = [Handler new];
   [server setDelegate: handler];
-  [server setPort: [defs stringForKey: @"Port"] secure: nil];
+  [server setPort: [defs stringForKey: @"Port"]
+	   secure: [defs dictionaryForKey: @"Security"]];
 
   [[NSRunLoop currentRunLoop] run];
 
