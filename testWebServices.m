@@ -260,6 +260,9 @@ main()
                       order: nil];
   fprintf(stdout, "\nENCODED ... %*.*s\n\n\n",
     [xml length], [xml length], (char*)[xml bytes]);
+  result = [coder parseMessage: xml];
+  fprintf(stdout, "\nDECODED ... %s\n\n\n",
+    (char*)[[result description] UTF8String]);
   [inner release];
 
 
