@@ -39,6 +39,7 @@
 		034768DFFF38A50411DB9C8B = {
 			children = (
 				8DC2EF5B0486A6940098B216,
+				85125B180F2506A80031D1B9,
 			);
 			isa = PBXGroup;
 			name = Products;
@@ -69,10 +70,12 @@
 			projectDirPath = "";
 			targets = (
 				8DC2EF4F0486A6940098B216,
+				85125B170F2506A80031D1B9,
 			);
 		};
 		0867D691FE84028FC02AAC07 = {
 			children = (
+				85125B120F2506520031D1B9,
 				08FB77AEFE84172EC02AAC07,
 				32C88DFF0371C24200C91783,
 				089C1665FE841158C02AAC07,
@@ -245,6 +248,90 @@
 //852
 //853
 //854
+		85125B120F2506520031D1B9 = {
+			children = (
+				85125B130F2506790031D1B9,
+			);
+			isa = PBXGroup;
+			name = TestClasses;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		85125B130F2506790031D1B9 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			path = testWebServices.m;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		85125B150F2506A80031D1B9 = {
+			buildActionMask = 2147483647;
+			files = (
+				85125B290F25072D0031D1B9,
+			);
+			isa = PBXSourcesBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		85125B160F2506A80031D1B9 = {
+			buildActionMask = 2147483647;
+			files = (
+				85125B2A0F2507520031D1B9,
+			);
+			isa = PBXFrameworksBuildPhase;
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		85125B170F2506A80031D1B9 = {
+			buildPhases = (
+				85125B150F2506A80031D1B9,
+				85125B160F2506A80031D1B9,
+			);
+			buildRules = (
+			);
+			buildSettings = {
+				GCC_CW_ASM_SYNTAX = NO;
+				GCC_ENABLE_CPP_EXCEPTIONS = NO;
+				GCC_ENABLE_CPP_RTTI = NO;
+				GCC_MODEL_TUNING = G3;
+				GCC_PRECOMPILE_PREFIX_HEADER = NO;
+				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
+				INSTALL_PATH = /usr/local/bin;
+				OPTIMIZATION_CFLAGS = "";
+				OTHER_CFLAGS = "";
+				OTHER_LDFLAGS = "-framework Foundation -framework AppKit";
+				OTHER_REZFLAGS = "";
+				PRODUCT_NAME = testWebServices;
+				SECTORDER_FLAGS = "";
+				WARNING_CFLAGS = "-Wmost -Wno-four-char-constants -Wno-unknown-pragmas";
+			};
+			dependencies = (
+			);
+			isa = PBXNativeTarget;
+			name = testWebServices;
+			productName = testWebServices;
+			productReference = 85125B180F2506A80031D1B9;
+			productType = "com.apple.product-type.tool";
+		};
+		85125B180F2506A80031D1B9 = {
+			explicitFileType = "compiled.mach-o.executable";
+			includeInIndex = 0;
+			isa = PBXFileReference;
+			path = testWebServices;
+			refType = 3;
+			sourceTree = BUILT_PRODUCTS_DIR;
+		};
+		85125B290F25072D0031D1B9 = {
+			fileRef = 85125B130F2506790031D1B9;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
+		85125B2A0F2507520031D1B9 = {
+			fileRef = 8DC2EF5B0486A6940098B216;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 		858D8E080F1EA04C00CC8F4A = {
 			fileEncoding = 30;
 			isa = PBXFileReference;
