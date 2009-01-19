@@ -496,6 +496,17 @@ static NSCharacterSet	*ws = nil;
 {
   GWSElement    *e;
 
+  if (_debug)
+    {
+      NSRange	r;
+
+      r = [elementName rangeOfString: @":"];
+      if (r.length > 0)
+	{
+	  NSLog(@"Parser gave us an illegal element name: '%@' with namespace: '%@', qualified name: '%@' and attributes: '%@'", elementName, namespaceURI, qualifiedName, attributeDict);
+	  elementName = [elementName substringFromIndex: NSMaxRange(r)];
+	}
+    }
 // NSLog(@"Element is '%@'", elementName);
 // NSLog(@"Namespace is '%@'", namespaceURI);
 // NSLog(@"Qualified is '%@'", qualifiedName);
@@ -530,6 +541,17 @@ static NSCharacterSet	*ws = nil;
   GWSElement    *top;
   unsigned      count;
 
+  if (_debug)
+    {
+      NSRange	r;
+
+      r = [elementName rangeOfString: @":"];
+      if (r.length > 0)
+	{
+	  NSLog(@"Parser gave us an illegal element name: '%@' with namespace: '%@', qualified name: '%@'", elementName, namespaceURI, qName);
+	  elementName = [elementName substringFromIndex: NSMaxRange(r)];
+	}
+    }
 // NSLog(@"End element '%@'", elementName);
 
   top = [_stack lastObject];
