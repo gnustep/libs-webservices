@@ -83,6 +83,7 @@ extern "C" {
   BOOL		        _compact;
   BOOL			_debug;		// YES if debug is enabled.
   BOOL			_fault;		// YES while building a fault.
+  BOOL                  _oldparser;     // YES if no namespace support.
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.

@@ -7,30 +7,30 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		790D8DC30ED0A36D00CF2935 /* GWSExtensibility.h in Headers */ = {isa = PBXBuildFile; fileRef = 790D8DC00ED0A36700CF2935 /* GWSExtensibility.h */; };
+		790D8DC30ED0A36D00CF2935 /* GWSExtensibility.h in Headers */ = {isa = PBXBuildFile; fileRef = 790D8DC00ED0A36700CF2935 /* GWSExtensibility.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		790D8DC40ED0A37000CF2935 /* GWSExtensibility.m in Sources */ = {isa = PBXBuildFile; fileRef = 790D8DC10ED0A36700CF2935 /* GWSExtensibility.m */; };
-		791866D90D4A46A0003EBF9C /* GWSBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C40D4A46A0003EBF9C /* GWSBinding.h */; };
+		7913D43C0F24CBD400234EF8 /* WebServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* WebServices.framework */; };
+		791866D90D4A46A0003EBF9C /* GWSBinding.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C40D4A46A0003EBF9C /* GWSBinding.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866DA0D4A46A1003EBF9C /* GWSBinding.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866C50D4A46A0003EBF9C /* GWSBinding.m */; };
-		791866DB0D4A46A1003EBF9C /* GWSCoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C60D4A46A0003EBF9C /* GWSCoder.h */; };
+		791866DB0D4A46A1003EBF9C /* GWSCoder.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C60D4A46A0003EBF9C /* GWSCoder.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866DC0D4A46A1003EBF9C /* GWSCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866C70D4A46A0003EBF9C /* GWSCoder.m */; };
-		791866DD0D4A46A1003EBF9C /* GWSConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C80D4A46A0003EBF9C /* GWSConstants.h */; };
-		791866DE0D4A46A1003EBF9C /* GWSElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C90D4A46A0003EBF9C /* GWSElement.h */; };
+		791866DD0D4A46A1003EBF9C /* GWSConstants.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C80D4A46A0003EBF9C /* GWSConstants.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		791866DE0D4A46A1003EBF9C /* GWSElement.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866C90D4A46A0003EBF9C /* GWSElement.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866DF0D4A46A1003EBF9C /* GWSElement.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866CA0D4A46A0003EBF9C /* GWSElement.m */; };
-		791866E20D4A46A1003EBF9C /* GWSMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866CD0D4A46A0003EBF9C /* GWSMessage.h */; };
+		791866E20D4A46A1003EBF9C /* GWSMessage.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866CD0D4A46A0003EBF9C /* GWSMessage.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866E30D4A46A1003EBF9C /* GWSMessage.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866CE0D4A46A0003EBF9C /* GWSMessage.m */; };
-		791866E40D4A46A1003EBF9C /* GWSPortType.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866CF0D4A46A0003EBF9C /* GWSPortType.h */; };
+		791866E40D4A46A1003EBF9C /* GWSPortType.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866CF0D4A46A0003EBF9C /* GWSPortType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866E50D4A46A1003EBF9C /* GWSPortType.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866D00D4A46A0003EBF9C /* GWSPortType.m */; };
 		791866E60D4A46A1003EBF9C /* GWSPrivate.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D10D4A46A0003EBF9C /* GWSPrivate.h */; };
-		791866E70D4A46A1003EBF9C /* GWSService.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D20D4A46A0003EBF9C /* GWSService.h */; };
+		791866E70D4A46A1003EBF9C /* GWSService.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D20D4A46A0003EBF9C /* GWSService.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866E80D4A46A1003EBF9C /* GWSService.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866D30D4A46A0003EBF9C /* GWSService.m */; };
 		791866E90D4A46A1003EBF9C /* GWSSOAPCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866D40D4A46A0003EBF9C /* GWSSOAPCoder.m */; };
-		791866EA0D4A46A1003EBF9C /* GWSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D50D4A46A0003EBF9C /* GWSType.h */; };
+		791866EA0D4A46A1003EBF9C /* GWSType.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D50D4A46A0003EBF9C /* GWSType.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866EB0D4A46A1003EBF9C /* GWSXMLRPCCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866D60D4A46A0003EBF9C /* GWSXMLRPCCoder.m */; };
-		791866EC0D4A46A1003EBF9C /* WebServices.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D70D4A46A0003EBF9C /* WebServices.h */; };
+		791866EC0D4A46A1003EBF9C /* WebServices.h in Headers */ = {isa = PBXBuildFile; fileRef = 791866D70D4A46A0003EBF9C /* WebServices.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		791866ED0D4A46A1003EBF9C /* WebServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 791866D80D4A46A0003EBF9C /* WebServices.m */; };
 		791867280D4A4C82003EBF9C /* testWebServices.m in Sources */ = {isa = PBXBuildFile; fileRef = 791867270D4A4C82003EBF9C /* testWebServices.m */; };
-		791867350D4A4DA2003EBF9C /* WebServices.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8DC2EF5B0486A6940098B216 /* WebServices.framework */; };
-		79DC40BD0ED21ED9009451BF /* GWSPort.h in Headers */ = {isa = PBXBuildFile; fileRef = 79DC40B80ED21E79009451BF /* GWSPort.h */; };
+		79DC40BD0ED21ED9009451BF /* GWSPort.h in Headers */ = {isa = PBXBuildFile; fileRef = 79DC40B80ED21E79009451BF /* GWSPort.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 79DC40B70ED21E79009451BF /* GWSPort.m */; };
 		79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
 		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; };
@@ -91,7 +91,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				791867350D4A4DA2003EBF9C /* WebServices.framework in Frameworks */,
+				7913D43C0F24CBD400234EF8 /* WebServices.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

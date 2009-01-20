@@ -463,6 +463,12 @@ static NSCharacterSet	*ws = nil;
   parser = [[[NSXMLParser alloc] initWithData: xml] autorelease];
   [parser setShouldProcessNamespaces: YES];
   [parser setShouldReportNamespacePrefixes: YES];
+  _oldparser = NO;
+  if ([parser shouldProcessNamespaces] == NO
+    || [parser shouldReportNamespacePrefixes] == NO)
+    {
+      _oldparser = YES;
+    }
   [parser setDelegate: self];
   [parser parse];
   [pool release];
@@ -496,17 +502,50 @@ static NSCharacterSet	*ws = nil;
 {
   GWSElement    *e;
 
-  if (_debug)
+  if (_oldparser == YES)
     {
-      NSRange	r;
+      NSRange       r = [elementName rangeOfString: @":"];
+      NSString      *prefix = @"";
 
-      r = [elementName rangeOfString: @":"];
+      qualifiedName = elementName;
       if (r.length > 0)
-	{
-	  NSLog(@"Parser gave us an illegal element name: '%@' with namespace: '%@', qualified name: '%@' and attributes: '%@'", elementName, namespaceURI, qualifiedName, attributeDict);
-	  elementName = [elementName substringFromIndex: NSMaxRange(r)];
-	}
+        {
+          NSEnumerator              *enumerator = [attributeDict keyEnumerator];
+          NSMutableDictionary       *attr = nil;
+          NSString                  *key;
+          NSString                  *uri;
+
+          prefix = [elementName substringToIndex: r.location];
+          elementName = [elementName substringFromIndex: NSMaxRange(r)];
+
+          while ((key = [enumerator nextObject]) != nil)
+            {
+              NSString  *name = nil;
+
+              if ([key isEqualToString: @"xmlns"] == YES)
+                {
+                  name = @"";
+                }
+              else if ([key hasPrefix: @"xmlns:"] == YES)
+                {
+                  name = [key substringFromIndex: 6];
+                }
+              if (name != nil)
+                {
+                  if (attr == nil)
+                    {
+                      attr = [[attributeDict mutableCopy] autorelease];
+                      attributeDict = attr;
+                    }
+                  uri = [attributeDict objectForKey: key];
+                  [self parser: parser didStartMappingPrefix: name toURI: uri];
+                  [attr removeObjectForKey: key];
+                }
+            }
+        }
+      namespaceURI = [_nmap objectForKey: prefix];
     }
+
 // NSLog(@"Element is '%@'", elementName);
 // NSLog(@"Namespace is '%@'", namespaceURI);
 // NSLog(@"Qualified is '%@'", qualifiedName);
@@ -541,17 +580,16 @@ static NSCharacterSet	*ws = nil;
   GWSElement    *top;
   unsigned      count;
 
-  if (_debug)
+  if (_oldparser == YES)
     {
-      NSRange	r;
+      NSRange       r = [elementName rangeOfString: @":"];
 
-      r = [elementName rangeOfString: @":"];
       if (r.length > 0)
-	{
-	  NSLog(@"Parser gave us an illegal element name: '%@' with namespace: '%@', qualified name: '%@'", elementName, namespaceURI, qName);
-	  elementName = [elementName substringFromIndex: NSMaxRange(r)];
-	}
+        {
+          elementName = [elementName substringFromIndex: NSMaxRange(r)];
+        }
     }
+
 // NSLog(@"End element '%@'", elementName);
 
   top = [_stack lastObject];
