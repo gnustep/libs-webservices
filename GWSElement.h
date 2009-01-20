@@ -182,7 +182,7 @@ extern "C" {
  */
 - (NSString*) namespace;
 
-/** Returns the namespace URL for the specified prefix buy looking at
+/** Returns the namespace URL for the specified prefix by looking at
  * the namespace declarations in the receiver and its parents.  If the
  * prefix is empty, this returns the default namespace URL.<br />
  * returns nil if no matching namespace is found.

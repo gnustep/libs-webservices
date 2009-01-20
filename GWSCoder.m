@@ -543,7 +543,21 @@ static NSCharacterSet	*ws = nil;
                 }
             }
         }
+      /* Get the namespace URI matching the current prefix.
+       * If we can't find the namespace in the declarations at this
+       * level, look in the parent element and upwards.
+       */
       namespaceURI = [_nmap objectForKey: prefix];
+      if (namespaceURI == nil)
+	{
+	  unsigned	count = [_stack count];
+
+	  if (count > 0)
+	    {
+	      namespaceURI = [(GWSElement*)[_stack objectAtIndex: count - 2]
+		namespaceForPrefix: prefix];
+	    }
+	}
     }
 
 // NSLog(@"Element is '%@'", elementName);
