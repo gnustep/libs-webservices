@@ -554,7 +554,7 @@ static NSCharacterSet	*ws = nil;
 
 	  if (count > 0)
 	    {
-	      namespaceURI = [(GWSElement*)[_stack objectAtIndex: count - 2]
+	      namespaceURI = [(GWSElement*)[_stack objectAtIndex: count - 1]
 		namespaceForPrefix: prefix];
 	    }
 	}
