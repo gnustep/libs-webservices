@@ -13,8 +13,6 @@ encoding/decoding SOAP messages in the 'literal' style.
 
 Add support for more of the basic xsi:... types.
 
-Improve support for handling arrays.
-
 Examples
 
 Implement a gui application to open/parse a WSDL document and display its

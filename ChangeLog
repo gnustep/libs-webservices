@@ -1,3 +1,11 @@
+2009-01-21 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	Release version 0.2.0
+
+2009-01-20 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	Various updates including fix for bug in MacOS-X 10.3.*
+
 2008-12-22 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSSOAPCoder.m: Fix support for encoding arrays and dedode arrays
@@ -11,7 +19,7 @@
 
 	For ease of use, allow soap header values to be placed in the params
 	directly rather than in a dictionary referenced by
-        GWSSOAPMessageheadersKey
+        GWSSOAPMessageHeadersKey
 
 2008-12-12 Richard Frith-Macdonald  <rfm@gnu.org>
 
