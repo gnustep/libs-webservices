@@ -175,6 +175,18 @@
   NSString	*n;
 
   n = [element namespace];
+  if ([n length] == 0)
+    {
+      /* No namespace recorded directly in the element ... 
+       * See if the document has a namespace for the element's prefix.
+       */
+      n = [element prefix];
+      if (n == nil)
+	{
+	  n = @"";
+	}
+      n = [_document namespaceForPrefix: n];
+    }
   if (n != nil)
     {
       GWSExtensibility	*e = [_document extensibilityForNamespace: n];
