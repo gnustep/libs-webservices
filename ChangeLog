@@ -1,3 +1,10 @@
+2009-02-24 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Add (untested) client side certificate authentication for GNUstep.
+	Still don't known how/if it's possible for Cocoa.
+
 2009-01-21 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Release version 0.2.0

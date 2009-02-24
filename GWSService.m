@@ -26,6 +26,12 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
+/* To support client side SSL certificate authentication we use the old
+ * NSURLHandle stuff with GNUstep extensions.  We use the _connection
+ * ivar to hold the handle in this case.
+ */
+#define	handle	((NSURLHandle*)_connection)
+
 @implementation	GWSService (Private)
 - (void) _clean
 {
@@ -309,8 +315,6 @@
                order: (NSArray*)order
              timeout: (int)seconds
 {
-  NSMutableURLRequest   *request;
-
   if (_operation != nil)
     {
       [self _setProblem: @"Earlier operation still in progress"];
@@ -529,22 +533,58 @@
 					  selector: @selector(timeout:)
 					  userInfo: nil
 					   repeats: NO];
-
-  request = [NSMutableURLRequest alloc];
-  request = [request initWithURL: [NSURL URLWithString: _connectionURL]];
-  [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
-  [request setHTTPMethod: @"POST"];  
-  [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
-  [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
-  if (_SOAPAction != nil)
+  if (_clientCertificate == nil)
     {
-      [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
-    }
-  [request setHTTPBody: _request];
+      NSMutableURLRequest   *request;
 
-  _connection = [NSURLConnection alloc];
-  _connection = [_connection initWithRequest: request delegate: self];
-  [request release];
+      request = [NSMutableURLRequest alloc];
+      request = [request initWithURL: [NSURL URLWithString: _connectionURL]];
+      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
+      [request setHTTPMethod: @"POST"];  
+      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
+      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+      if (_SOAPAction != nil)
+	{
+	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
+	}
+      [request setHTTPBody: _request];
+
+      _connection = [NSURLConnection alloc];
+      _connection = [_connection initWithRequest: request delegate: self];
+      [request release];
+    }
+  else
+    {
+#if	defined(GNUSTEP)
+      NSURL	*u = [NSURL URLWithString: _connectionURL];
+        
+      _connection = (NSURLConnection*)[[u URLHandleUsingCache: NO] retain];
+      if (_clientCertificate != nil)
+	{
+	  [handle writeProperty: _clientCertificate 
+			 forKey: GSHTTPPropertyCertificateFileKey];
+	}
+      if (_clientKey != nil)
+	{
+	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
+	}
+      if (_clientPassword != nil)
+	{
+	  [handle writeProperty: _clientPassword
+			 forKey: GSHTTPPropertyPasswordKey];
+	}
+      if (_SOAPAction != nil)
+	{
+	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
+	}
+      [handle addClient: (id<NSURLHandleClient>)self];
+      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
+      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
+      [handle writeData: _request];
+      [handle loadInBackground];
+#endif
+    }
   return YES;
 }
 
@@ -631,6 +671,13 @@
 {
   id	old;
 
+#if	!defined(GNUSTEP)
+  if (cert != nil)
+    {
+      [NSException raise: NSInvalidArgumentException
+	          format: @"Client certificates not supported on MacOS-X"];
+    }
+#endif
   if ([url isKindOfClass: [NSURL class]])
     {
       url = [(NSURL*)url absoluteString];
@@ -647,6 +694,15 @@
     }
   old = _connectionURL;
   _connectionURL = [url copy];
+  [old release];
+  old = _clientCertificate;
+  _clientCertificate = [cert copy];
+  [old release];
+  old = _clientKey;
+  _clientKey = [pKey copy];
+  [old release];
+  old = _clientPassword;
+  _clientPassword = [pwd copy];
   [old release];
   [_connection release];
   _connection = nil;
@@ -819,3 +875,106 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   return data;
 }
 @end
+
+#if	defined(GNUSTEP)
+@implementation	GWSService (NSURLHandle)
+
+- (void) URLHandle: (NSURLHandle*)sender
+  resourceDataDidBecomeAvailable: (NSData*)newData
+{
+  return;	// Not interesting
+}
+
+- (void) URLHandle: (NSURLHandle*)sender
+  resourceDidFailLoadingWithReason: (NSString*)reason
+{
+  [_timer invalidate];
+  _timer = nil;
+  [handle removeClient: (id<NSURLHandleClient>)self];
+  [self _setProblem: reason];
+  [self _completed];
+}
+
+- (void) URLHandleResourceDidBeginLoading: (NSURLHandle*)sender
+{
+  return;	// Not interesting
+}
+
+- (void) URLHandleResourceDidCancelLoading: (NSURLHandle*)sender
+{
+  NSString	*str;
+
+  [_timer invalidate];
+  _timer = nil;
+  [handle removeClient: (id<NSURLHandleClient>)self];
+  str = [handle propertyForKeyIfAvailable: NSHTTPPropertyStatusCodeKey];
+  if (str == nil)
+    {
+      str = @"timeout";
+    }
+  else
+    {
+      str = [NSString stringWithFormat: @"HTTP status %@", str];
+    }
+  [self _setProblem: str];
+  [self _completed];
+}
+
+- (void) URLHandleResourceDidFinishLoading: (NSURLHandle*)sender
+{
+  int	code;
+
+  [_timer invalidate];
+  _timer = nil;
+  [handle removeClient: (id<NSURLHandleClient>)self];
+
+  code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
+  if (code == 200)
+    {
+      _response = [[handle availableResourceData] retain];
+    }
+  else
+    {
+      NSString	*str;
+
+      str = [NSString stringWithFormat: @"HTTP status %03d", code];
+      [self _setProblem: str];
+      [self _completed];
+      return;
+    }
+
+  if (_result != nil)
+    {
+      [_result release];
+      _result = nil;
+    }
+  NS_DURING
+    {
+      if (_delegate != nil)
+	{
+	  NSData	*data;
+
+	  data = [_delegate webService: self willHandleResponse: _response];
+	  if (data != _response)
+	    {
+	      [_response release];
+	      _response = [data retain];
+	    }
+	}
+      _result = [_coder parseMessage: _response];
+    }
+  NS_HANDLER
+    {
+      id        reason = [localException reason];
+
+      _result = [NSMutableDictionary dictionaryWithObjects: &reason
+						   forKeys: &GWSFaultKey
+						     count: 1];
+    }
+  NS_ENDHANDLER
+  [_result retain];
+
+  [self _completed];
+}
+@end
+#endif

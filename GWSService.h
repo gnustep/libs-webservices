@@ -74,7 +74,7 @@ extern "C" {
  * passing the parameters ('p') in the order they are listed in 'o'
  * and with a 30 second timeout.<br />
  * If there is a network or http-level error or a timeout, the result
- * will contain <ref type="constant" id="GWSErrorKey">GWSOrderKey</ref>,
+ * will contain <ref type="constant" id="GWSErrorKey">GWSErrorKey</ref>,
  * otherwise it will contain 
  * <ref type="constant" id="GWSParametersKey">GWSParametersKey</ref>,
  * and <ref type="constant" id="GWSOrderKey">GWSOrderKey</ref> on success,
@@ -105,6 +105,9 @@ extern "C" {
   GWSPort		*_port;
   NSMutableDictionary	*_parameters;
   NSData		*_request;
+  NSString		*_clientCertificate;
+  NSString		*_clientKey;
+  NSString		*_clientPassword;
 }
 
 /**
@@ -242,9 +245,9 @@ extern "C" {
  * If the SSL credentials are non-nil, connections to the remote server
  * will be authenticated using the supplied certificate so that the
  * remote system knows who is contacting it.<br />
- * Certificate based authentication currently <em>NOT</em> implemented.
- * I could easily implement it using gnustep-base, but I don't know how
- * to do this for MacOS-X. Please could someone let me know how
+ * Certificate based authentication currently <em>NOT</em> implemented
+ ** for MacOS-X (though it is for GNUstep).<br />
+ * Please could someone let me know how
  * certificate based authentication is done for HTTPS on MacOS-X?
  */
 - (void) setURL: (id)url
