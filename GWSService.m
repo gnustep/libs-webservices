@@ -518,7 +518,8 @@
       [self _clean];
       return NO;
     }
-  if (_delegate != nil)
+  if ([_delegate respondsToSelector:
+    @selector(webService:willSendRequest:)] == YES)
     {
       _request = [_delegate webService: self willSendRequest: _request];
     }
@@ -823,7 +824,8 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
     }
   NS_DURING
     {
-      if (_delegate != nil)
+      if ([_delegate respondsToSelector:
+	@selector(webService:willHandleResponse:)] == YES)
 	{
 	  NSData	*data;
 
@@ -957,7 +959,8 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
     }
   NS_DURING
     {
-      if (_delegate != nil)
+      if ([_delegate respondsToSelector:
+	@selector(webService:willHandleResponse:)] == YES)
 	{
 	  NSData	*data;
 
