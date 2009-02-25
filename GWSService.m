@@ -556,6 +556,7 @@
       NSURL	*u = [NSURL URLWithString: _connectionURL];
         
       _connection = (NSURLConnection*)[[u URLHandleUsingCache: NO] retain];
+      [handle setDebug: [self debug]];
       if (_clientCertificate != nil)
 	{
 	  [handle writeProperty: _clientCertificate 
