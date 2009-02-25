@@ -330,8 +330,9 @@ promote(NSMutableDictionary *d, NSString *k)
 			&& [order containsObject: n] == NO)
 			{
 			  return [NSString stringWithFormat:
-			    @"Unknown value '%@' in message '%@'",
-			    n, messageName];
+			    @"Unknown value '%@' in message '%@'"
+			    @" with parameters %@",
+			    n, messageName, p];
 			}
 		    }
 		}
