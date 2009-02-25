@@ -107,10 +107,6 @@
             {
               NSLog(@"Port without a name in WSDL!");
             }
-          else if ([_document portTypeWithName: name create: NO] == nil)
-	    {
-              NSLog(@"Port type '%@' in service but not in ports", name);
-	    }
           else if (binding == nil)
             {
               NSLog(@"Port named '%@' without a binding in WSDL!", name);

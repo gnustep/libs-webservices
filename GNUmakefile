@@ -16,7 +16,7 @@ TEST_TOOL_NAME=
 LIBRARY_NAME=WebServices
 DOCUMENT_NAME=WebServices
 
-WebServices_INTERFACE_VERSION=0.1
+WebServices_INTERFACE_VERSION=0.2
 
 WebServices_OBJC_FILES +=\
         WebServices.m \
