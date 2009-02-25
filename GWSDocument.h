@@ -149,7 +149,7 @@ extern "C" {
 - (NSString*) name;
 
 /** Returns the namespace URI mapped to by the specified prefix,
- * or nil if there is no such prefix know.
+ * or nil if there is no such prefix known.
  */
 - (NSString*) namespaceForPrefix: (NSString*)prefix;
 

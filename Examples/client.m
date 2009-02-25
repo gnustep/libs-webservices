@@ -33,11 +33,14 @@ main()
   NSUserDefaults	*defs;
   NSString		*test;
   GWSSOAPCoder		*coder;
+  GWSDocument		*document;
   GWSService		*service;
   NSString              *method;
   NSMutableArray        *order;
   NSMutableDictionary   *params;
   NSDictionary          *result;
+  NSData		*data;
+  unsigned		length;
 
   pool = [NSAutoreleasePool new];
 
@@ -50,6 +53,7 @@ main()
       nil]
     ];
 
+#if 1
   coder = [GWSSOAPCoder new];
 
   /* Test encoding and decoding of a SOAP request with a single string.
@@ -78,7 +82,7 @@ main()
     || [order isEqual: [result objectForKey: GWSOrderKey]] == NO)
     {
       fprintf(stdout, "Document unexpected result: %s\n",
-	[[result description] cString]);
+	[[result description] UTF8String]);
     }
   else
     {
@@ -96,7 +100,7 @@ main()
     || [order isEqual: [result objectForKey: GWSOrderKey]] == NO)
     {
       fprintf(stdout, "RPC unexpected result: %s\n",
-	[[result description] cString]);
+	[[result description] UTF8String]);
     }
   else
     {
@@ -104,6 +108,31 @@ main()
     }
 
   [service release];
+
+#else
+
+  document = [[[GWSDocument alloc]
+    initWithContentsOfFile: @"Message.wsdl"] autorelease];
+
+  service = [document serviceWithName: @"Message" create: NO];
+
+  params = [NSMutableDictionary dictionaryWithCapacity: 8];
+  [params setObject: [NSDictionary dictionaryWithObjectsAndKeys:
+    @"Me", @"recipient",
+    @"hello", @"message",
+    @"1", @"messageType",
+    nil] forKey: @"sendMsg"];
+
+  [service setDebug: YES];
+  result = [service invokeMethod: @"sendMsg"
+                      parameters: params
+                           order: nil
+                         timeout: 30];
+  data = [result objectForKey: GWSRequestDataKey];
+  length = [data length];
+  fprintf(stdout, "RPC result: %*.*s\n", length, length, [data bytes]);
+
+#endif
 
   [pool release];
   return 0;

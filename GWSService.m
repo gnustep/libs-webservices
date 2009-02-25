@@ -715,7 +715,18 @@
   [_timer invalidate];
   _timer = nil;
   [self _setProblem: @"timed out"];
+#if	defined(GNUSTEP)
+  if ([_connection isKindOfClass: [NSURLConnection class]])
+    {
+      [_connection cancel];
+    }
+  else
+    {
+      [handle cancelLoadInBackground];
+    }
+#else
   [_connection cancel];
+#endif
   [self _completed];
 }
 
