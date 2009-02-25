@@ -168,7 +168,7 @@ promote(NSMutableDictionary *d, NSString *k)
 
 	  /* A missing action defaults to '""'
 	   */
-	  if (action == nil)
+	  if ([action length] == 0)
 	    {
 	      [service setSOAPAction: @"\"\""];
 	    }
@@ -317,6 +317,7 @@ promote(NSMutableDictionary *d, NSString *k)
 			}
 		    }
 		}
+#if	0
 	      if (p != nil)
 		{
 		  NSString	*n;
@@ -336,6 +337,26 @@ promote(NSMutableDictionary *d, NSString *k)
 			}
 		    }
 		}
+#else
+	      if (p != nil)
+		{
+		  NSString	*n;
+
+		  [p setObject: order forKey: GWSOrderKey];
+		  enumerator = [p keyEnumerator];
+		  while ((n = [enumerator nextObject]) != nil)
+		    {
+		      if ([n isEqualToString: GWSOrderKey] == NO
+			&& [n hasPrefix: @"GWSSOAP"] == NO
+			&& [order containsObject: n] == NO)
+			{
+			  NSLog(@"Unknown value '%@' in message '%@'"
+			    @" with parameters %@",
+			    n, messageName, p);
+			}
+		    }
+		}
+#endif
 	    }
 	  else if ([name isEqualToString: @"header"])
 	    {

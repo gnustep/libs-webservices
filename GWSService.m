@@ -32,6 +32,12 @@
  */
 #define	handle	((NSURLHandle*)_connection)
 
+#if	defined(GNUSTEP)
+@interface	NSURLHandle (Debug)
+- (void) setDebug: (BOOL)flag;
+@end
+#endif
+
 @implementation	GWSService (Private)
 - (void) _clean
 {
