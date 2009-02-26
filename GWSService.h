@@ -327,6 +327,41 @@ extern "C" {
  * before the response is handled.
  */
 - (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data;
+
+/** This method is used to inform the delegate of the
+ * GWSElement instance being decoded as the SOAP Envelope, Header, Body,
+ * Fault or Method.<br />
+ * The instance to be decoded will contain the children from the
+ * document being decoded.<br />
+ * The delegate implementation should return the proposed instance
+ * (possibly modified) or a different object that it wishes the
+ * coder to use.
+ */
+- (GWSElement*) webService: (GWSService*)service
+		willDecode: (GWSElement*)element;
+
+/** This method is used to inform the delegate of the proposed
+ * [GWSElement] instance used to encode SOAP Envelope, Header, Body, Fault
+ * or Method elements.<br />
+ * The proposed instance will not have any children at the point
+ * where this method is called (they are added later in the
+ * encoding process.<br />
+ * This method may be called with a nil value for the element parameter in
+ * the case where no Header element would be encoded ... in this situation
+ * the delegate may return a Header element to be used.<br />
+ * The delegate implementation should return the proposed instance
+ * (possibly modified) or a different object that it wishes the
+ * coder to encode instead.<br />
+ * The default implementation returns element.<br />
+ * NB. A Fault or Method will obviously only be provided where the message
+ * contain such an element, and the Header will only be provided where
+ * the message has been told to contain headers by use of the
+ * <ref type="constant" id="GWSSOAPMessageHeadersKey">
+ * GWSSOAPMessageHeadersKey</ref> in the parameters dictionary.
+ */
+- (GWSElement*) webService: (GWSService*)service
+		willEncode: (GWSElement*)element;
+
 @end
 
 

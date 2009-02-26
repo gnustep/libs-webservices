@@ -1,3 +1,9 @@
+2009-02-26 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Add two new delegate methods to make adding SOAP extras easier.
+
 2009-02-24 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

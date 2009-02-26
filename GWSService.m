@@ -215,6 +215,24 @@
   return _coder;
 }
 
+- (GWSElement*) coder: (GWSSOAPCoder*)coder willDecode: (GWSElement*)element
+{
+  if ([_delegate respondsToSelector: @selector(webService:willDecode:)] == YES)
+    {
+      element = [_delegate webService: self willDecode: element];
+    }
+  return element;
+}
+
+- (GWSElement*) coder: (GWSSOAPCoder*)coder willEncode: (GWSElement*)element
+{
+  if ([_delegate respondsToSelector: @selector(webService:willEncode:)] == YES)
+    {
+      element = [_delegate webService: self willEncode: element];
+    }
+  return element;
+}
+
 - (BOOL) compact
 {
   return _compact;
@@ -889,6 +907,16 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data
 {
   return data;
+}
+- (GWSElement*) webService: (GWSService*)service
+		willDecode: (GWSElement*)element
+{
+  return element;
+}
+- (GWSElement*) webService: (GWSService*)service
+		willEncode: (GWSElement*)element
+{
+  return element;
 }
 @end
 
