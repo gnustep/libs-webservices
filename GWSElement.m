@@ -106,6 +106,7 @@
   [_name release];
   [_namespace release];
   [_namespaces release];
+  [_prefix release];
   [_qualified release];
   [_literal release];
   [super dealloc];
@@ -256,10 +257,22 @@
       if (qualified == nil)
 	{
 	  _qualified = [_name retain];
+	  _prefix = @"";
 	}
       else
 	{
+	  NSRange	r = [qualified rangeOfString: @":"];
+
 	  _qualified = [qualified copyWithZone: z];
+	  if (r.length == 0)
+	    {
+	      _prefix = @"";
+	    }
+	  else
+	    {
+	      _prefix
+		= [[qualified substringToIndex: r.location] copyWithZone: z];
+	    }
 	}
       if ([attributes count] > 0)
         {
@@ -348,13 +361,41 @@
 
 - (NSString*) prefix
 {
-  NSRange	r = [_qualified rangeOfString: @":"];
+  return _prefix;
+}
 
-  if (r.length == 0)
+- (NSString*) prefixForNamespace: (NSString*)uri
+{
+  GWSElement	*toSearch = self;
+
+  if ([uri length] == 0)
     {
       return nil;
     }
-  return [_qualified substringToIndex: r.location];
+  while (toSearch != nil)
+    {
+      NSDictionary	*d = [toSearch namespaces];
+      NSEnumerator	*e = [d keyEnumerator];
+      NSString		*k;
+
+      while ((k = [e nextObject]) != nil)
+	{
+	  NSString	*v = [d objectForKey: k];
+
+	  if ([uri isEqualToString: v] == YES)
+	    {
+	      /* Found the namespace ... but it's only usable if
+	       * the corresponding previd maps to it at our level.
+	       */
+	      if ([uri isEqual: [self namespaceForPrefix: k]] == YES)
+		{
+		  return k;
+		}
+	    }
+	}
+      toSearch = [toSearch parent];
+    }
+  return nil;
 }
 
 - (NSString*) qualified
@@ -419,6 +460,15 @@
   name = [name copy];
   [_name release];
   _name = name;
+  [_qualified release];
+  if (_prefix == nil)
+    {
+      _qualified = [_name retain];
+    }
+  else
+    {
+      _qualified = [[NSString alloc] initWithFormat: @"%@:%@", _prefix, _name];
+    }
 }
 
 - (void) setNamespace: (NSString*)uri forPrefix: (NSString*)prefix
@@ -445,7 +495,14 @@
         {
           _namespaces = [[NSMutableDictionary alloc] initWithCapacity: 1];
         }
+      uri = [uri copy];
       [_namespaces setObject: uri forKey: prefix];
+      [uri release];
+    }
+  if ([prefix isEqual: [self prefix]])
+    {
+      [_namespace release];
+      _namespace = [uri copy];
     }
 }
 
@@ -504,6 +561,8 @@
 	    }
 	}
     }
+  [_prefix release];
+  _prefix = [prefix copy];
 }
 
 - (GWSElement*) sibling

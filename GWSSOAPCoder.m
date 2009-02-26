@@ -58,6 +58,47 @@ NSString * const GWSSOAPValueKey
 
 @implementation	GWSSOAPCoder
 
+/* Build a new header using the specified namespace prefix or the prefix
+ * and namespace specified in o (if it is a dictionary specifying them).
+ */
+static GWSElement*
+newHeader(NSString *prefix, id o)
+{
+  NSString	*hdrNamespace = nil;
+  NSString	*hdrPrefix = prefix;
+  NSString	*qualified;
+  GWSElement	*header;
+
+  /* Get namespace and prefix from dictionary if possible.
+   */
+  if ([o isKindOfClass: [NSDictionary class]])
+    {
+      hdrNamespace = [o objectForKey: GWSSOAPNamespaceURIKey];
+      if ([o objectForKey: GWSSOAPNamespaceNameKey] != nil)
+	{
+	  hdrPrefix = [o objectForKey: GWSSOAPNamespaceNameKey];
+	}
+    }
+  qualified = @"Header";
+  if (hdrPrefix != nil)
+    {
+      qualified = [NSString stringWithFormat: @"%@:%@",
+	hdrPrefix, qualified];
+    }
+  header = [[GWSElement alloc] initWithName: @"Header"
+				  namespace: hdrPrefix
+				  qualified: qualified
+				 attributes: nil];
+  if (hdrNamespace != nil && hdrPrefix == nil)
+    {
+      /* We have a namespace but no name ... make it the default
+       * namespace for the body.
+       */
+      [header setNamespace: hdrNamespace forPrefix: @""];
+    }
+  return header;
+}
+
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
@@ -229,36 +270,7 @@ NSString * const GWSSOAPValueKey
     }
   else
     {
-      NSString	*hdrNamespace = nil;
-      NSString	*hdrPrefix = prefix;
-
-      /* Get namespace and prefix from dictionary if possible.
-       */
-      if ([o isKindOfClass: [NSDictionary class]])
-	{
-          hdrNamespace = [o objectForKey: GWSSOAPNamespaceURIKey];
-	  if ([o objectForKey: GWSSOAPNamespaceNameKey] != nil)
-	    {
-	      hdrPrefix = [o objectForKey: GWSSOAPNamespaceNameKey];
-	    }
-	}
-      qualified = @"Header";
-      if (hdrPrefix != nil)
-        {
-          qualified = [NSString stringWithFormat: @"%@:%@",
-	    hdrPrefix, qualified];
-        }
-      header = [[GWSElement alloc] initWithName: @"Header"
-                                      namespace: hdrPrefix
-                                      qualified: qualified
-                                     attributes: nil];
-      if (hdrNamespace != nil && hdrPrefix == nil)
-	{
-	  /* We have a namespace but no name ... make it the default
-	   * namespace for the body.
-	   */
-	  [header setNamespace: hdrNamespace forPrefix: @""];
-	}
+      header = newHeader(prefix, o);
       [envelope addChild: header];
       [header release];
       if ([o isKindOfClass: [NSDictionary class]] && [o count] > 0)
@@ -316,7 +328,7 @@ NSString * const GWSSOAPValueKey
   /* Now we give the delegate a chance to entirely replace the header
    * (which may be nil) with an element of its own.
    */
-  if ([self delegate] != nil)
+  if ([[self delegate] respondsToSelector: @selector(coder:willEncode:)])
     {
       GWSElement        *elem;
 
@@ -324,8 +336,22 @@ NSString * const GWSSOAPValueKey
       if (elem != header)
         {
           [header remove];
-          header = elem;
-          [envelope addChild: header];
+	  if (elem != nil)
+	    {
+	      /* If we have the content of a header rather than a
+	       * complete header, we put it inside a standard header.
+	       */
+	      if ([[elem name] isEqualToString: @"Header"] == NO)
+		{
+		  header = [newHeader(prefix, o) autorelease];
+		  [header addChild: elem];
+		}
+	      else
+		{
+	          header = elem;
+		}
+              [envelope addChild: header];
+	    }
         }
     }
 

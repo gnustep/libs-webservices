@@ -348,7 +348,9 @@ extern "C" {
  * encoding process.<br />
  * This method may be called with a nil value for the element parameter in
  * the case where no Header element would be encoded ... in this situation
- * the delegate may return a Header element to be used.<br />
+ * the delegate may return a Header element to be used, or may return some
+ * other element, which will be automatically inserted into a standard
+ * header.<br />
  * The delegate implementation should return the proposed instance
  * (possibly modified) or a different object that it wishes the
  * coder to encode instead.<br />

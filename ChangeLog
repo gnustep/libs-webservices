@@ -3,6 +3,13 @@
 	* GWSService.h:
 	* GWSService.m:
 	Add two new delegate methods to make adding SOAP extras easier.
+	* WSSUsernameToken.h:
+	* WSSUsernameToken.m:
+	New class providing rudimentary web services security username token.
+	* GWSElement.h:
+	* GWSElement.m:
+	Improve prefix and namespace handling and add new method to look up
+	a usable prefix for a namespace.
 
 2009-02-24 Richard Frith-Macdonald  <rfm@gnu.org>
 

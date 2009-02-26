@@ -58,6 +58,7 @@ extern "C" {
   GWSElement            *_parent;       // not retained.
   NSString              *_name;
   NSString              *_namespace;
+  NSString		*_prefix;
   NSString              *_qualified;
   NSMutableDictionary   *_attributes;
   NSMutableDictionary   *_namespaces;
@@ -208,6 +209,11 @@ extern "C" {
  * Returns nil if the receiver has no prefix.
  */
 - (NSString*) prefix;
+
+/** Searches the receiver and its parents for the first usable prefix
+ * mapping to the specified namespace.  Returns nil if there is none.
+ */
+- (NSString*) prefixForNamespace: (NSString*)uri;
 
 /** Returns the fully qualified name of the receiver
  * (as set when it was initialised, or using the -setName: and -setPrefix:

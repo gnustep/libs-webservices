@@ -25,6 +25,43 @@
 
 #import	<Foundation/Foundation.h>
 #import	"GWSPrivate.h"
+#import	"WSSUsernameToken.h"
+
+@interface	SimpleDelegate : NSObject
+{
+  WSSUsernameToken	*_token;
+}
+- (void) setToken: (WSSUsernameToken*)token;
+@end
+@implementation	SimpleDelegate
+- (void) dealloc
+{
+  [_token release];
+  [super dealloc];
+}
+
+- (void) setToken: (WSSUsernameToken*)token
+{
+  if (_token != token)
+    {
+      [_token release];
+      _token = [token retain];
+    }
+}
+
+- (GWSElement*) webService: (GWSService*)service
+		willEncode: (GWSElement*)element
+{
+  if (_token != nil)
+    {
+      if (element == nil || [[element name] isEqualToString: @"Header"])
+	{
+	  element = [_token addToHeader: element];
+	}
+    }
+  return element;
+}
+@end
 
 int
 main()
@@ -32,6 +69,8 @@ main()
   NSAutoreleasePool     *pool;
   NSAutoreleasePool     *inner;
   NSUserDefaults	*defs;
+  SimpleDelegate	*del;
+  WSSUsernameToken	*token;
   GWSCoder              *coder;
   GWSService		*service;
   GWSDocument   	*document;
@@ -273,6 +312,11 @@ main()
   [service setDebug: YES];
   [service setURL: @"http://localhost/"];
   [service setCoder: coder];
+  del = [SimpleDelegate new];
+  token = [[WSSUsernameToken alloc] initWithName: @"me" password: @"private"];
+  [del setToken: token];
+  [token release];
+  [service setDelegate: del];
   params = [NSMutableDictionary dictionaryWithCapacity: 8];
   order = [NSMutableArray arrayWithCapacity: 8];
   [params setObject: @"hello<" forKey: @"string1"];

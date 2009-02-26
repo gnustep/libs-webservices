@@ -31,6 +31,7 @@ WebServices_OBJC_FILES +=\
 	GWSService.m \
 	GWSSOAPCoder.m \
 	GWSXMLRPCCoder.m \
+	WSSUsernameToken.m \
 
 
 WebServices_HEADER_FILES += \
@@ -46,6 +47,7 @@ WebServices_HEADER_FILES += \
 	GWSPortType.h \
 	GWSService.h \
 	GWSType.h \
+	WSSUsernameToken.h \
 
 
 WebServices_AGSDOC_FILES += \
@@ -62,6 +64,8 @@ WebServices_AGSDOC_FILES += \
 	GWSPortType.h \
 	GWSService.h \
 	GWSType.h \
+	WSSUsernameToken.h \
+
 
 WebServices_AGSDOC_FLAGS = \
 	-MakeFrames YES \
