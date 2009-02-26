@@ -38,5 +38,7 @@
 #import <WebServices/GWSService.h>
 #import <WebServices/GWSType.h>
 
+#import <WebServices/WSSUsernameToken.h>
+
 #endif
 
