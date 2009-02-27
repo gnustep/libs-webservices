@@ -32,6 +32,7 @@
 extern "C" {
 #endif
 
+@class  NSDate;
 @class  NSString;
 @class  GWSElement;
 
@@ -60,6 +61,8 @@ extern "C" {
 @private
   NSString              *_name;
   NSString		*_password;
+  NSDate		*_created;
+  NSData		*_nonce;
 }
 
 /** Adds a representation of the receiver to the specified SOAP header
