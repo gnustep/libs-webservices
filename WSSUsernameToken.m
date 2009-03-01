@@ -26,12 +26,26 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 #import "WSSUsernameToken.h"
+#include <stdlib.h>
 
 @interface	NSData (SHA1)
 - (NSData*) SHA1;
 @end
 
+static NSTimeZone	*gmt = nil;
+static GWSCoder		*coder = nil;
+
 @implementation	WSSUsernameToken
+
++ (void) initialize
+{
+  srandom((unsigned)[[NSDate date] timeIntervalSinceReferenceDate]);
+  if (gmt == nil)
+    {
+      gmt = [[NSTimeZone timeZoneForSecondsFromGMT: 0] retain];
+      coder = [GWSSOAPCoder new];
+    }
+}
 
 - (GWSElement*) addToHeader: (GWSElement*)header
 {
@@ -39,13 +53,19 @@
   GWSElement	*token;
   GWSElement	*elem;
   NSString	*prefix;
+  NSString	*uPrefix;
   NSString	*ns;
+  NSString	*uns;
+  NSString	*cName;
+  NSString	*nName;
   NSString	*tName;
   NSString	*uName;
   NSString	*pName;
 
   ns = @"http://docs.oasis-open.org/wss/2004/01/"
     @"oasis-200401-wss-wssecurity-secext-1.0.xsd";
+  uns = @"http://docs.oasis-open.org/wss/2004/01/"
+    @"oasis-200401-wss-wssecurity-utility-1.0.xsd";
 
   /* Try to find any existing WSS Security element in the header.
    */
@@ -66,14 +86,11 @@
     {
       NSString	*qName;
 
+      uPrefix = [header prefixForNamespace: uns];
       prefix = [header prefixForNamespace: ns];
-      if (prefix == nil)
+      if ([prefix length] == 0)
 	{
 	  qName = @"wsse:Security";
-	}
-      else if ([prefix length] == 0)
-	{
-	  qName = @"Security";
 	}
       else
 	{
@@ -83,7 +100,7 @@
 					namespace: ns
 					qualified: qName
 				       attributes: nil];
-      if (prefix == nil)
+      if ([prefix length] == 0)
 	{
 	  /* There is no prefix for our namespace, so we will used
 	   * our default one ... 'wsse'.
@@ -103,6 +120,26 @@
               [security setNamespace: ns forPrefix: @"wsse"];
 	    }
 	}
+      if ([uPrefix length] == 0)
+	{
+	  /* There is no prefix for our namespace, so we will used
+	   * our default one ... 'wsu'.
+	   */
+	  uPrefix = @"wsu";
+
+	  /* We need to set up the prefix to namespace mapping, and we
+	   * prefer to do that in the top level (SOAP Envelope) if
+	   * possible.
+	   */
+	  if ([[[header parent] name] isEqualToString: @"Envelope"])
+	    {
+              [[header parent] setNamespace: uns forPrefix: @"wsu"];
+	    }
+	  else
+	    {
+              [security setNamespace: uns forPrefix: @"wsu"];
+	    }
+	}
       if (header == nil)
 	{
           header = security;
@@ -115,24 +152,29 @@
 	}
     }
     
+  if ([uPrefix isEqualToString: @"wsu"] == YES)
+    {
+      cName = @"wsu:Created";
+    }
+  else
+    {
+      cName = [NSString stringWithFormat: @"%@:Created", uPrefix];
+    }
+
   prefix = [security prefix];
   if ([prefix isEqualToString: @"wsse"] == YES)
     {
+      nName = @"wsse:Nonce";
       tName = @"wsse:UsernameToken";
       uName = @"wsse:Username";
       pName = @"wsse:Password";
     }
   else
     {
-      tName = @"UsernameToken";
-      uName = @"Username";
-      pName = @"Password";
-      if ([prefix length] > 0)
-	{
-	  tName = [NSString stringWithFormat: @"%@:%@", prefix, tName];
-	  uName = [NSString stringWithFormat: @"%@:%@", prefix, uName];
-	  pName = [NSString stringWithFormat: @"%@:%@", prefix, pName];
-	}
+      nName = [NSString stringWithFormat: @"%@:Nonce", prefix];
+      tName = [NSString stringWithFormat: @"%@:UsernameToken", prefix];
+      uName = [NSString stringWithFormat: @"%@:Username", prefix];
+      pName = [NSString stringWithFormat: @"%@:password", prefix];
     }
 
   token = [[GWSElement alloc] initWithName: @"UsernameToken"
@@ -150,13 +192,74 @@
   [elem release];
   [elem addContent: _name];
 
-  elem = [[GWSElement alloc] initWithName: @"Password"
-				namespace: ns
-				qualified: pName
-			       attributes: nil];
-  [token addChild: elem];
-  [elem release];
-  [elem addContent: _password];
+  if (_ttl > 0)
+    {
+      NSMutableDictionary	*attr;
+      NSMutableData		*hashable;
+      NSCalendarDate		*created;
+      NSData			*nonce;
+      NSData			*hash;
+      NSData			*pass;
+      NSString			*date;
+      uint32_t			buf[4];
+
+      created = [NSCalendarDate new];
+      [created setTimeZone: gmt];
+      [created setCalendarFormat: @"%Y-%m-%dT%H:%M:%SZ"];
+      date = [created description];
+      [created release];
+      buf[0] = (uint32_t)random();
+      buf[1] = (uint32_t)random();
+      buf[2] = (uint32_t)random();
+      buf[3] = (uint32_t)random();
+      nonce = [[NSData alloc] initWithBytes: buf length: 16];
+      pass = [_password dataUsingEncoding: NSUTF8StringEncoding];
+      hashable = [[NSMutableData alloc] initWithCapacity:
+	[nonce length] + [pass length] + 20];
+      [hashable appendData: nonce];
+      [hashable appendData: [date dataUsingEncoding: NSUTF8StringEncoding]];
+      [hashable appendData: pass];
+      hash = [hashable SHA1];
+      [hashable release];
+
+      attr = [[NSMutableDictionary alloc] initWithCapacity: 1];
+      [attr setObject: @"#PasswordDigest" forKey: @"Type"];
+      elem = [[GWSElement alloc] initWithName: @"Password"
+				    namespace: ns
+				    qualified: pName
+				   attributes: attr];
+      [attr release];
+      [elem addContent: [coder encodeBase64From: hash]];
+      [token addChild: elem];
+      [elem release];
+
+      elem = [[GWSElement alloc] initWithName: @"Nonce"
+				    namespace: ns
+				    qualified: nName
+				   attributes: nil];
+      [elem addContent: [coder encodeBase64From: nonce]];
+      [nonce release];
+      [token addChild: elem];
+      [elem release];
+
+      elem = [[GWSElement alloc] initWithName: @"Created"
+				    namespace: uns
+				    qualified: cName
+				   attributes: nil];
+      [elem addContent: date];
+      [token addChild: elem];
+      [elem release];
+    }
+  else
+    {
+      elem = [[GWSElement alloc] initWithName: @"Password"
+				    namespace: ns
+				    qualified: pName
+				   attributes: nil];
+      [elem addContent: _password];
+      [token addChild: elem];
+      [elem release];
+    }
 
   return header;
 }
@@ -165,6 +268,8 @@
 {
   [_name release];
   [_password release];
+  [_created release];
+  [_nonce release];
   [super dealloc];
 }
 
@@ -176,8 +281,16 @@
 
 - (id) initWithName: (NSString*)name password: (NSString*)password
 {
+  return [self initWithName: name password: password timeToLive: 0];
+}
+
+- (id) initWithName: (NSString*)name
+	   password: (NSString*)password
+	 timeToLive: (unsigned)ttl
+{
   _name = [name copy];
   _password = [password copy];
+  _ttl = ttl;
   return self;
 }
 

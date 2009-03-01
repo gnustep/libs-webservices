@@ -63,6 +63,7 @@ extern "C" {
   NSString		*_password;
   NSDate		*_created;
   NSData		*_nonce;
+  unsigned		_ttl;
 }
 
 /** Adds a representation of the receiver to the specified SOAP header
@@ -75,7 +76,20 @@ extern "C" {
 /** Initialise the receiver with a name and password used to authenticate
  * with a remote server.
  */
-- (id) initWithName: (NSString*)name password: (NSString*)password;
+- (id) initWithName: (NSString*)name
+	   password: (NSString*)password;
+
+/** <init />
+ * Initialise the receiver with a name and password used to authenticate
+ * with a remote server.<br />
+ * If ttl is non-zero, then a hash of the token is used along with a
+ * creation date and nonce.  The actual ttl value is only of use for 
+ * server-side code, which will reject any message whose creation date
+ * is older than the number of seconds specified as the time to live.
+ */
+- (id) initWithName: (NSString*)name
+	   password: (NSString*)password
+	 timeToLive: (unsigned)ttl;
 
 /** Return a tree representation of the WSS Username Token for inclusion
  * in the header of a SOAP request.
