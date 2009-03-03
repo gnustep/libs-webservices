@@ -35,6 +35,7 @@
 #if	defined(GNUSTEP)
 @interface	NSURLHandle (Debug)
 - (void) setDebug: (BOOL)flag;
+- (void) setReturnAll: (BOOL)flag;
 @end
 #endif
 
@@ -581,6 +582,10 @@
         
       _connection = (NSURLConnection*)[[u URLHandleUsingCache: NO] retain];
       [handle setDebug: [self debug]];
+      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
+	{
+          [handle setReturnAll: YES];
+	}
       if (_clientCertificate != nil)
 	{
 	  [handle writeProperty: _clientCertificate 
