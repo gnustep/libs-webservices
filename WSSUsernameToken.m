@@ -120,7 +120,7 @@ static GWSCoder		*coder = nil;
               [security setNamespace: ns forPrefix: @"wsse"];
 	    }
 	}
-      if ([uPrefix length] == 0)
+      if (_ttl > 0 && [uPrefix length] == 0)
 	{
 	  /* There is no prefix for our namespace, so we will used
 	   * our default one ... 'wsu'.
