@@ -972,16 +972,32 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   _timer = nil;
   [handle removeClient: (id<NSURLHandleClient>)self];
 
+  _response = [[handle availableResourceData] retain];
   code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
-  if (code == 200)
+  if (code != 200)
     {
-      _response = [[handle availableResourceData] retain];
+      if ([_coder isKindOfClass: [GWSXMLRPCCoder class]] == YES)
+	{
+          NSString	*str;
+
+          str = [NSString stringWithFormat: @"HTTP status %03d", code];
+          [self _setProblem: str];
+          [self _completed];
+          return;
+	}
     }
-  else
+  if (_response == nil)
     {
       NSString	*str;
 
-      str = [NSString stringWithFormat: @"HTTP status %03d", code];
+      if (code == 200)
+	{
+          str = [NSString stringWithFormat: @"HTTP status 200 but no body"];
+	}
+      else
+	{
+          str = [NSString stringWithFormat: @"HTTP status %03d", code];
+	}
       [self _setProblem: str];
       [self _completed];
       return;
