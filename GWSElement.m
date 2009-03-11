@@ -225,6 +225,30 @@
     }
 }
 
+- (GWSElement*) findElement: (NSString*)name
+{
+  if ([_name isEqualToString: name] == YES)
+    {
+      return self;
+    }
+  else
+    {
+      GWSElement	*child = [self firstChild];
+
+      while (child != nil)
+	{
+	  GWSElement	*found = [child findElement: name];
+
+	  if (found != nil)
+	    {
+	      return found;
+	    }
+	  child = [child sibling];
+	}
+      return nil;
+    }
+}
+
 - (GWSElement*) firstChild
 {
   if ([_children count] == 0)

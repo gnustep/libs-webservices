@@ -150,6 +150,13 @@ extern "C" {
  */
 - (void) encodeWith: (GWSCoder*)coder;
 
+/** A convenience method to search the receiver for an elemement whose
+ * name (ignoring any namespace prefix) matches the method argument.<br />
+ * The return value could be the receiver itsself, any of it's direct
+ * (or indirect) children, or nil if no such element is found.
+ */
+- (GWSElement*) findElement: (NSString*)name;
+
 /** Returns the first child element or nil if there are no children.
  */
 - (GWSElement*) firstChild;

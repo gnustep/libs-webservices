@@ -1,3 +1,9 @@
+2009-03-10 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.h:
+	* GWSElement.m:
+	Add convenience method to find a named element.
+
 2009-02-26 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:
