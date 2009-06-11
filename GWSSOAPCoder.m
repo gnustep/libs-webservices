@@ -1090,13 +1090,10 @@ newHeader(NSString *prefix, id o)
             {
               result = [self decodeBase64From: result];
             }
-
-#if 0
           else if ([t isEqualToString: @"xsd:hexBinary"] == YES)
             {
-              result = [self decodeHexFrom: result];
+              result = [self decodeHexBinaryFrom: result];
             }
-#endif
           else if ([t isEqualToString: @"xsd:dateTime"] == YES
             || [t isEqualToString: @"xsd:timeInstant"] == YES)
             {

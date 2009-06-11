@@ -1,3 +1,13 @@
+2009-06-11 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSCoder.h:
+	* GWSCoder.m:
+	Add methods for encoding/decoding haxBinary information as per the
+	schema recommendations.
+	* WSSUsernameToken.h:
+	* WSSUsernameToken.m:
+	Expose SHA1 category.
+
 2009-03-10 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSElement.h:

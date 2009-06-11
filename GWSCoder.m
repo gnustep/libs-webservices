@@ -121,7 +121,7 @@ static NSCharacterSet	*ws = nil;
 {
   NSData        *source = [str dataUsingEncoding: NSASCIIStringEncoding];
   int		length;
-  int		declen ;
+  int		declen;
   const unsigned char	*src;
   const unsigned char	*end;
   unsigned char *result;
@@ -215,6 +215,80 @@ static NSCharacterSet	*ws = nil;
     initWithBytesNoCopy: result length: dst - result] autorelease];
 }
 
+- (NSData*) decodeHexBinaryFrom: (NSString*)str
+{
+  NSData        *source = [str dataUsingEncoding: NSASCIIStringEncoding];
+  int		length;
+  int		declen;
+  const unsigned char	*src;
+  const unsigned char	*end;
+  unsigned char *result;
+  unsigned char	*dst;
+  unsigned char	val = 0;
+  BOOL		hi = YES;
+
+  if (source == nil)
+    {
+      return nil;
+    }
+  length = [source length];
+  if (length == 0)
+    {
+      return [NSData data];
+    }
+  declen = length/2;
+  src = (const unsigned char*)[source bytes];
+  end = &src[length];
+
+  result = (unsigned char*)NSZoneMalloc(NSDefaultMallocZone(), declen);
+  dst = result;
+
+  while ((src != end) && *src != '\0')
+    {
+      int	c = *src++;
+
+      if (isxdigit(c))
+	{
+	  if (isdigit(c))
+	    {
+	      c = c - '0' + 52;
+	    }
+	  else if (isupper(c))
+	    {
+	      c -= 'A';
+	    }
+	  else
+	    {
+	      c = c - 'a' + 26;
+	    }
+	  if (hi == YES)
+	    {
+	      val = c << 4;
+	      hi = NO;
+	    }
+	  else
+	    {
+	      *dst++ = hi | val;
+	      hi = YES;
+	    }
+	}
+      else if (!isspace(c))
+	{
+	  hi = NO;	// Indicate problem
+	  break;
+	}
+    }
+
+  if (hi == NO)
+    {
+      /* Bad number of hex digits, or non hex data */
+      NSZoneFree(NSDefaultMallocZone(), result);
+      return nil;
+    }
+  return [[[NSData allocWithZone: NSDefaultMallocZone()]
+    initWithBytesNoCopy: result length: dst - result] autorelease];
+}
+
 - (NSString*) encodeBase64From: (NSData*)source
 {
   NSString      *str;
@@ -233,6 +307,38 @@ static NSCharacterSet	*ws = nil;
   dBuf = NSZoneMalloc(NSDefaultMallocZone(), destlen);
 
   destlen = encodebase64(dBuf, sBuf, length);
+
+  str = [[NSString alloc] initWithBytesNoCopy: dBuf
+                                       length: destlen
+                                     encoding: NSASCIIStringEncoding
+                                 freeWhenDone: YES];
+  return [str autorelease];
+}
+
+- (NSString*) encodeHexBinaryFrom: (NSData*)source
+{
+  const char	*hex = "0123456789ABCDEF";
+  NSString      *str;
+  int		length;
+  int		destlen;
+  unsigned char *sBuf;
+  unsigned char *dBuf;
+  unsigned	dpos;
+  unsigned	spos;
+
+  length = [source length];
+  if (length == 0)
+    {
+      return @"";
+    }
+  destlen = length * 2;
+  sBuf = (unsigned char*)[source bytes];
+  dBuf = NSZoneMalloc(NSDefaultMallocZone(), destlen);
+  for (spos = 0; spos < length; spos++)
+    {
+      dBuf[dpos++] = hex[sBuf[spos] >> 4];
+      dBuf[dpos++] = hex[sBuf[spos] & 0x0f];
+    }
 
   str = [[NSString alloc] initWithBytesNoCopy: dBuf
                                        length: destlen

@@ -27,6 +27,7 @@
 #define	INCLUDED_WSSUSERNAMETOKEN_H
 
 #import <Foundation/NSObject.h>
+#import <Foundation/NSData.h>
 
 #if     defined(__cplusplus)
 extern "C" {
@@ -42,7 +43,7 @@ extern "C" {
  * <p>Basic usage is simple, you create an instance of this class,
  * initialising it with the username and password to be used to authenticate
  * requests.  Then for each request you add the token to the request
- * header.  This can be done wither as a delegate of a coder or the delegate
+ * header.  This can be done either as a delegate of a coder or the delegate
  * of a service.  The following shows the delegate method for a service:
  * </p>
  * <example>
@@ -95,6 +96,17 @@ extern "C" {
  * in the header of a SOAP request.
  */
 - (GWSElement*) tree;
+@end
+
+/** Produce an SHA1 digest of an NSData object.<br />
+ * Used internally by [WSSUsernameToken] when hash based authentication
+ * is in use.
+ */
+@interface	NSData (SHA1)
+/** This method produces an SHA1 digest of the receiver and returns the
+ * resulting value as an autoreleased NSData object.
+ */
+- (NSData*) SHA1;
 @end
 
 #if	defined(__cplusplus)

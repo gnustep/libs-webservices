@@ -28,10 +28,6 @@
 #import "WSSUsernameToken.h"
 #include <stdlib.h>
 
-@interface	NSData (SHA1)
-- (NSData*) SHA1;
-@end
-
 static NSTimeZone	*gmt = nil;
 static GWSCoder		*coder = nil;
 
