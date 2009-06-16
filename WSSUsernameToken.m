@@ -31,11 +31,19 @@
 static NSTimeZone	*gmt = nil;
 static GWSCoder		*coder = nil;
 
+#ifdef __MINGW__
+#define RANDOM(x)   rand(x)
+#define SRANDOM(s)  srand(s)
+#else
+#define RANDOM(x)   random(x)
+#define SRANDOM(s)  srandom(s)
+#endif
+
 @implementation	WSSUsernameToken
 
 + (void) initialize
 {
-  srandom((unsigned)[[NSDate date] timeIntervalSinceReferenceDate]);
+  SRANDOM((unsigned)[[NSDate date] timeIntervalSinceReferenceDate]);
   if (gmt == nil)
     {
       gmt = [[NSTimeZone timeZoneForSecondsFromGMT: 0] retain];
@@ -204,10 +212,10 @@ static GWSCoder		*coder = nil;
       [created setCalendarFormat: @"%Y-%m-%dT%H:%M:%SZ"];
       date = [created description];
       [created release];
-      buf[0] = (uint32_t)random();
-      buf[1] = (uint32_t)random();
-      buf[2] = (uint32_t)random();
-      buf[3] = (uint32_t)random();
+      buf[0] = (uint32_t)RANDOM();
+      buf[1] = (uint32_t)RANDOM();
+      buf[2] = (uint32_t)RANDOM();
+      buf[3] = (uint32_t)RANDOM();
       nonce = [[NSData alloc] initWithBytes: buf length: 16];
       pass = [_password dataUsingEncoding: NSUTF8StringEncoding];
       hashable = [[NSMutableData alloc] initWithCapacity:

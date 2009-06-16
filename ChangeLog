@@ -1,3 +1,9 @@
+2009-06-16 Riccardo Mottola  <multix@gmail.com>
+
+	* WSSUsernameToken.m: use alternative random number functions
+	(rand() and srand()) on mswindows as it doesn't have the random()
+	and srandom() functions.
+
 2009-06-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSCoder.h:
