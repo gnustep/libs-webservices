@@ -550,6 +550,8 @@
     }
   [_request retain];
 
+  [_response release];
+  _response = [[NSMutableData alloc] init];
   _timer = [NSTimer scheduledTimerWithTimeInterval: seconds
 					    target: self
 					  selector: @selector(timeout:)
@@ -734,7 +736,7 @@
   [_connection release];
   _connection = nil;
   [_response release];
-  _response = [[NSMutableData alloc] init];
+  _response = nil;
 }
 
 - (void) timeout: (NSTimer*)t
@@ -977,6 +979,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   _timer = nil;
   [handle removeClient: (id<NSURLHandleClient>)self];
 
+  [_response release];
   _response = [[handle availableResourceData] retain];
   code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
   if (code != 200)

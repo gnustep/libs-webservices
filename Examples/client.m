@@ -67,12 +67,16 @@ main()
   method = @"test";
 
   service = [GWSService new]; 
+  [service setDebug: YES];
   [service setCoder: coder];
   [coder release];
 
   /* Send a document style message.
    */
   [service setURL: test];
+/*
+  [service setURL: test certificate: @"xx" privateKey: @"yy" password: @"zz"];
+ */
   [coder setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
   result = [service invokeMethod: method
                       parameters: params
@@ -90,7 +94,28 @@ main()
     }
 
   [service setURL: [test stringByAppendingString: @"rpc"]];
+/*
+  [service setURL: [test stringByAppendingString: @"rpc"]
+    certificate: @"xx" privateKey: @"yy" password: @"zz"];
+ */
   [coder setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
+  result = [service invokeMethod: method
+                      parameters: params
+                           order: order
+                         timeout: 30];
+  if ([method isEqual: [result objectForKey: GWSMethodKey]] == NO
+    || [params isEqual: [result objectForKey: GWSParametersKey]] == NO
+    || [order isEqual: [result objectForKey: GWSOrderKey]] == NO)
+    {
+      fprintf(stdout, "RPC unexpected result: %s\n",
+	[[result description] UTF8String]);
+    }
+  else
+    {
+      fprintf(stdout, "RPC style message test OK\n");
+    }
+
+  [params setObject: @"there" forKey: @"string1"];
   result = [service invokeMethod: method
                       parameters: params
                            order: order
