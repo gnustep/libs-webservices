@@ -168,6 +168,8 @@
 				858D8E1E0F1EA04C00CC8F4A,
 				858D8E1F0F1EA04C00CC8F4A,
 				858D8E200F1EA04C00CC8F4A,
+				85AD68240FECBA8000E82714,
+				85AD68250FECBA8000E82714,
 			);
 			isa = PBXGroup;
 			name = Classes;
@@ -296,7 +298,6 @@
 				GCC_PRECOMPILE_PREFIX_HEADER = NO;
 				GCC_PREFIX_HEADER = "$(SYSTEM_LIBRARY_DIR)/Frameworks/AppKit.framework/Headers/AppKit.h";
 				INSTALL_PATH = /usr/local/bin;
-				OPTIMIZATION_CFLAGS = "";
 				OTHER_CFLAGS = "";
 				OTHER_LDFLAGS = "-framework Foundation -framework AppKit";
 				OTHER_REZFLAGS = "";
@@ -721,6 +722,37 @@
 			settings = {
 			};
 		};
+		85AD68240FECBA8000E82714 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.h;
+			path = WSSUsernameToken.h;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		85AD68250FECBA8000E82714 = {
+			fileEncoding = 30;
+			isa = PBXFileReference;
+			lastKnownFileType = sourcecode.c.objc;
+			path = WSSUsernameToken.m;
+			refType = 4;
+			sourceTree = "<group>";
+		};
+		85AD68260FECBA8000E82714 = {
+			fileRef = 85AD68240FECBA8000E82714;
+			isa = PBXBuildFile;
+			settings = {
+				ATTRIBUTES = (
+					Public,
+				);
+			};
+		};
+		85AD68270FECBA8000E82714 = {
+			fileRef = 85AD68250FECBA8000E82714;
+			isa = PBXBuildFile;
+			settings = {
+			};
+		};
 //850
 //851
 //852
@@ -783,6 +815,7 @@
 				858D8E330F1EA04C00CC8F4A,
 				858D8E360F1EA04C00CC8F4A,
 				858D8E380F1EA04C00CC8F4A,
+				85AD68260FECBA8000E82714,
 			);
 			isa = PBXHeadersBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
@@ -816,6 +849,7 @@
 				858D8E350F1EA04C00CC8F4A,
 				858D8E370F1EA04C00CC8F4A,
 				858D8E390F1EA04C00CC8F4A,
+				85AD68270FECBA8000E82714,
 			);
 			isa = PBXSourcesBuildPhase;
 			runOnlyForDeploymentPostprocessing = 0;
