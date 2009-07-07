@@ -150,20 +150,24 @@ promote(NSMutableDictionary *d, NSString *k)
 	  NSString	*style = [a objectForKey: @"style"];
 	  NSString	*action = [a objectForKey: @"soapAction"];
 
-	  /* A missing style defaults to 'document'
+	  /* A missing style means we use the value set in the
+	   * 'binding' extensibility, and don't change it here.
 	   */
-	  if (style == nil || [style isEqualToString: @"document"] == YES)
+	  if (style != nil)
 	    {
-	      [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
-	    }
-	  else if ([style isEqualToString: @"rpc"])
-	    {
-	      [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
-	    }
-	  else
-	    {
-	      return [NSString stringWithFormat:
-		@"bad SOAP style: '%@' in operation", style];
+	      if ([style isEqualToString: @"document"] == YES)
+		{
+		  [c setOperationStyle: GWSSOAPBodyEncodingStyleDocument];
+		}
+	      else if ([style isEqualToString: @"rpc"])
+		{
+		  [c setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
+		}
+	      else
+		{
+		  return [NSString stringWithFormat:
+		    @"bad SOAP style: '%@' in operation", style];
+		}
 	    }
 
 	  /* A missing action defaults to '""'
