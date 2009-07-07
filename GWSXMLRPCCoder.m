@@ -559,7 +559,7 @@ static NSCharacterSet   *ws;
                   [NSException raise: NSGenericException
                               format: @"bad element count in params"];
                 }
-              elem = [tree firstChild]; 
+              elem = [elem firstChild]; 
               name = [elem name];
               if ([name isEqualToString: @"param"] == NO)
                 {
