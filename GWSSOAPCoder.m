@@ -40,6 +40,8 @@ NSString * const GWSSOAPNamespaceNameKey
   = @"GWSSOAPNamespaceNameKey";
 NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
+NSString * const GWSSOAPTypeKey
+  = @"GWSSOAPTypeKey";
 NSString * const GWSSOAPUseEncoded
   = @"encoded";
 NSString * const GWSSOAPUseKey
@@ -146,6 +148,9 @@ newHeader(NSString *prefix, id o)
 	}
       order = a;
     }
+
+  [self setOperationStyle:
+    [parameters objectForKey: GWSSOAPBodyEncodingStyleKey]];
 
   /* The method name is required for RPC operations ...
    * for document style operations the method is implicit in the URL
@@ -486,9 +491,6 @@ newHeader(NSString *prefix, id o)
 	{
 	  container = body;    // Direct encoding inside the body.
 	}
-
-      [self setOperationStyle:
-	[parameters objectForKey: GWSSOAPBodyEncodingStyleKey]];
 
       c = [order count];
       for (i = 0; i < c; i++)
@@ -866,12 +868,13 @@ newHeader(NSString *prefix, id o)
     {
       nsURI = [o objectForKey: GWSSOAPNamespaceURIKey];
       nsName = [o objectForKey: GWSSOAPNamespaceNameKey];
+      x = [o objectForKey: GWSSOAPTypeKey];
       o = [o objectForKey: GWSSOAPValueKey];
     }
 
   if (YES == [o isKindOfClass: [NSString class]])
     {
-      if (NO == _useLiteral)
+      if (NO == _useLiteral && x == nil)
         {
           x = @"xsd:string";
         }
@@ -887,7 +890,7 @@ newHeader(NSString *prefix, id o)
 
           if ((i == 0 || i == 1) && (*t == 'c' || *t == 'C'))
             {
-              if (NO == _useLiteral)
+              if (NO == _useLiteral && x == nil)
                 {
                   x = @"xsd:boolean";
                 }
@@ -900,18 +903,26 @@ newHeader(NSString *prefix, id o)
                   c = @"true";
                 }
             }
+          else if (*t == 'l' || *t == 'L')
+            {
+              if (NO == _useLiteral && x == nil)
+                {
+                  x = @"xsd:long";
+                }
+              c = [NSString stringWithFormat: @"%ld", i];
+            }
           else
             {
-              if (NO == _useLiteral)
+              if (NO == _useLiteral && x == nil)
                 {
                   x = @"xsd:int";
                 }
-              c = [NSString stringWithFormat: @"%ld", i];
+              c = [NSString stringWithFormat: @"%d", i];
             }
         }
       else
         {
-          if (NO == _useLiteral)
+          if (NO == _useLiteral && x == nil)
             {
               x = @"xsd:double";
             }
@@ -920,7 +931,7 @@ newHeader(NSString *prefix, id o)
     }
   else if (YES == [o isKindOfClass: [NSData class]])
     {
-      if (NO == _useLiteral)
+      if (NO == _useLiteral && x == nil)
         {
           x = @"xsd:base64Binary";
         }
@@ -928,7 +939,7 @@ newHeader(NSString *prefix, id o)
     }
   else if (YES == [o isKindOfClass: [NSDate class]])
     {
-      if (NO == _useLiteral)
+      if (NO == _useLiteral && x == nil)
         {
           x = @"xsd:timeInstant";
         }
@@ -944,14 +955,83 @@ newHeader(NSString *prefix, id o)
     }
   else
     {
-      if (NO == _useLiteral)
+      if (NO == _useLiteral && x == nil)
         {
           x = @"xsd:string";
         }
       c = [o description];
     }
 
-  if (array == YES)
+  if (nsName != nil)
+    {
+      q = [NSString stringWithFormat: @"%@:%@", nsName, name];
+    }
+  e = [[GWSElement alloc] initWithName: name
+			     namespace: nil
+			     qualified: q
+			    attributes: nil];
+  if (nsURI != nil)
+    {
+      [e setNamespace: nsURI forPrefix: @""];
+    }
+  if (x != nil)
+    {
+      [e setAttribute: x forKey: @"xsi:type"];
+    }
+  if (c != nil)
+    {
+      [e addContent: c];
+    }
+  [ctxt addChild: e];
+  [e release];
+
+  if (dictionary == YES)
+    {
+      NSArray   *order = [o objectForKey: GWSOrderKey];
+      NSString  *namespace = [o objectForKey: GWSSOAPNamespaceURIKey];
+      NSString  *prefix = [o objectForKey: GWSSOAPNamespaceNameKey];
+      unsigned  count;
+      unsigned  i;
+
+      if (namespace != nil)
+	{
+	  /* We have been told to specify a new namespace ... so do it.
+	   */
+	  [e setNamespace: namespace forPrefix: prefix];
+	}
+      else if (prefix != nil)
+	{
+	  /* We have been given a namespace prefix for this element.
+	   */
+	  [e setPrefix: prefix];
+	}
+
+      if ([order count] == 0)
+	{
+	  order = [o allKeys];
+	}
+      count = [order count];
+      for (i = 0; i < count; i++)
+	{
+	  NSString      *k = [order objectAtIndex: i];
+	  id            v = [o objectForKey: k];
+
+	  if ([k hasPrefix: @"GWSSOAP"] == YES)
+	    {
+	      /* This is not an element to encode.
+	       */
+	      continue;
+	    }
+	  v = [o objectForKey: k];
+	  if (v == nil)
+	    {
+	      [NSException raise: NSInvalidArgumentException
+		format: @"Parameter '%@' (order %u) missing", k, i];
+	    }
+	  [self _createElementFor: v named: k in: e];
+	}
+    }
+  else if (array == YES)
     {
       unsigned  count;
       unsigned  i;
@@ -961,82 +1041,10 @@ newHeader(NSString *prefix, id o)
        */
       count = [o count];
       for (i = 0; i < count; i++)
-        {
-          id            v = [o objectAtIndex: i];
-
-	  [self _createElementFor: v named: name in: ctxt];
-        }
-    }
-  else
-    {
-      if (nsName != nil)
 	{
-	  q = [NSString stringWithFormat: @"%@:%@", nsName, name];
-	}
-      e = [[GWSElement alloc] initWithName: name
-				 namespace: nil
-				 qualified: q
-				attributes: nil];
-      if (nsURI != nil)
-	{
-	  [e setNamespace: nsURI forPrefix: @""];
-	}
-      if (x != nil)
-	{
-	  [e setAttribute: x forKey: @"xsi:type"];
-	}
-      if (c != nil)
-	{
-	  [e addContent: c];
-	}
-      [ctxt addChild: e];
-      [e release];
+	  id	v = [o objectAtIndex: i];
 
-      if (dictionary == YES)
-	{
-	  NSArray   *order = [o objectForKey: GWSOrderKey];
-	  NSString  *namespace = [o objectForKey: GWSSOAPNamespaceURIKey];
-	  NSString  *prefix = [o objectForKey: GWSSOAPNamespaceNameKey];
-	  unsigned  count;
-	  unsigned  i;
-
-	  if (namespace != nil)
-	    {
-	      /* We have been told to specify a new namespace ... so do it.
-	       */
-	      [e setNamespace: namespace forPrefix: prefix];
-	    }
-	  else if (prefix != nil)
-	    {
-	      /* We have been given a namespace prefix for this element.
-	       */
-	      [e setPrefix: prefix];
-	    }
-
-	  if ([order count] == 0)
-	    {
-	      order = [o allKeys];
-	    }
-	  count = [order count];
-	  for (i = 0; i < count; i++)
-	    {
-	      NSString      *k = [order objectAtIndex: i];
-	      id            v = [o objectForKey: k];
-
-	      if ([k hasPrefix: @"GWSSOAP"] == YES)
-		{
-		  /* This is not an element to encode.
-		   */
-		  continue;
-		}
-	      v = [o objectForKey: k];
-	      if (v == nil)
-		{
-		  [NSException raise: NSInvalidArgumentException
-		    format: @"Parameter '%@' (order %u) missing", k, i];
-		}
-	      [self _createElementFor: v named: k in: e];
-	    }
+	  [self _createElementFor: v named: @"item" in: e];
 	}
     }
 }

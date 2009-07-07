@@ -1,3 +1,10 @@
+2009-07-07 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m: Fix error encoding arrays.
+	* GWSService.m: internal changes (incomplete)
+	* GWSExtensibility.m: fixup for messages defining part types
+	* GWSSOAPCopder.m: New key to specify a type for a value
+
 2009-06-16 Riccardo Mottola  <multix@gmail.com>
 
 	* WSSUsernameToken.m: use alternative random number functions

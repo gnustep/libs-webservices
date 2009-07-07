@@ -276,11 +276,20 @@ promote(NSMutableDictionary *d, NSString *k)
 	      while ((part = [enumerator nextObject]) != nil)
 		{
 		  NSString	*elementName;
+		  NSString	*typeName;
 		  NSString	*prefix;
 		  NSArray	*a;
 
 		  elementName = [message elementOfPartNamed: part];
 		  if (elementName == nil)
+		    {
+		      typeName = [message typeOfPartNamed: part];
+		    }
+		  else
+		    {
+		      typeName = nil;
+		    }
+		  if (elementName == nil && typeName == nil)
 		    {
 		      return [NSString stringWithFormat:
 			@"Unable to find part '%@' in message '%@'",
@@ -301,19 +310,39 @@ promote(NSMutableDictionary *d, NSString *k)
 		      /* FIXME ... what if there is no value for this
 		       * part ... which parts are mandatory?
 		       */
-		      if ([p objectForKey: elementName] != nil)
+		      if (elementName != nil)
 			{
-			  [order addObject: elementName];
-			}
-		      if (prefix != nil &&  literal == YES)
-			{
-			  NSMutableDictionary	*v;
-			  NSString		*n;
+			  if ([p objectForKey: elementName] != nil)
+			    {
+			      [order addObject: elementName];
+			    }
+			  if (prefix != nil &&  literal == YES)
+			    {
+			      NSMutableDictionary	*v;
+			      NSString		*n;
 
-			  v = promote(p, elementName);
-			  n = [document namespaceForPrefix: prefix];
-			  [v setObject: n
-				forKey: GWSSOAPNamespaceURIKey];
+			      v = promote(p, elementName);
+			      n = [document namespaceForPrefix: prefix];
+			      [v setObject: n
+				    forKey: GWSSOAPNamespaceURIKey];
+			    }
+			}
+		      else
+			{
+			  if ([p objectForKey: part] != nil)
+			    {
+			      [order addObject: part];
+			    }
+			  if (prefix != nil &&  literal == YES)
+			    {
+			      NSMutableDictionary	*v;
+			      NSString		*n;
+
+			      v = promote(p, part);
+			      n = [document namespaceForPrefix: prefix];
+			      [v setObject: n
+				    forKey: GWSSOAPNamespaceURIKey];
+			    }
 			}
 		    }
 		}
@@ -383,12 +412,24 @@ promote(NSMutableDictionary *d, NSString *k)
 	      if (part)
 		{
 		  NSString	*elementName;
+		  NSString	*typeName;
+		  NSString	*partName;
 		  NSString	*prefix;
 		  NSArray	*a;
 		  id		o;
 
 		  elementName = [message elementOfPartNamed: part];
 		  if (elementName == nil)
+		    {
+		      typeName = [message typeOfPartNamed: part];
+		      partName = part;
+		    }
+		  else
+		    {
+		      typeName = nil;
+		      partName = elementName;
+		    }
+		  if (partName == nil)
 		    {
 		      return [NSString stringWithFormat:
 			@"Unable to find part '%@' in message '%@'",
@@ -405,17 +446,17 @@ promote(NSMutableDictionary *d, NSString *k)
 		      prefix = nil;
 		    }
 
-		  o = [h objectForKey: elementName];
+		  o = [h objectForKey: partName];
 		  if (o == nil)
 		    {
 		      /* No value found in headers dictionary, perhaps it's in
 		       * the main parameters dictionary and we should move it.
 		       */
-		      o = [p objectForKey: elementName];
+		      o = [p objectForKey: partName];
 		      if (o != nil && [[p objectForKey: GWSOrderKey]
-			containsObject: elementName] == NO)
+			containsObject: partName] == NO)
 			{
-			  [h setObject: o forKey: elementName];
+			  [h setObject: o forKey: partName];
 			  [p removeObjectForKey: elementName];
 			}
 		    }

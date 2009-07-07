@@ -162,7 +162,7 @@ extern NSString * const GWSSOAPMessageHeadersKey;
  * As a special case at the SOAP Body, Fault, or Header level,
  * if this key is used in conjunction with the GWSSOAPNamespaceNameKey,
  * a mapping is set up in the SOAP Envelope to match the name to the URI.
- * This behavior is in addition to the normal behaqvior of setting the
+ * This behavior is in addition to the normal behavior of setting the
  * default namespace.
  */
 extern NSString * const GWSSOAPNamespaceURIKey;
@@ -182,6 +182,13 @@ extern NSString * const GWSSOAPNamespaceURIKey;
  * GWSSOAPNamespaceURIKey to set up a namespace mapping in the SOAP Envelope.
  */
 extern NSString * const GWSSOAPNamespaceNameKey;
+
+/** If this key is present in a dictionary describing a value
+ * (one with a GWSSOAPValuekey present) it is used to specify the type
+ * of the value, overriding any normal xsi:type=... setting inferred
+ * from the actual data type of the value.
+ */
+extern NSString * const GWSSOAPTypeKey;
 
 /** If this key is present in a dictionary, then instead of treating the
  * dictionary as a complex type, the value referenced by this key is

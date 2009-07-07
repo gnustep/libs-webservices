@@ -111,6 +111,20 @@ extern "C" {
 }
 
 /**
+ * Builds an RPC method call.<br />
+ * The method argument is the name of the operation to be performed,
+ * however, if the receiver is owned by a GWSDocument instance which
+ * defines multiple ports for the service, the operation name may not
+ * be unique, in which case it must be specified as the port type and
+ * operation names separated by a full stop (port.operation).<br />
+ * Parameters must be supplied as for the
+ * [GWSCoder-buildRequest:parameters:order:] method.<br />
+ */
+- (NSData*) buildRequest: (NSString*)method
+              parameters: (NSDictionary*)parameters
+                   order: (NSArray*)order;
+
+/**
  * Returns the coder instance used to serialize/deserialize for this
  * instance.<br />
  */

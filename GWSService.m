@@ -211,6 +211,262 @@
 
 @implementation	GWSService
 
+- (BOOL) beginMethod: (NSString*)method 
+           operation: (NSString**)operation
+	        port: (GWSPort**)port
+{
+  if (_operation != nil)
+    {
+      [self _setProblem: @"Earlier operation still in progress"];
+      return NO;
+    }
+
+  /* Perhaps the values are being set directly ... if so, we trust them
+   */
+  if (operation && *operation && port && *port)
+    {
+      ASSIGN(_operation, *operation);
+      ASSIGN(_port, *port);
+      return YES;
+    }
+
+  if (_document == nil)
+    {
+      _operation = [method retain];
+    }
+  else
+    {
+      NSRange		r;
+      NSString		*portName;
+      NSEnumerator	*enumerator;
+      GWSElement	*elem;
+      GWSPortType	*portType;
+      GWSBinding	*binding;
+
+      /* As this is not a standalone service, we must set up information from
+       * the parsed WSDL document.
+       */
+      r = [method rangeOfString: @"."];
+      if (r.length == 1)
+	{
+	  portName = [method substringToIndex: r.location];
+	  _operation = [method substringFromIndex: NSMaxRange(r)];
+	}
+      else
+	{
+	  portName = nil;
+	  _operation = method;
+	}
+      [_operation retain];
+
+      /* Look through the ports declared in this service for one matching
+       * the port name and operation name.  Get details by looking up
+       * bindings, since we can't actually use a port/operation if there
+       * is no binding for it.
+       */
+      enumerator = [_ports objectEnumerator];
+      while ((_port = [enumerator nextObject]) != nil)
+	{
+	  binding = [_port binding];
+	  portType = [binding type];
+	  if (portType != nil)
+	    {
+	      elem = [[portType operations] objectForKey: _operation];
+	      if (elem != nil)
+		{
+		  if (portName == nil || [portName isEqual: [portType name]])
+		    {
+		      break;	// matched
+		    }
+		  elem = nil;
+		}
+	    }
+	}
+      [_port retain];
+
+      if (_port == nil)
+	{
+	  [self _clean];
+	  [self _setProblem: [NSString stringWithFormat:
+	    @"Unable to find port.operation matching '%@'", method]];
+	  return NO;
+	}
+    }
+  if (operation != 0)
+    {
+      *operation = _operation;
+    }
+  if (port != 0)
+    {
+      *port = _port;
+    }
+  return YES;
+}
+
+- (NSData*) _buildRequest: (NSString*)method 
+               parameters: (NSDictionary*)parameters
+                    order: (NSArray*)order
+{
+  if (_parameters != nil)
+    {
+      [self _setProblem: @"Earlier operation still in progress"];
+      return nil;
+    }
+
+  if ([self beginMethod: method operation: 0 port: 0] == NO)
+    {
+      return nil;
+    }
+
+  /* Take a mutable copy of the parameters so that we can add keys to it
+   * to control encoding options.
+   */
+  _parameters = [parameters mutableCopy];
+  if (order != nil)
+    {
+      /* Store the ordering so that extensions can find it.
+       */
+      [_parameters setObject: order forKey: GWSOrderKey];
+    }
+
+  /* If this is not a standalone service, we must set up information from
+   * the parsed WSDL document.  Otherwise we just use whatever has been
+   * set via the API.
+   */
+  if (_port != nil)
+    {
+      NSEnumerator	*enumerator;
+      GWSElement	*elem;
+      GWSElement	*operation;
+      GWSBinding	*binding;
+      GWSPortType	*portType;
+      NSString		*problem;
+      NSArray		*order;
+
+      /* Handle extensibility for port ...
+       * With SOAP this supplies the URL that we should send to.
+       */
+      enumerator = [[_port extensibility] objectEnumerator];
+      while ((elem = [enumerator nextObject]) != nil)
+	{
+	  problem = [self _setupFrom: elem in: _port];
+	  if (problem != nil)
+	    {
+	      [self _clean];
+	      [self _setProblem: problem];
+	      return nil;
+	    }
+	}
+
+      /* Handle SOAP binding ... this supplies the encoding style and
+       * transport that we should used.
+       */
+      binding = [_port binding];
+      enumerator = [[binding extensibility] objectEnumerator];
+      while ((elem = [enumerator nextObject]) != nil)
+	{
+	  problem = [self _setupFrom: elem in: binding];
+	  if (problem != nil)
+	    {
+	      [self _clean];
+	      [self _setProblem: problem];
+	      return nil;
+	    }
+	}
+
+      /* Now look at operation specific parameter ordering defined in
+       * the abstract operation in the portType. 
+       */
+      portType = [binding type];
+      operation = [[portType operations] objectForKey: _operation];
+      order = [[[operation attributes] objectForKey: @"parameterOrder"]
+	componentsSeparatedByString: @" "];
+      if ([order count] > 0)
+	{
+	  NSMutableArray	*m = [order mutableCopy];
+	  unsigned		c = [m count];
+
+	  while (c-- > 0)
+	    {
+	      NSString	*s = [order objectAtIndex: c];
+
+	      if ([_parameters objectForKey: s] == nil)
+		{
+		  /* Item is not present in parameters dictionary so
+		   * presumably it' an output parameter rather than
+		   * an input parameter ad we can ignore it.
+		   */
+		  [m removeObjectAtIndex: c];
+		}
+	    }
+	  if ([m count] > 0)
+	    {
+	      /* Add the ordering information to the parameters dictionary
+	       * so that the coder will be able to use it.
+	       */
+	      [_parameters setObject: m forKey: GWSOrderKey];
+	    }
+	  [m release];
+	}
+
+      /* Next we can examine the specific operation binding information.
+       */
+      elem = [binding operationWithName: _operation create: NO];
+      elem = [elem firstChild];
+      while (elem != nil
+	&& [[elem name] isEqualToString: @"input"] == NO
+	&& [[elem name] isEqualToString: @"output"] == NO)
+	{
+	  problem = [self _setupFrom: elem in: binding];
+	  if (problem != nil)
+	    {
+	      [self _clean];
+	      [self _setProblem: problem];
+	      return NO;
+	    }
+	  elem = [elem sibling];
+	}
+      if ([[elem name] isEqualToString: @"input"] == YES)
+	{
+	  elem = [elem firstChild];
+	  while (elem != nil)
+	    {
+	      problem = [self _setupFrom: elem in: binding];
+	      if (problem != nil)
+		{
+		  [self _clean];
+		  [self _setProblem: problem];
+		  return nil;
+		}
+	      elem = [elem sibling];
+	    }
+	}
+    }
+
+  if (_coder == nil)
+    {
+      [self _clean];
+      [self _setProblem: @"no coder set  (use -setCoder:)"];
+      return nil;
+    }
+  [_coder setDebug: [self debug]];
+  return [_coder buildRequest: method parameters: _parameters order: order];
+}
+
+- (NSData*) buildRequest: (NSString*)method 
+              parameters: (NSDictionary*)parameters
+                   order: (NSArray*)order
+{
+  NSData	*req;
+
+  req = [self _buildRequest: method parameters: parameters order: order];
+  if (req != nil)
+    {
+      [self _clean];
+    }
+  return req;
+}
+
 - (GWSCoder*) coder
 {
   return _coder;
@@ -336,222 +592,25 @@
                order: (NSArray*)order
              timeout: (int)seconds
 {
-  if (_operation != nil)
-    {
-      [self _setProblem: @"Earlier operation still in progress"];
-      return NO;
-    }
+  NSData	*req;
 
-  /* Take a mutable copy of the parameters so that we can add keys to it
-   * to control encoding options.
-   */
-  _parameters = [parameters mutableCopy];
-  if (order != nil)
-    {
-      /* Store the ordering so that extensions can find it.
-       */
-      [_parameters setObject: order forKey: GWSOrderKey];
-    }
-
-  /* If this is not a standalone service, we must set up information from
-   * the parsed WSDL document.  Otherwise we just use whatever has been
-   * set via the API.
-   */
-  if (_document != nil)
-    {
-      NSRange		r;
-      NSString		*portName;
-      NSEnumerator	*enumerator;
-      GWSElement	*elem;
-      GWSPortType	*portType;
-      GWSBinding	*binding;
-      GWSElement	*operation;
-
-      r = [method rangeOfString: @"."];
-      if (r.length == 1)
-	{
-	  portName = [method substringToIndex: r.location];
-	  _operation = [method substringFromIndex: NSMaxRange(r)];
-	}
-      else
-	{
-	  portName = nil;
-	  _operation = method;
-	}
-      [_operation retain];
-
-      /* Look through the ports declared in this service for one matching
-       * the port name and operation name.  Get details by looking up
-       * bindings, since we can't actually use a port/operation if there
-       * is no binding for it.
-       */
-      enumerator = [_ports objectEnumerator];
-      while ((_port = [enumerator nextObject]) != nil)
-	{
-	  binding = [_port binding];
-	  portType = [binding type];
-	  if (portType != nil)
-	    {
-	      operation = [[portType operations] objectForKey: _operation];
-	      if (operation != nil)
-		{
-		  if (portName == nil || [portName isEqual: [portType name]])
-		    {
-		      break;	// matched
-		    }
-		  operation = nil;
-		}
-	    }
-	}
-      [_port retain];
-
-      if (_port == nil)
-	{
-	  [self _clean];
-	  [self _setProblem: [NSString stringWithFormat:
-	    @"Unable to find port.operation matching '%@'", method]];
-	  return NO;
-	}
-      else
-	{
-	  NSString	*problem;
-          NSArray	*order;
-
-	  /* Handle extensibility for port ...
-	   * With SOAP this supplies the URL that we should send to.
-	   */
-          enumerator = [[_port extensibility] objectEnumerator];
-	  while ((elem = [enumerator nextObject]) != nil)
-	    {
-	      problem = [self _setupFrom: elem in: _port];
-	      if (problem != nil)
-		{
-		  [self _clean];
-		  [self _setProblem: problem];
-		  return NO;
-		}
-	    }
-
-	  /* Handle SOAP binding ... this supplies the encoding style and
-	   * transport that we should used.
-	   */
-          enumerator = [[binding extensibility] objectEnumerator];
-	  while ((elem = [enumerator nextObject]) != nil)
-	    {
-	      problem = [self _setupFrom: elem in: binding];
-	      if (problem != nil)
-		{
-		  [self _clean];
-		  [self _setProblem: problem];
-		  return NO;
-		}
-	    }
-
-	  /* Now look at operation specific parameter ordering defined in
-	   * the abstract operation in the portType. 
-	   */
-	  order = [[[operation attributes] objectForKey: @"parameterOrder"]
-	    componentsSeparatedByString: @" "];
-	  if ([order count] > 0)
-	    {
-	      NSMutableArray	*m = [order mutableCopy];
-	      unsigned		c = [m count];
-
-	      while (c-- > 0)
-		{
-		  NSString	*s = [order objectAtIndex: c];
-
-		  if ([_parameters objectForKey: s] == nil)
-		    {
-		      /* Item is not present in parameters dictionary so
-		       * presumably it' an output parameter rather than
-		       * an input parameter ad we can ignore it.
-		       */
-		      [m removeObjectAtIndex: c];
-		    }
-		}
-	      if ([m count] > 0)
-		{
-		  /* Add the ordering information to the parameters dictionary
-		   * so that the coder will be able to use it.
-		   */
-		  [_parameters setObject: m forKey: GWSOrderKey];
-		}
-	      [m release];
-	    }
-
-	  /* Next we can examine the specific operation binding information.
-	   */
-	  elem = [binding operationWithName: _operation create: NO];
-	  elem = [elem firstChild];
-	  while (elem != nil
-	    && [[elem name] isEqualToString: @"input"] == NO
-	    && [[elem name] isEqualToString: @"output"] == NO)
-	    {
-	      problem = [self _setupFrom: elem in: binding];
-	      if (problem != nil)
-		{
-		  [self _clean];
-		  [self _setProblem: problem];
-		  return NO;
-		}
-	      elem = [elem sibling];
-	    }
-          if ([[elem name] isEqualToString: @"input"] == YES)
-	    {
-	      elem = [elem firstChild];
-	      while (elem != nil)
-		{
-		  problem = [self _setupFrom: elem in: binding];
-		  if (problem != nil)
-		    {
-		      [self _clean];
-		      [self _setProblem: problem];
-		      return NO;
-		    }
-		  elem = [elem sibling];
-		}
-	    }
-	}
-    }
-
-  if (_coder == nil)
-    {
-      [self _clean];
-      [self _setProblem: @"no coder set  (use -setCoder:)"];
-      return NO;
-    }
-  [_coder setDebug: [self debug]];
-  if (_connectionURL == nil)
-    {
-      [self _clean];
-      [self _setProblem: @"no URL string set  (use -setURL:)"];
-      return NO;
-    }
-
-  [self _setProblem: @"unable to send"];
-
-  if (_timer != nil)
-    {
-      [self _clean];
-      return NO;	// Send already in progress.
-    }
-
-  _request = [_coder buildRequest: method parameters: _parameters order: order];
-  if (_request == nil)
+  req = [self _buildRequest: method parameters: parameters order: order];
+  if (req == nil)
     {
       [self _clean];
       return NO;
     }
-  if ([_delegate respondsToSelector:
-    @selector(webService:willSendRequest:)] == YES)
-    {
-      _request = [_delegate webService: self willSendRequest: _request];
-    }
-  [_request retain];
 
   [_response release];
   _response = [[NSMutableData alloc] init];
+
+  if ([_delegate respondsToSelector:
+    @selector(webService:willSendRequest:)] == YES)
+    {
+      req = [_delegate webService: self willSendRequest: req];
+    }
+  _request = [req retain];
+
   _timer = [NSTimer scheduledTimerWithTimeInterval: seconds
 					    target: self
 					  selector: @selector(timeout:)
