@@ -217,7 +217,7 @@ promote(NSMutableDictionary *d, NSString *k)
 	      GWSElement	*elem;
 
 	      /* This is in binding/operation/input/xxx, so the name
-	       * attribute of the operatio n element is the namer of
+	       * attribute of the operation element is the name of
 	       * the operation we need to use.
 	       */
 	      name = [[[[node parent] parent] attributes]
@@ -262,6 +262,8 @@ promote(NSMutableDictionary *d, NSString *k)
 	      if (namespace != nil)
 		{
 	          [p setObject: namespace forKey: GWSSOAPNamespaceURIKey];
+	          [p setObject: [document prefixForNamespace: namespace]
+			forKey: GWSSOAPNamespaceNameKey];
 		}
 
 	      parts = [[a objectForKey: @"parts"]
@@ -281,19 +283,21 @@ promote(NSMutableDictionary *d, NSString *k)
 		{
 		  NSString	*elementName;
 		  NSString	*typeName;
+		  NSString	*partName;
 		  NSString	*prefix;
 		  NSArray	*a;
 
-		  elementName = [message elementOfPartNamed: part];
+		  partName = elementName = [message elementOfPartNamed: part];
 		  if (elementName == nil)
 		    {
-		      typeName = [message typeOfPartNamed: part];
+		      partName = part;
+		      typeName = [message typeOfPartNamed: partName];
 		    }
 		  else
 		    {
 		      typeName = nil;
 		    }
-		  if (elementName == nil && typeName == nil)
+		  if (partName == nil)
 		    {
 		      return [NSString stringWithFormat:
 			@"Unable to find part '%@' in message '%@'",
@@ -303,7 +307,7 @@ promote(NSMutableDictionary *d, NSString *k)
 		  if ([a count] == 2)
 		    {
 		      prefix = [a objectAtIndex: 0];
-		      elementName = [a lastObject];
+		      partName = [a lastObject];
 		    }
 		  else
 		    {
@@ -314,63 +318,24 @@ promote(NSMutableDictionary *d, NSString *k)
 		      /* FIXME ... what if there is no value for this
 		       * part ... which parts are mandatory?
 		       */
-		      if (elementName != nil)
+		      if ([p objectForKey: partName] != nil)
 			{
-			  if ([p objectForKey: elementName] != nil)
-			    {
-			      [order addObject: elementName];
-			    }
-			  if (prefix != nil &&  literal == YES)
-			    {
-			      NSMutableDictionary	*v;
-			      NSString		*n;
-
-			      v = promote(p, elementName);
-			      n = [document namespaceForPrefix: prefix];
-			      [v setObject: n
-				    forKey: GWSSOAPNamespaceURIKey];
-			    }
+			  [order addObject: partName];
 			}
-		      else
+		      if (prefix != nil)
 			{
-			  if ([p objectForKey: part] != nil)
-			    {
-			      [order addObject: part];
-			    }
-			  if (prefix != nil &&  literal == YES)
-			    {
-			      NSMutableDictionary	*v;
-			      NSString		*n;
-
-			      v = promote(p, part);
-			      n = [document namespaceForPrefix: prefix];
-			      [v setObject: n
-				    forKey: GWSSOAPNamespaceURIKey];
-			    }
+			  [promote(p, partName)
+			    setObject: [document namespaceForPrefix: prefix]
+			    forKey: GWSSOAPNamespaceURIKey];
+			}
+		      if (typeName != nil && literal == NO)
+			{
+			  [promote(p, partName)
+			    setObject: typeName
+			    forKey: GWSSOAPTypeKey];
 			}
 		    }
 		}
-#if	0
-	      if (p != nil)
-		{
-		  NSString	*n;
-
-		  [p setObject: order forKey: GWSOrderKey];
-		  enumerator = [p keyEnumerator];
-		  while ((n = [enumerator nextObject]) != nil)
-		    {
-		      if ([n isEqualToString: GWSOrderKey] == NO
-			&& [n hasPrefix: @"GWSSOAP"] == NO
-			&& [order containsObject: n] == NO)
-			{
-			  return [NSString stringWithFormat:
-			    @"Unknown value '%@' in message '%@'"
-			    @" with parameters %@",
-			    n, messageName, p];
-			}
-		    }
-		}
-#else
 	      if (p != nil)
 		{
 		  NSString	*n;
@@ -389,7 +354,6 @@ promote(NSMutableDictionary *d, NSString *k)
 			}
 		    }
 		}
-#endif
 	    }
 	  else if ([name isEqualToString: @"header"])
 	    {
@@ -411,6 +375,8 @@ promote(NSMutableDictionary *d, NSString *k)
 	      if (namespace != nil)
 		{
 		  [h setObject: namespace forKey: GWSSOAPNamespaceURIKey];
+	          [h setObject: [document prefixForNamespace: namespace]
+			forKey: GWSSOAPNamespaceNameKey];
 		}
 	      part = [a objectForKey: @"part"];
 	      if (part)
@@ -422,16 +388,15 @@ promote(NSMutableDictionary *d, NSString *k)
 		  NSArray	*a;
 		  id		o;
 
-		  elementName = [message elementOfPartNamed: part];
+		  partName = elementName = [message elementOfPartNamed: part];
 		  if (elementName == nil)
 		    {
-		      typeName = [message typeOfPartNamed: part];
 		      partName = part;
+		      typeName = [message typeOfPartNamed: partName];
 		    }
 		  else
 		    {
 		      typeName = nil;
-		      partName = elementName;
 		    }
 		  if (partName == nil)
 		    {
@@ -443,7 +408,7 @@ promote(NSMutableDictionary *d, NSString *k)
 		  if ([a count] == 2)
 		    {
 		      prefix = [a objectAtIndex: 0];
-		      elementName = [a lastObject];
+		      partName = [a lastObject];
 		    }
 		  else
 		    {
@@ -471,18 +436,25 @@ promote(NSMutableDictionary *d, NSString *k)
 		    {
 		      added++;
 
-		      /* If the element has a namespace and we are doing
-		       * use=literal then we should make sure that the
-		       * element is encoded with the namespace.
+		      /* If we have an element with a namespace
+		       * then we should make sure that the
+		       * part is encoded with the namespace.
 		       */
-		      if (prefix != nil && literal == YES)
+		      if (prefix != nil)
 			{
-			  NSString		*n;
-			  NSMutableDictionary	*v;
-
-			  n = [document namespaceForPrefix: prefix];
-			  v = promote(h, elementName);
-			  [v setObject: n forKey: GWSSOAPNamespaceURIKey];
+			  [promote(h, partName)
+			    setObject: [document namespaceForPrefix: prefix]
+			    forKey: GWSSOAPNamespaceURIKey];
+			}
+		      /* If we have a part with a specified type
+		       * then we encode the part with the type
+		       * unless literal encoding is beiing used.
+		       */
+		      if (typeName != nil && literal == NO)
+			{
+			  [promote(h, partName)
+			    setObject: typeName
+			    forKey: GWSSOAPTypeKey];
 			}
 		    }
 
