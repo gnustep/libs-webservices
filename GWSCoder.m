@@ -76,7 +76,6 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
 
 
 @implementation	GWSCoder
-static NSCharacterSet	*ws = nil;
 
 + (GWSCoder*) coder
 {
@@ -91,11 +90,6 @@ static NSCharacterSet	*ws = nil;
       coder = [self new];
     }
   return [coder autorelease];
-}
-
-+ (void) initialize
-{
-  ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
 }
 
 - (BOOL) compact
@@ -596,7 +590,6 @@ static NSCharacterSet	*ws = nil;
 - (void) parser: (NSXMLParser *)parser
   foundCharacters: (NSString *)string
 {
-  string = [string stringByTrimmingCharactersInSet: ws];
   [[_stack lastObject] addContent: string];
 }
 

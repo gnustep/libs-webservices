@@ -27,12 +27,34 @@
 #import "GWSPrivate.h"
 
 @implementation GWSElement
+
+static NSCharacterSet	*ws = nil;
+
++ (void) initialize
+{
+  ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
+}
+
 - (void) addContent: (NSString*)content
 {
   if ([content length] > 0)
     {
       if (_content == nil)
         {
+	  unsigned	length = [content length];
+	  unsigned	pos = 0;
+
+	  /* Ignore leading white space within an element.
+	   */
+	  while (pos < length
+	    && [ws characterIsMember: [content characterAtIndex: pos]] == YES)
+	    {
+	      pos++;
+	    }
+	  if (pos > 0)
+	    {
+	      content = [content substringFromIndex: pos];
+	    }
           _content = [content mutableCopy];
         }
       else
@@ -90,7 +112,17 @@
 
 - (NSString*) content
 {
-  return _content;
+  unsigned	pos = [_content length];
+
+  /* Strip trailing white space (leading space was already stripped as
+   * content was added).
+   */
+  while (pos > 0
+    && [ws characterIsMember: [_content characterAtIndex: pos-1]] == YES)
+    {
+      pos--;
+    }
+  return [_content substringToIndex: pos];
 }
 
 - (unsigned) countChildren
@@ -132,7 +164,8 @@
         }
       else
         {
-          [[coder mutableString] appendString: [coder escapeXMLFrom: _content]];
+          [[coder mutableString]
+	    appendString: [coder escapeXMLFrom: [self content]]];
         }
     }
 }

@@ -1,3 +1,8 @@
+2009-07-09 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.m: Fix error in whitespace handling.
+	* GWSSOAPCoder.m: Let GWSElement handle whitespace removal.
+	
 2009-07-07 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSSOAPCoder.m: Fix error encoding arrays.
