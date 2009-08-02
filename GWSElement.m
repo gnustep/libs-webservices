@@ -144,6 +144,12 @@ static NSCharacterSet	*ws = nil;
   [super dealloc];
 }
 
+- (NSString*) description
+{
+  return [[super description] stringByAppendingFormat: @" %@ %@",
+    [self qualified], [self attributes]];
+}
+
 - (void) encodeContentWith: (GWSCoder*)coder
 {
   if (_literal == nil)

@@ -175,6 +175,7 @@ static NSCharacterSet   *ws;
       [ms appendString: @"</methodCall>"];
     }
   [container remove];
+  [container release];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -253,6 +254,7 @@ static NSCharacterSet   *ws;
   [self unindent];
   [self nl];
   [ms appendString: @"</methodResponse>"];
+  [container remove];
   [container release];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }

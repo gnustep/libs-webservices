@@ -135,7 +135,7 @@ extern "C" {
  */
 - (void) indent;
 
-/** Returns the mutable string currently in use for encoding (if any).
+/** Returns the mutable string currently in use for encoding.
  */
 - (NSMutableString*) mutableString;
 
