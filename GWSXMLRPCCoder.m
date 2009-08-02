@@ -267,7 +267,7 @@ static NSCharacterSet   *ws;
   return s;
 }
 
-- (id) _parseValue: (GWSElement*)elem
+- (id) _newParsedValue: (GWSElement*)elem
 {
   unsigned      c = [elem countChildren];
   NSString      *name = [elem name];
@@ -280,7 +280,7 @@ static NSCharacterSet   *ws;
     }
   if (c == 0)
     {
-      s = [elem content];
+      s = [[elem content] copy];
       if (s == nil)
         {
           s = @"";
@@ -297,7 +297,7 @@ static NSCharacterSet   *ws;
 
   if ([name isEqualToString: @"string"])
     {
-      s = [elem content];
+      s = [[elem content] copy];
       if (s == nil)
         {
           s = @"";
@@ -400,6 +400,7 @@ static NSCharacterSet   *ws;
       while (elem != nil)
         {
           GWSElement    *e;
+	  id		o;
 
           if ([[elem name] isEqualToString: @"member"] == NO)
             {
@@ -424,10 +425,12 @@ static NSCharacterSet   *ws;
                           format: @"member name is empty"];
             }
           e = [e sibling];
-          [m setObject: [self _parseValue: e] forKey: name];
+          o = [self _newParsedValue: e];
+          [m setObject: o forKey: name];
+	  [o release];
           elem = [elem sibling];
         }
-      return m;
+      return [m retain];
     }
 
   if ([name isEqualToString: @"array"])
@@ -451,10 +454,13 @@ static NSCharacterSet   *ws;
       elem = [elem firstChild];
       while (elem != nil)
         {
-          [m addObject: [self _parseValue: elem]];
+	  id	o = [self _newParsedValue: elem];
+
+          [m addObject: o];
+	  [o release];
           elem = [elem sibling];
         }
-      return m;
+      return [m retain];
     }
 
   [NSException raise: NSGenericException
@@ -532,9 +538,14 @@ static NSCharacterSet   *ws;
                                                  named: name];
                   if (o == nil)
                     {
-                      o = [self _parseValue: [elem firstChild]];
+                      o = [self _newParsedValue: [elem firstChild]];
+                      [params setObject: o forKey: name];
+		      [o release];
                     }
-                  [params setObject: o forKey: name];
+		  else
+		    {
+                      [params setObject: o forKey: name];
+		    }
                   [order addObject: name];
                 }
               [result setObject: params forKey: GWSParametersKey];
@@ -575,13 +586,18 @@ static NSCharacterSet   *ws;
               o = [[self delegate] decodeWithCoder: self
                                               item: [elem firstChild]
                                              named: @"Result"];
-              if (o == nil)
-                {
-                  o = [self _parseValue: [elem firstChild]];
-                }
 
               params = [NSMutableDictionary dictionaryWithCapacity: 1];
-              [params setObject: o forKey: @"Result"];
+              if (o == nil)
+                {
+                  o = [self _newParsedValue: [elem firstChild]];
+		  [params setObject: o forKey: @"Result"];
+		  [o release];
+                }
+	      else
+		{
+		  [params setObject: o forKey: @"Result"];
+		}
               [result setObject: params forKey: GWSParametersKey];
 
               order = [NSMutableArray arrayWithCapacity: 1];
@@ -590,8 +606,10 @@ static NSCharacterSet   *ws;
             }
           else if ([name isEqualToString: @"fault"] == YES)
             {
-              [result setObject: [self _parseValue: [elem firstChild]]
-                         forKey: GWSFaultKey];
+	      id	o = [self _newParsedValue: [elem firstChild]];
+
+              [result setObject: o forKey: GWSFaultKey];
+	      [o release];
             }
           else if (elem != nil)
             {
