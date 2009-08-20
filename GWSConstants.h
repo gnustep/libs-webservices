@@ -184,7 +184,23 @@ extern NSString * const GWSSOAPNamespaceURIKey;
 extern NSString * const GWSSOAPNamespaceNameKey;
 
 /** If this key is present in a dictionary describing a value
- * (one with a GWSSOAPValuekey present) it is used to specify the type
+ * (one with a GWSSOAPValueKey present) where the value is actually
+ * an array of values, then a setting of YES specifies that the
+ * array contents are encoded as a series of repeated elements at
+ * this level, rather than being encoded as items inside this element.
+ * <example>
+ * foo = {
+ *   GWSSOAPValueKey = ("hello", "there");
+ *   GWSSOAPRepeatedKey = YES;
+ * };
+ * </example>
+ * would encode '&lt;foo&gt;hello&lt;/foo&gt;&lt;foo&gt;there&lt;/foo&gt;'
+ * rather than the normal '&lt;foo&gt;&lt;item&gt;hello&lt;/item&gt;&lt;item&gt;there&lt;/item&gt;&lt;/foo&gt;'
+ */
+extern NSString * const GWSSOAPRepeatedKey;
+
+/** If this key is present in a dictionary describing a value
+ * (one with a GWSSOAPValueKey present) it is used to specify the type
  * of the value, overriding any normal xsi:type=... setting inferred
  * from the actual data type of the value.
  */

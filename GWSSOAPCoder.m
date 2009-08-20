@@ -40,6 +40,8 @@ NSString * const GWSSOAPNamespaceNameKey
   = @"GWSSOAPNamespaceNameKey";
 NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
+NSString * const GWSSOAPRepeatedKey
+  = @"GWSSOAPRepeatedKey";
 NSString * const GWSSOAPTypeKey
   = @"GWSSOAPTypeKey";
 NSString * const GWSSOAPUseEncoded
@@ -837,6 +839,7 @@ newHeader(NSString *prefix, id o)
 		     named: (NSString*)name
 		        in: (GWSElement*)ctxt
 {
+  id		v;
   GWSElement    *e;
   NSString      *q;     // Qualified name
   NSString      *x;     // xsi:type if any
@@ -864,12 +867,28 @@ newHeader(NSString *prefix, id o)
    * complex value, we can get the information we need now.
    */
   if (YES == [o isKindOfClass: [NSDictionary class]]
-    && [o objectForKey: GWSSOAPValueKey] != nil)
+    && (v = [o objectForKey: GWSSOAPValueKey]) != nil)
     {
+      /* If our value is an array of items to be repeated at this
+       * level, we can handle that now.
+       */
+      if ([[o objectForKey: GWSSOAPRepeatedKey] boolValue] == YES
+	&& [v isKindOfClass: [NSArray class]] == YES)
+	{
+	  NSMutableDictionary	*m = [[o mutableCopy] autorelease];
+
+	  [m removeObjectForKey: GWSSOAPRepeatedKey];
+	  v = [o objectEnumerator];
+	  while ((o = [v nextObject]) != nil)
+	    {
+	      [self _createElementFor: o named: name in: ctxt];
+	    }
+	  return;
+	}
       nsURI = [o objectForKey: GWSSOAPNamespaceURIKey];
       nsName = [o objectForKey: GWSSOAPNamespaceNameKey];
       x = [o objectForKey: GWSSOAPTypeKey];
-      o = [o objectForKey: GWSSOAPValueKey];
+      o = v;
     }
 
   if (YES == [o isKindOfClass: [NSString class]])

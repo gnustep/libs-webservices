@@ -1,3 +1,13 @@
+2009-08-20 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m:
+	* GWSConstants.h:
+	Add GWSSOAPRepeatedKey to control the behavior when encoding arrays of
+	values.  The normal behavior for encoding an element 'foo' whose value
+	is an array is to encode 'item' elements inside a 'foo' element.
+	If GWSSOAPRepeatedKey is YES then we encode a sequence of 'foo'
+	elements instead.
+
 2009-08-02 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSXMLRPCCoder.m: fix memory leaks.
