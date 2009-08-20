@@ -40,8 +40,8 @@ NSString * const GWSSOAPNamespaceNameKey
   = @"GWSSOAPNamespaceNameKey";
 NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
-NSString * const GWSSOAPRepeatedKey
-  = @"GWSSOAPRepeatedKey";
+NSString * const GWSSOAPSequenceKey
+  = @"GWSSOAPSequenceKey";
 NSString * const GWSSOAPTypeKey
   = @"GWSSOAPTypeKey";
 NSString * const GWSSOAPUseEncoded
@@ -869,16 +869,15 @@ newHeader(NSString *prefix, id o)
   if (YES == [o isKindOfClass: [NSDictionary class]]
     && (v = [o objectForKey: GWSSOAPValueKey]) != nil)
     {
-      /* If our value is an array of items to be repeated at this
-       * level, we can handle that now.
+      /* If our value is a sequence of items, we can handle that now.
        */
-      if ([[o objectForKey: GWSSOAPRepeatedKey] boolValue] == YES
+      if ([[o objectForKey: GWSSOAPSequenceKey] boolValue] == YES
 	&& [v isKindOfClass: [NSArray class]] == YES)
 	{
 	  NSMutableDictionary	*m = [[o mutableCopy] autorelease];
 
-	  [m removeObjectForKey: GWSSOAPRepeatedKey];
-	  v = [o objectEnumerator];
+	  [m removeObjectForKey: GWSSOAPSequenceKey];
+	  v = [v objectEnumerator];
 	  while ((o = [v nextObject]) != nil)
 	    {
 	      [self _createElementFor: o named: name in: ctxt];
