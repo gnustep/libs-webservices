@@ -49,12 +49,12 @@
   xml = [request convertToData];
   coder = [GWSSOAPCoder new];
 
+  NSLog(@"Unparsed request: %@", [request convertToText]);
   path = [[request headerNamed: @"x-http-path"] value];
   if ([path isEqualToString: @"/rpc"] == YES)
     {
       [coder setOperationStyle: GWSSOAPBodyEncodingStyleRPC];
       parsed = [coder parseMessage: xml];
-      NSLog(@"Parsed request: %@", parsed);
       method = [parsed objectForKey: GWSMethodKey];
       params = [parsed objectForKey: GWSParametersKey];
       order = [parsed objectForKey: GWSOrderKey];
@@ -67,6 +67,7 @@
       params = [parsed objectForKey: GWSParametersKey];
       order = [parsed objectForKey: GWSOrderKey];
     }
+  NSLog(@"Parsed request: %@", parsed);
 
   xml = [coder buildResponse: method
 		  parameters: params

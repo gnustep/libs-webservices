@@ -151,8 +151,13 @@ newHeader(NSString *prefix, id o)
       order = a;
     }
 
-  [self setOperationStyle:
-    [parameters objectForKey: GWSSOAPBodyEncodingStyleKey]];
+  /* Set the operation style if it's specified (otherwise we keep it
+   * unchanged).
+   */
+  if ((o = [parameters objectForKey: GWSSOAPBodyEncodingStyleKey]) != nil)
+    {
+      [self setOperationStyle: o];
+    }
 
   /* The method name is required for RPC operations ...
    * for document style operations the method is implicit in the URL
@@ -724,7 +729,7 @@ newHeader(NSString *prefix, id o)
            * parameters.  Otherwise we assume that the parameters
            * are found directly inside the body.
            */
-          if (c == 1 && [elem content] == nil)
+          if (c == 1 && [[elem content] length] == 0)
             {
               if ([self delegate] != nil)
                 {
@@ -1079,14 +1084,9 @@ newHeader(NSString *prefix, id o)
     {
       NSString  *t;
 
-      /* No child elements ... use the content of this element
-       * or an empty string if there was no content.
+      /* No child elements ... use the content of this element.
        */
       result = [elem content];
-      if (result == nil)
-        {
-          result = @"";
-        }
       t = [[elem attributes] objectForKey: @"xsi:type"];
       if (t != nil)
         {

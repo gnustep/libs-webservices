@@ -283,10 +283,6 @@ static NSCharacterSet   *ws;
   if (c == 0)
     {
       s = [[elem content] copy];
-      if (s == nil)
-        {
-          s = @"";
-        }
       return s;
     }
   if (c != 1)
@@ -300,10 +296,6 @@ static NSCharacterSet   *ws;
   if ([name isEqualToString: @"string"])
     {
       s = [[elem content] copy];
-      if (s == nil)
-        {
-          s = @"";
-        }
       return s;
     }
 
@@ -311,7 +303,7 @@ static NSCharacterSet   *ws;
     || [name isEqualToString: @"int"])
     {
       s = [elem content];
-      if (s == nil)
+      if ([s length] == 0)
 	{
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"missing %@ value", name];
@@ -324,7 +316,7 @@ static NSCharacterSet   *ws;
       char	c;
 
       s = [elem content];
-      if (s == nil)
+      if ([s length] == 0)
 	{
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"missing %@ value", name];
@@ -336,7 +328,7 @@ static NSCharacterSet   *ws;
   if ([name isEqualToString: @"double"])
     {
       s = [elem content];
-      if (s == nil)
+      if ([s length] == 0)
 	{
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"missing %@ value", name];
@@ -347,7 +339,7 @@ static NSCharacterSet   *ws;
   if ([name isEqualToString: @"base64"])
     {
       s = [elem content];
-      if (s == nil)
+      if ([s length] == 0)
 	{
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"missing %@ value", name];
@@ -366,7 +358,7 @@ static NSCharacterSet   *ws;
       int		second;
 
       s = [elem content];
-      if (s == nil)
+      if ([s length] == 0)
 	{
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"missing %@ value", name];

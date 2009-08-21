@@ -132,6 +132,22 @@ main()
       fprintf(stdout, "RPC style message test OK\n");
     }
 
+{
+  NSArray	*values = [NSArray arrayWithObjects:
+    @"one", @"two", @"three", nil];
+  NSDictionary	*value =  [NSDictionary dictionaryWithObjectsAndKeys:
+    values, GWSSOAPValueKey,
+    @"YES", GWSSOAPSequenceKey,
+    nil];
+  [params setObject: value forKey: @"string1"];
+  result = [service invokeMethod: method
+                      parameters: params
+                           order: order
+                         timeout: 30];
+  fprintf(stdout, "RPC result: %s\n",
+    [[result description] UTF8String]);
+}
+
   [service release];
 
 #else

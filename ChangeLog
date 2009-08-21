@@ -1,3 +1,13 @@
+2009-08-21 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m:
+	* GWSXMLRPCCoder.m:
+	* GWSElement.h:
+	* GWSElement.m:
+	Make sure all code deals with empty string content of an element,
+	and for consistency ensure that we always use an empty string for
+	empty content rather than sometimes using nil.
+
 2009-08-20 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSSOAPCoder.m:

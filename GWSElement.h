@@ -97,8 +97,8 @@ extern "C" {
  */
 - (NSArray*) children;
 
-/** Returns the content of the receiver.  This may be nil if no content
- * has been added to the receiver.
+/** Returns the content text of the receiver.  This may be an empty string
+ * if no content has been added to the receiver.
  */
 - (NSString*) content;
 

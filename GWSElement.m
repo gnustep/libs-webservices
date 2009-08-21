@@ -112,17 +112,24 @@ static NSCharacterSet	*ws = nil;
 
 - (NSString*) content
 {
-  unsigned	pos = [_content length];
-
-  /* Strip trailing white space (leading space was already stripped as
-   * content was added).
-   */
-  while (pos > 0
-    && [ws characterIsMember: [_content characterAtIndex: pos-1]] == YES)
+  if (_content == nil)
     {
-      pos--;
+      return @"";
     }
-  return [_content substringToIndex: pos];
+  else
+    {
+      unsigned	pos = [_content length];
+
+      /* Strip trailing white space (leading space was already stripped as
+       * content was added).
+       */
+      while (pos > 0
+	&& [ws characterIsMember: [_content characterAtIndex: pos-1]] == YES)
+	{
+	  pos--;
+	}
+      return [_content substringToIndex: pos];
+    }
 }
 
 - (unsigned) countChildren
