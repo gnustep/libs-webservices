@@ -154,6 +154,8 @@ extern "C" {
  * [GWSCoder-buildRequest:parameters:order:] method.<br />
  * Returns the response dictionary containing values for the
  * success or failure of the call (as returned by -result).<br />
+ * Returns nil if it was impossible to build a valid request
+ * from the supplied parameters.
  */
 - (NSMutableDictionary*) invokeMethod: (NSString*)method
                            parameters: (NSDictionary*)parameters

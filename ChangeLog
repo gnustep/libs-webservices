@@ -1,3 +1,8 @@
+2009-08-23 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Clear any old result before making a new call to the
+	remote server so that invoking with bad parameters can be detected.
+
 2009-08-21 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSSOAPCoder.m:

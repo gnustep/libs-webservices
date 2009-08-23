@@ -545,6 +545,11 @@
                                 order: (NSArray*)order
                               timeout: (int)seconds
 {
+  if (_result != nil)
+    {
+      [_result release];
+      _result = nil;
+    }
   NS_DURING
     {
       if ([self sendRequest: method
@@ -594,15 +599,23 @@
 {
   NSData	*req;
 
+  if (_result != nil)
+    {
+      [_result release];
+      _result = nil;
+    }
+  if (_response != nil)
+    {
+      [_response release];
+      _response = nil;
+    }
+
   req = [self _buildRequest: method parameters: parameters order: order];
   if (req == nil)
     {
       [self _clean];
       return NO;
     }
-
-  [_response release];
-  _response = [[NSMutableData alloc] init];
 
   if ([_delegate respondsToSelector:
     @selector(webService:willSendRequest:)] == YES)
@@ -633,6 +646,7 @@
       [request setHTTPBody: _request];
 
       _connection = [NSURLConnection alloc];
+      _response = [[NSMutableData alloc] init];
       _connection = [_connection initWithRequest: request delegate: self];
       [request release];
     }
