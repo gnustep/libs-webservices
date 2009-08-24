@@ -53,6 +53,46 @@ NSString * const GWSSOAPUseLiteral
 NSString * const GWSSOAPValueKey
   = @"GWSSOAPValueKey";
 
+
+#if	!defined(GNUSTEP)
+/* Older versions of MacOS-X don't have -boolValue as an NSString method,
+ * so we add it here if we might be building with one of those versions.
+ */
+@implementation	NSString(GWSCoder)
+- (BOOL) boolValue
+{
+  unsigned	length = [self length];
+
+  if (length > 0)
+    {
+      unsigned	index;
+      SEL	sel = @selector(characterAtIndex:);
+      unichar	(*imp)() = (unichar (*)())[self methodForSelector: sel];
+
+      for (index = 0; index < length; index++)
+	{
+	  unichar	c = (*imp)(self, sel, index);
+
+	  if (c > 'y')
+	    {
+	      break;
+	    }
+          if (strchr("123456789yYtT", c) != 0)
+	    {
+	      return YES;
+	    }
+	  if (!isspace(c) && c != '0' && c != '-' && c != '+')
+	    {
+	      break;
+	    }
+	}
+    }
+  return NO;
+}
+@end
+#endif
+
+
 @interface      GWSSOAPCoder (Private)
 
 - (void) _createElementFor: (id)o named: (NSString*)name in: (GWSElement*)ctct;
