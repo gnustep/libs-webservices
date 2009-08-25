@@ -185,19 +185,21 @@ extern NSString * const GWSSOAPNamespaceNameKey;
 
 /** If this key is present in a dictionary describing a value
  * (one with a GWSSOAPValueKey present) where the value is actually
- * an array of values, then a setting of YES specifies that the
- * array contents are encoded as a sequence of values of the same type
- * rather than being encoded as in array of items inside this element.
+ * an array of values, then the array contents are encoded as an xsd
+ * style array of items inside this element rather than as a sequence
+ * of values of the same type.  The value of this key is used as the
+ * name for the array item elements (if the value is not a legal element
+ * name then the string 'item' is used).
  * <example>
  * foo = {
  *   GWSSOAPValueKey = ("hello", "there");
- *   GWSSOAPSequenceKey = YES;
+ *   GWSSOAPArrayKey = val;
  * };
  * </example>
- * would encode '&lt;foo&gt;hello&lt;/foo&gt;&lt;foo&gt;there&lt;/foo&gt;'
- * rather than the normal '&lt;foo&gt;&lt;item&gt;hello&lt;/item&gt;&lt;item&gt;there&lt;/item&gt;&lt;/foo&gt;'
+ * would encode '&lt;foo&gt;&lt;val&gt;hello&lt;/val&gt;&lt;val&gt;there&lt;/val&gt;&lt;/foo&gt;'
+ * rather than the normal '&lt;foo&gt;hello&lt;/foo&gt;&lt;foo&gt;there&lt;/foo&gt;'
  */
-extern NSString * const GWSSOAPSequenceKey;
+extern NSString * const GWSSOAPArrayKey;
 
 /** If this key is present in a dictionary describing a value
  * (one with a GWSSOAPValueKey present) it is used to specify the type

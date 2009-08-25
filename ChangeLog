@@ -1,3 +1,12 @@
+2009-08-25 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m:
+	* GWSConstants.h:
+	Replace GWSSOAPSequenceKey with GWSSOAPArrayKey and make sequence
+	style encoding the default as it seems to be more common.
+	Use GWSSOAPArrayKey to define the name for the elements in the array,
+	defaulting to 'item' if the value is not a valid element name.
+
 2009-08-23 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Clear any old result before making a new call to the
@@ -133,8 +142,3 @@
 	parsed from a WSDL document.  The idea is to avoid the programmer
 	having to setup the options and the URL to port to etc.
 
-2007-09-24 Richard Frith-Macdonald  <rfm@gnu.org>
-
-        * WebServer.m: On receipt of an unparsable request, send a 400
-	response.
-		

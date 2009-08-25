@@ -40,8 +40,8 @@ NSString * const GWSSOAPNamespaceNameKey
   = @"GWSSOAPNamespaceNameKey";
 NSString * const GWSSOAPMessageHeadersKey
   = @"GWSSOAPMessageHeadersKey";
-NSString * const GWSSOAPSequenceKey
-  = @"GWSSOAPSequenceKey";
+NSString * const GWSSOAPArrayKey
+  = @"GWSSOAPArrayKey";
 NSString * const GWSSOAPTypeKey
   = @"GWSSOAPTypeKey";
 NSString * const GWSSOAPUseEncoded
@@ -101,6 +101,24 @@ NSString * const GWSSOAPValueKey
 @end
 
 @implementation	GWSSOAPCoder
+
+static NSCharacterSet	*illegal = nil;
+
++ (void) initialize
+{
+  if (illegal == nil)
+    {
+      NSMutableCharacterSet	*tmp = [NSMutableCharacterSet new];
+
+      [tmp addCharactersInRange: NSMakeRange('0', 10)];
+      [tmp addCharactersInRange: NSMakeRange('a', 26)];
+      [tmp addCharactersInRange: NSMakeRange('A', 26)];
+      [tmp addCharactersInString: @"_.:/"];
+      [tmp invert];
+      illegal = [tmp copy];
+      [tmp release];
+    }
+}
 
 /* Build a new header using the specified namespace prefix or the prefix
  * and namespace specified in o (if it is a dictionary specifying them).
@@ -212,21 +230,8 @@ newHeader(NSString *prefix, id o)
 	}
       else
 	{
-	  static NSCharacterSet	*illegal = nil;
-	  NSRange			r;
+	  NSRange	r;
 
-	  if (illegal == nil)
-	    {
-	      NSMutableCharacterSet	*tmp = [NSMutableCharacterSet new];
-
-	      [tmp addCharactersInRange: NSMakeRange('0', 10)];
-	      [tmp addCharactersInRange: NSMakeRange('a', 26)];
-	      [tmp addCharactersInRange: NSMakeRange('A', 26)];
-	      [tmp addCharactersInString: @"_.:/"];
-	      [tmp invert];
-	      illegal = [tmp copy];
-	      [tmp release];
-	    }
 	  r = [method rangeOfCharacterFromSet: illegal];
 	  if (r.length > 0)
 	    {
@@ -889,6 +894,7 @@ newHeader(NSString *prefix, id o)
   NSString      *q;     // Qualified name
   NSString      *x;     // xsi:type if any
   NSString      *c;     // Content if any
+  NSString	*a;	// Array item name
   NSString	*nsURI = nil;
   NSString	*nsName = nil;
   BOOL          array = NO;
@@ -906,6 +912,7 @@ newHeader(NSString *prefix, id o)
 
   x = nil;
   c = nil;
+  a = nil;
   q = name;
 
   /* If this is a dictionary describing a single value, rather than a
@@ -916,16 +923,16 @@ newHeader(NSString *prefix, id o)
     {
       /* If our value is a sequence of items, we can handle that now.
        */
-      if ([[o objectForKey: GWSSOAPSequenceKey] boolValue] == YES
-	&& [v isKindOfClass: [NSArray class]] == YES)
+      a = [o objectForKey: GWSSOAPArrayKey];
+      if (a == nil && [v isKindOfClass: [NSArray class]] == YES)
 	{
 	  NSMutableDictionary	*m = [[o mutableCopy] autorelease];
 
-	  [m removeObjectForKey: GWSSOAPSequenceKey];
 	  v = [v objectEnumerator];
 	  while ((o = [v nextObject]) != nil)
 	    {
-	      [self _createElementFor: o named: name in: ctxt];
+	      [m setObject: o forKey: GWSSOAPValueKey];
+	      [self _createElementFor: m named: name in: ctxt];
 	    }
 	  return;
 	}
@@ -1099,6 +1106,13 @@ newHeader(NSString *prefix, id o)
       unsigned  count;
       unsigned  i;
 
+      /* Use supplied item name if it is legal.
+       */
+      if ([a length] == 0 || [a rangeOfCharacterFromSet: illegal].length > 0)
+	{
+	  a = @"item";
+	}
+
       /* For an array, we simply create a sequence of elements with the
        * same name for the items in the array.
        */
@@ -1107,7 +1121,7 @@ newHeader(NSString *prefix, id o)
 	{
 	  id	v = [o objectAtIndex: i];
 
-	  [self _createElementFor: v named: @"item" in: e];
+	  [self _createElementFor: v named: a in: e];
 	}
     }
 }

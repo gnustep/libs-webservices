@@ -133,18 +133,33 @@ main()
     }
 
 {
-  NSArray	*values = [NSArray arrayWithObjects:
+  NSArray	*values;
+  NSDictionary	*value;
+
+  values = [NSArray arrayWithObjects:
     @"one", @"two", @"three", nil];
-  NSDictionary	*value =  [NSDictionary dictionaryWithObjectsAndKeys:
+
+  value =  [NSDictionary dictionaryWithObjectsAndKeys:
     values, GWSSOAPValueKey,
-    @"YES", GWSSOAPSequenceKey,
     nil];
   [params setObject: value forKey: @"string1"];
   result = [service invokeMethod: method
                       parameters: params
                            order: order
                          timeout: 30];
-  fprintf(stdout, "RPC result: %s\n",
+  fprintf(stdout, "RPC array 1 result: %s\n",
+    [[result description] UTF8String]);
+
+  value =  [NSDictionary dictionaryWithObjectsAndKeys:
+    values, GWSSOAPValueKey,
+    @"value", GWSSOAPArrayKey,
+    nil];
+  [params setObject: value forKey: @"string1"];
+  result = [service invokeMethod: method
+                      parameters: params
+                           order: order
+                         timeout: 30];
+  fprintf(stdout, "RPC array 2 result: %s\n",
     [[result description] UTF8String]);
 }
 
