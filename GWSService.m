@@ -654,6 +654,12 @@
       request = [request initWithURL: [NSURL URLWithString: _connectionURL]];
       [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
       [request setHTTPMethod: @"POST"];  
+      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
+      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+      if (_SOAPAction != nil)
+	{
+	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
+	}
       if ([_headers count] > 0)
 	{
 	  NSEnumerator	*e = [_headers keyEnumerator];
@@ -665,12 +671,6 @@
 
 	      [request setValue: v forHTTPHeaderField: k];
 	    }
-	}
-      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
-      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
-      if (_SOAPAction != nil)
-	{
-	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
 	}
       [request setHTTPBody: _request];
 
@@ -710,6 +710,8 @@
 	}
       [handle addClient: (id<NSURLHandleClient>)self];
       [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
+      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
       if ([_headers count] > 0)
 	{
 	  NSEnumerator	*e = [_headers keyEnumerator];
@@ -722,8 +724,6 @@
 	      [handle writeProperty: v forKey: k];
 	    }
 	}
-      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
-      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
       [handle writeData: _request];
       [handle loadInBackground];
 #endif
