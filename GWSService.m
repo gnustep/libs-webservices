@@ -517,6 +517,8 @@
   [_SOAPAction release];
   [_ports release];
   [_name release];
+  [_headers release];
+  [_extra release];
   [super dealloc];
 }
 
@@ -533,6 +535,11 @@
 - (GWSElement*) documentation
 {
   return _documentation;
+}
+
+- (NSDictionary*) headers
+{
+  return _headers;
 }
 
 - (id) init
@@ -578,6 +585,11 @@
 - (NSString*) name
 {
   return _name;
+}
+
+- (id) objectForKey: (NSString*)aKey
+{
+  return [_extra objectForKey: aKey];
 }
 
 - (NSMutableDictionary*) result
@@ -637,6 +649,18 @@
       request = [request initWithURL: [NSURL URLWithString: _connectionURL]];
       [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
       [request setHTTPMethod: @"POST"];  
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [request setValue: v forHTTPHeaderField: k];
+	    }
+	}
       [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
       [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
       if (_SOAPAction != nil)
@@ -681,6 +705,18 @@
 	}
       [handle addClient: (id<NSURLHandleClient>)self];
       [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [handle writeProperty: v forKey: k];
+	    }
+	}
       [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
       [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
       [handle writeData: _request];
@@ -736,6 +772,30 @@
       _documentation = [documentation retain];
       [o release];
       [_documentation remove];
+    }
+}
+
+- (void) setHeaders: (NSDictionary*)headers
+{
+  NSDictionary	*tmp = [headers copy];
+
+  [_headers release];
+  _headers = tmp;
+}
+
+- (void) setObject: (id)anObject forKey: (NSString*)aKey
+{
+  if (anObject == nil)
+    {
+      [_extra removeObjectForKey: aKey];
+    }
+  else
+    {
+      if (_extra == nil)
+	{
+	  _extra = [NSMutableDictionary new];
+	}
+      [_extra setObject: anObject forKey: aKey];
     }
 }
 

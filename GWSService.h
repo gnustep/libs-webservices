@@ -108,6 +108,8 @@ extern "C" {
   NSString		*_clientCertificate;
   NSString		*_clientKey;
   NSString		*_clientPassword;
+  NSDictionary		*_headers;
+  NSMutableDictionary	*_extra;
 }
 
 /**
@@ -147,6 +149,10 @@ extern "C" {
  */
 - (GWSElement*) documentation;
 
+/** Returns the value set by a previous call to the -setHeaders: method.
+ */
+- (NSDictionary*) headers;
+
 /**
  * Calls -sendRequest:parameters:order:timeout: and waits for the
  * response.<br />
@@ -165,6 +171,11 @@ extern "C" {
 /** Returns the name of this WSDL service.
  */
 - (NSString*) name;
+
+/** Returns the extra information (if any) associated with aKey by an
+ * earlier call to the -setObject:forKey: method.
+ */
+- (id) objectForKey: (NSString*)aKey;
 
 /**
  * Returns the result of the last method call, or nil if there has been
@@ -227,6 +238,20 @@ extern "C" {
 /** Set the documentation for the receiver.
  */
 - (void) setDocumentation: (GWSElement*)documentation;
+
+/** Sets extra headers to be sent as part of any HTTP or HTTPS request
+ * initiated by this service.
+ */
+- (void) setHeaders: (NSDictionary*)headers;
+
+/** Tags the service with entra information in the form of anObject
+ * references by aKey.  if anObject is nil, this removes any previous
+ * association for aKey.<br />
+ * This facility is not used by the WebServices library, and is present
+ * purely so that delegates can associate extra information with the
+ * services they are handling.
+ */
+- (void) setObject: (id)anObject forKey: (NSString*)aKey;
 
 /**
  * Sets the value of the SOAPAction header to be sent with a request.<br />
