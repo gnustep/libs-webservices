@@ -320,8 +320,13 @@
 
   /* Take a mutable copy of the parameters so that we can add keys to it
    * to control encoding options.
+   * If there was no parameters dictionary, create an empty one to use.
    */
   _parameters = [parameters mutableCopy];
+  if (_parameters == nil)
+    {
+      _parameters = [NSMutableDictionary new];
+    }
   if (order != nil)
     {
       /* Store the ordering so that extensions can find it.
