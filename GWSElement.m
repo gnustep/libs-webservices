@@ -66,28 +66,7 @@ static NSCharacterSet	*ws = nil;
 
 - (void) addChild: (GWSElement*)child
 {
-  if (child->_parent == self)
-    {
-      unsigned  pos = [_children indexOfObjectIdenticalTo: child];
-
-      /* If this is already one of our children, we merely move it
-       * to make it the latest one.
-       */
-      [_children addObject: child];
-      [_children removeObjectAtIndex: pos];
-    }
-  else
-    {
-      [child retain];
-      [child remove];
-      if (_children == nil)
-        {
-          _children = [[NSMutableArray alloc] initWithCapacity: 2];
-        }
-      [_children addObject: child];
-      child->_parent = self;
-      [child release];
-    }
+  [self insertChild: child atIndex: [_children count]];
 }
 
 - (NSString*) attributeForName: (NSString*)name
@@ -350,6 +329,49 @@ static NSCharacterSet	*ws = nil;
         }
     }
   return self;
+}
+
+- (void) insertChild: (GWSElement*)child atIndex: (unsigned)index
+{
+  unsigned	count = [_children count];
+
+  if (child->_parent == self)
+    {
+      unsigned  pos = [_children indexOfObjectIdenticalTo: child];
+
+      if (index > count)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"index too large"];
+	}
+      if (index > pos)
+	{
+          [_children insertObject: child atIndex: index];
+          [_children removeObjectAtIndex: pos];
+	}
+      else if (index < pos)
+	{
+          [_children insertObject: child atIndex: index];
+          [_children removeObjectAtIndex: pos + 1];
+	}
+    }
+  else
+    {
+      if (index > count)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"index too large"];
+	}
+      [child retain];
+      [child remove];
+      if (_children == nil)
+        {
+          _children = [[NSMutableArray alloc] initWithCapacity: 2];
+        }
+      [_children insertObject: child atIndex: index];
+      child->_parent = self;
+      [child release];
+    }
 }
 
 - (id) mutableCopyWithZone: (NSZone*)aZone

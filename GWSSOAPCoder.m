@@ -180,6 +180,7 @@ newHeader(NSString *prefix, id o)
   unsigned	        c;
   unsigned	        i;
 
+  [self reset];
   pool = [NSAutoreleasePool new];
 
   /* Determine the order of the parameters in the message body.

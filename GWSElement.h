@@ -176,6 +176,16 @@ extern "C" {
           qualified: (NSString*)qualified
          attributes: (NSDictionary*)attributes;
 
+/** Inserts an element to the list of elements which are direct
+ * children of the receiver.<br />
+ * Raises an exception it the specified
+ * index is greater than the number of children present.<br />
+ * If the element is already a child of the receiver, this method
+ * inserts it at the new location and then removes it from the old
+ * location.
+ */
+- (void) insertChild: (GWSElement*)child atIndex: (unsigned)index;
+
 /** Perform a deep copy of the receiver.
  */
 - (id) mutableCopyWithZone: (NSZone*)aZone;

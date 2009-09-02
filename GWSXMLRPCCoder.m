@@ -46,9 +46,12 @@ static NSCharacterSet   *ws;
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
 {
-  GWSElement		*container = [GWSElement new];
-  NSMutableString       *ms = [self mutableString];
+  GWSElement		*container;
+  NSMutableString       *ms;
   id			o;
+
+  [self reset];
+  container = [GWSElement new];
 
   o = [parameters objectForKey: GWSOrderKey];
   if (o != nil)
@@ -60,7 +63,8 @@ static NSCharacterSet   *ws;
       order = o;
     }
 
-  [ms setString: @"<?xml version=\"1.0\"?>\n"];
+  ms = [self mutableString];
+  [ms setString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"];
 
   if ([self fault])
     {
@@ -183,12 +187,16 @@ static NSCharacterSet   *ws;
                parameters: (NSDictionary*)parameters
                     order: (NSArray*)order;
 {
-  GWSElement		*container = [GWSElement new];
+  GWSElement		*container;
   NSMutableString       *ms;
   unsigned	        c;
   unsigned	        i;
   id			o;
   
+  [self reset];
+
+  container = [GWSElement new];
+
   o = [parameters objectForKey: GWSOrderKey];
   if (o != nil)
     {
@@ -207,7 +215,7 @@ static NSCharacterSet   *ws;
       order = [parameters allKeys];
     }
   c = [order count];
-  [ms appendString: @"<?xml version=\"1.0\"?>\n"];
+  [ms appendString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"];
   [ms appendString: @"<methodResponse>"];
   [self indent];
   [self nl];

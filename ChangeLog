@@ -1,3 +1,10 @@
+2009-09-02 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSSOAPCoder.m: Reset before building new rpc.
+	* GWSXMLRPCCoder.m: Reset before building new rpc.
+	* GWSElement.h: Add method for child insertion
+	* GWSElement.m: Add method for child insertion
+	
 2009-09-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* Make 0.3.0 release
