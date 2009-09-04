@@ -66,22 +66,28 @@
 
 - (void) _completed
 {
-  if ([self debug] == YES)
+  /* We can safely call this more than once, since we do nothing unless
+   * a request is actually in progress.
+   */
+  if (_request != nil)
     {
-      if (_request != nil)
+      if ([self debug] == YES)
 	{
-	  [_result setObject: _request forKey: GWSRequestDataKey];
+	  if (_request != nil)
+	    {
+	      [_result setObject: _request forKey: GWSRequestDataKey];
+	    }
+	  if (_response != nil)
+	    {
+	      [_result setObject: _response forKey: GWSResponseDataKey];
+	    }
 	}
-      if (_response != nil)
+      [self _clean];
+      if ([_delegate respondsToSelector: @selector(completedRPC:)])
 	{
-	  [_result setObject: _response forKey: GWSResponseDataKey];
-	}
+	  [_delegate completedRPC: self];
+	}    
     }
-  [self _clean];
-  if ([_delegate respondsToSelector: @selector(completedRPC:)])
-    {
-      [_delegate completedRPC: self];
-    }    
 }
 
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document
@@ -646,7 +652,13 @@
 					  selector: @selector(timeout:)
 					  userInfo: nil
 					   repeats: NO];
-  if (_clientCertificate == nil)
+  if (_clientCertificate == nil
+#if	defined(GNUSTEP)
+/* GNUstep has better debugging with NSURLHandle than NSURLConnection
+ */
+&& [self debug] == NO
+#endif
+    )
     {
       NSMutableURLRequest   *request;
 
@@ -879,6 +891,7 @@
 
 - (void) timeout: (NSTimer*)t
 {
+  [self retain];
   [_timer invalidate];
   _timer = nil;
   [self _setProblem: @"timed out"];
@@ -895,6 +908,7 @@
   [_connection cancel];
 #endif
   [self _completed];
+  [self release];
 }
 
 - (NSTimeZone*) timeZone
