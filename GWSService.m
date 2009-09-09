@@ -259,8 +259,18 @@ available(NSString *host)
 	  NSMutableArray	*a;
 	  NSUInteger		index;
 
+	  /* Retain self and host in case the delegate changes the URL
+	   * or releases us (or removing self from active list would
+	   * cause deallocation).
+	   */
+	  [[self retain] autorelease];
 	  host = [[[_connectionURL host] retain] autorelease];
-	  [_delegate completedRPC: self];
+
+	  /* Now make sure the receiver is no longer active.
+	   * This must be done before informing the delegate of
+	   * completion, in case the delegate wants to schedule
+	   * another request to the same host.
+	   */
 	  a = [active objectForKey: host];
 	  index = [a indexOfObjectIdenticalTo: self];
 	  if (index == NSNotFound)
@@ -274,12 +284,10 @@ available(NSString *host)
 	    {
 	      [a removeObjectAtIndex: index];
 	      activeCount--;
-	      [[self class] _activate: host];
-	      if ([a count] == 0)
-		{
-		  [active removeObjectForKey: host];
-		}
+	      [GWSService _activate: host];	// start any queued requests
 	    }
+
+	  [_delegate completedRPC: self];
 	}
     }
 }
