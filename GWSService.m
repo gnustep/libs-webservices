@@ -26,6 +26,31 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
+static unsigned perHostPool = 20;
+static unsigned	pool = 200;
+static unsigned	activeCount = 0;
+
+static NSMutableDictionary	*active = nil;
+static NSMutableDictionary	*queues = nil;
+static NSMutableArray		*queued = nil;
+
+/* Return YES if there is an available slot to send a request to the
+ * specified host, NO otherwise.
+ */
+static BOOL
+available(NSString *host)
+{
+  if (activeCount >= pool)
+    {
+      return NO;
+    }
+  if (host != nil && [[active objectForKey: host] count] < perHostPool)
+    {
+      return YES;
+    }
+  return NO;
+}
+
 /* To support client side SSL certificate authentication we use the old
  * NSURLHandle stuff with GNUstep extensions.  We use the _connection
  * ivar to hold the handle in this case.
@@ -40,6 +65,151 @@
 #endif
 
 @implementation	GWSService (Private)
++ (void) _activate: (NSString*)host
+{
+  if (activeCount < pool && [queued count] > 0)
+    {
+      unsigned	i;
+
+      if (available(host) == YES)
+	{
+	  NSArray	*a = [queues objectForKey: host];
+
+	  if ([a count] > 0)
+	    {
+	      [[a objectAtIndex: 0] _activate];
+	    }
+	}
+      for (i = 0; activeCount < pool && i < [queued count]; i++)
+	{
+	  GWSService	*svc = [queued objectAtIndex: i];
+
+	  if (available([svc->_connectionURL host]) == YES)
+	    {
+	      [svc _activate];
+	    }
+	}
+    }
+}
+
+- (void) _activate
+{
+  NSString		*host;
+  NSMutableArray	*queue;
+
+  /* Add self to active list.
+   * Keep the count of active requests up to date.
+   */
+  host = [_connectionURL host];
+  queue = [active objectForKey: host];
+  if (queue == nil)
+    {
+      queue = [NSMutableArray new];
+      [active setObject: queue forKey: host];
+      [queue release];
+    }
+  [queue addObject: self];
+  activeCount++;
+
+  /* The next two lines will do nothing if the receiver was not
+   * queued before activation.  We need them for the case where
+   * we were queued and are now being activated.
+   * Removal from the queue is done *after* addition to the
+   * active list to ensure that the receiver is not deallocated.
+   */
+  [[queues objectForKey: host] removeObjectIdenticalTo: self];
+  [queued removeObjectIdenticalTo: self];
+
+  _code = 0;
+  if (_clientCertificate == nil
+#if	defined(GNUSTEP)
+/* GNUstep has better debugging with NSURLHandle than NSURLConnection
+ */
+&& [self debug] == NO
+#endif
+    )
+    {
+      NSMutableURLRequest   *request;
+
+      request = [NSMutableURLRequest alloc];
+      request = [request initWithURL: _connectionURL];
+      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
+      [request setHTTPMethod: @"POST"];  
+      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
+      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+      if (_SOAPAction != nil)
+	{
+	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
+	}
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [request setValue: v forHTTPHeaderField: k];
+	    }
+	}
+      [request setHTTPBody: _request];
+
+      _connection = [NSURLConnection alloc];
+      _response = [[NSMutableData alloc] init];
+      _connection = [_connection initWithRequest: request delegate: self];
+      [request release];
+    }
+  else
+    {
+#if	defined(GNUSTEP)
+      _connection
+	= (NSURLConnection*)[[_connectionURL URLHandleUsingCache: NO] retain];
+      [handle setDebug: [self debug]];
+      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
+	{
+          [handle setReturnAll: YES];
+	}
+      if (_clientCertificate != nil)
+	{
+	  [handle writeProperty: _clientCertificate 
+			 forKey: GSHTTPPropertyCertificateFileKey];
+	}
+      if (_clientKey != nil)
+	{
+	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
+	}
+      if (_clientPassword != nil)
+	{
+	  [handle writeProperty: _clientPassword
+			 forKey: GSHTTPPropertyPasswordKey];
+	}
+      if (_SOAPAction != nil)
+	{
+	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
+	}
+      [handle addClient: (id<NSURLHandleClient>)self];
+      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
+      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [handle writeProperty: v forKey: k];
+	    }
+	}
+      [handle writeData: _request];
+      [handle loadInBackground];
+#endif
+    }
+}
+
 - (void) _clean
 {
   if (_operation != nil)
@@ -85,8 +255,79 @@
       [self _clean];
       if ([_delegate respondsToSelector: @selector(completedRPC:)])
 	{
+	  NSString		*host;
+	  NSMutableArray	*a;
+	  NSUInteger		index;
+
+	  host = [[[_connectionURL host] retain] autorelease];
 	  [_delegate completedRPC: self];
-	}    
+	  a = [active objectForKey: host];
+	  index = [a indexOfObjectIdenticalTo: self];
+	  if (index == NSNotFound)
+	    {
+	      /* Must have timed out while still in local queue.
+	       */
+	      [[queues objectForKey: host] removeObjectIdenticalTo: self];
+	      [queued removeObjectIdenticalTo: self];
+	    }
+	  else
+	    {
+	      [a removeObjectAtIndex: index];
+	      activeCount--;
+	      [[self class] _activate: host];
+	      if ([a count] == 0)
+		{
+		  [active removeObjectForKey: host];
+		}
+	    }
+	}
+    }
+}
+
+- (void) _enqueue
+{
+  NSString		*host = [_connectionURL host];
+  NSMutableArray	*queue = [queues objectForKey: host];
+
+  if (queue == nil)
+    {
+      queue = [NSMutableArray new];
+      [queues setObject: queue forKey: host];
+      [queue release];
+    }
+  if (YES == _prioritised)
+    {
+      unsigned	count;
+      unsigned	index;
+
+      count = [queue count];
+      for (index = 0; index < count; index++)
+	{
+	  GWSService	*tmp = [queue objectAtIndex: index];
+
+	  if (tmp->_prioritised == NO)
+	    {
+	      break;
+	    }
+	}
+      [queue insertObject: self atIndex: index];
+
+      count = [queued count];
+      for (index = 0; index < count; index++)
+	{
+	  GWSService	*tmp = [queued objectAtIndex: index];
+
+	  if (tmp->_prioritised == NO)
+	    {
+	      break;
+	    }
+	}
+      [queued insertObject: self atIndex: index];
+    }
+  else
+    {
+      [queue addObject: self];
+      [queued addObject: self];
     }
 }
 
@@ -171,6 +412,73 @@
   return self;
 }
 
+- (void) _received
+{
+  if (_result != nil)
+    {
+      [_result release];
+      _result = nil;
+    }
+
+  if (_code != 200 && [_coder isKindOfClass: [GWSXMLRPCCoder class]] == YES)
+    {
+      NSString	*str;
+
+      str = [NSString stringWithFormat: @"HTTP status %03d", _code];
+      [self _setProblem: str];
+    }
+  else if (_code != 204 && [_response length] == 0)
+    {
+      NSString	*str;
+
+      /* Unless we got a 204 response, we expect to have a body to parse.
+       */
+      if (_code == 200)
+	{
+          str = [NSString stringWithFormat: @"HTTP status 200 but no body"];
+	}
+      else
+	{
+          str = [NSString stringWithFormat: @"HTTP status %03d", _code];
+	}
+      [self _setProblem: str];
+    }
+  else
+    {
+      /* OK ... parse the body ... which sould contain some sort of data
+       * unless we had a 204 response (some services may accept an empty
+       * response, even though xmlrpc and soap do not).
+       */
+      NS_DURING
+	{
+	  if ([_delegate respondsToSelector:
+	    @selector(webService:willHandleResponse:)] == YES)
+	    {
+	      NSData	*data;
+
+	      data = [_delegate webService: self willHandleResponse: _response];
+	      if (data != _response)
+		{
+		  [_response release];
+		  _response = [data retain];
+		}
+	    }
+	  _result = [[_coder parseMessage: _response] retain];
+	}
+      NS_HANDLER
+	{
+	  id        reason = [localException reason];
+
+	  _result = [[NSMutableDictionary alloc] initWithObjects: &reason
+						         forKeys: &GWSFaultKey
+							   count: 1];
+	}
+      NS_ENDHANDLER
+    }
+
+  [self _completed];
+}
+
 - (void) _remove
 {
   _document = nil;
@@ -215,7 +523,35 @@
 }
 @end
 
+
 @implementation	GWSService
+
++ (void) initialize
+{
+  if (self == [GWSService class])
+    {
+      active = [NSMutableDictionary new];
+      queues = [NSMutableDictionary new];
+      queued = [NSMutableArray new];
+    }
+}
+
++ (NSString*) description
+{
+  return [NSString stringWithFormat: @"GWSService async request status..."
+    @" Pool: %u (per host: %u) Active: %@ Queues: %@",
+    pool, perHostPool, active, queues];
+}
+
++ (void) setPerHostPool: (unsigned)max
+{
+  perHostPool = max;
+}
+
++ (void) setPool: (unsigned)max
+{
+  pool = max;
+}
 
 - (BOOL) beginMethod: (NSString*)method 
            operation: (NSString**)operation
@@ -620,6 +956,19 @@
                order: (NSArray*)order
              timeout: (int)seconds
 {
+  return [self sendRequest: method
+	        parameters: parameters
+		     order: order
+		   timeout: seconds
+	       prioritised: NO];
+}
+
+- (BOOL) sendRequest: (NSString*)method 
+          parameters: (NSDictionary*)parameters
+               order: (NSArray*)order
+             timeout: (int)seconds
+	 prioritised: (BOOL)urgent
+{
   NSData	*req;
 
   if (_result != nil)
@@ -646,99 +995,20 @@
       req = [_delegate webService: self willSendRequest: req];
     }
   _request = [req retain];
-
+  _prioritised = urgent;
   _timer = [NSTimer scheduledTimerWithTimeInterval: seconds
 					    target: self
 					  selector: @selector(timeout:)
 					  userInfo: nil
 					   repeats: NO];
-  if (_clientCertificate == nil
-#if	defined(GNUSTEP)
-/* GNUstep has better debugging with NSURLHandle than NSURLConnection
- */
-&& [self debug] == NO
-#endif
-    )
+
+  if (available([_connectionURL host]) == YES)
     {
-      NSMutableURLRequest   *request;
-
-      request = [NSMutableURLRequest alloc];
-      request = [request initWithURL: [NSURL URLWithString: _connectionURL]];
-      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
-      [request setHTTPMethod: @"POST"];  
-      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
-      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
-      if (_SOAPAction != nil)
-	{
-	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
-	}
-      if ([_headers count] > 0)
-	{
-	  NSEnumerator	*e = [_headers keyEnumerator];
-	  NSString	*k;
-
-	  while ((k = [e nextObject]) != nil)
-	    {
-	      NSString	*v = [_headers objectForKey: k];
-
-	      [request setValue: v forHTTPHeaderField: k];
-	    }
-	}
-      [request setHTTPBody: _request];
-
-      _connection = [NSURLConnection alloc];
-      _response = [[NSMutableData alloc] init];
-      _connection = [_connection initWithRequest: request delegate: self];
-      [request release];
+      [self _activate];
     }
   else
     {
-#if	defined(GNUSTEP)
-      NSURL	*u = [NSURL URLWithString: _connectionURL];
-        
-      _connection = (NSURLConnection*)[[u URLHandleUsingCache: NO] retain];
-      [handle setDebug: [self debug]];
-      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
-	{
-          [handle setReturnAll: YES];
-	}
-      if (_clientCertificate != nil)
-	{
-	  [handle writeProperty: _clientCertificate 
-			 forKey: GSHTTPPropertyCertificateFileKey];
-	}
-      if (_clientKey != nil)
-	{
-	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
-	}
-      if (_clientPassword != nil)
-	{
-	  [handle writeProperty: _clientPassword
-			 forKey: GSHTTPPropertyPasswordKey];
-	}
-      if (_SOAPAction != nil)
-	{
-	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
-	}
-      [handle addClient: (id<NSURLHandleClient>)self];
-      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
-      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
-      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
-      if ([_headers count] > 0)
-	{
-	  NSEnumerator	*e = [_headers keyEnumerator];
-	  NSString	*k;
-
-	  while ((k = [e nextObject]) != nil)
-	    {
-	      NSString	*v = [_headers objectForKey: k];
-
-	      [handle writeProperty: v forKey: k];
-	    }
-	}
-      [handle writeData: _request];
-      [handle loadInBackground];
-#endif
+      [self _enqueue];
     }
   return YES;
 }
@@ -857,11 +1127,7 @@
 	          format: @"Client certificates not supported on MacOS-X"];
     }
 #endif
-  if ([url isKindOfClass: [NSURL class]])
-    {
-      url = [(NSURL*)url absoluteString];
-    }
-  if (url != nil)
+  if ([url isKindOfClass: [NSURL class]] == NO)
     {
       NSURL	*u = [NSURL URLWithString: url];
 
@@ -870,6 +1136,7 @@
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"Bad URL (%@) supplied", url];
 	}
+      url = u;
     }
   old = _connectionURL;
   _connectionURL = [url copy];
@@ -983,7 +1250,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (void) connection: (NSURLConnection*)connection
  didReceiveResponse: (NSURLResponse*)response 
 {
-  /* DO NOTHING */
+  _code = [(NSHTTPURLResponse*)response statusCode];
 }
 
 - (NSCachedURLResponse*) connection: (NSURLConnection*)connection
@@ -1001,41 +1268,14 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) connectionDidFinishLoading: (NSURLConnection*)connection 
 {
-  if (_result != nil)
-    {
-      [_result release];
-      _result = nil;
-    }
-  NS_DURING
-    {
-      if ([_delegate respondsToSelector:
-	@selector(webService:willHandleResponse:)] == YES)
-	{
-	  NSData	*data;
-
-	  data = [_delegate webService: self willHandleResponse: _response];
-	  if (data != _response)
-	    {
-	      [_response release];
-	      _response = [data retain];
-	    }
-	}
-      _result = [_coder parseMessage: _response];
-    }
-  NS_HANDLER
-    {
-      id        reason = [localException reason];
-
-      _result = [NSMutableDictionary dictionaryWithObjects: &reason
-						   forKeys: &GWSFaultKey
-						     count: 1];
-    }
-  NS_ENDHANDLER
-  [_result retain];
-
   [_timer invalidate];
   _timer = nil;
-  [self _completed];
+  if ([_response length] == 0)	// No response received
+    {
+      [_response release];
+      _response = nil;
+    }
+  [self _received];
 }
 
 - (NSString*) webServiceOperation
@@ -1125,77 +1365,13 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) URLHandleResourceDidFinishLoading: (NSURLHandle*)sender
 {
-  int	code;
-
   [_timer invalidate];
   _timer = nil;
   [handle removeClient: (id<NSURLHandleClient>)self];
-
   [_response release];
   _response = [[handle availableResourceData] retain];
-  code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
-  if (code != 200)
-    {
-      if ([_coder isKindOfClass: [GWSXMLRPCCoder class]] == YES)
-	{
-          NSString	*str;
-
-          str = [NSString stringWithFormat: @"HTTP status %03d", code];
-          [self _setProblem: str];
-          [self _completed];
-          return;
-	}
-    }
-  if (_response == nil)
-    {
-      NSString	*str;
-
-      if (code == 200)
-	{
-          str = [NSString stringWithFormat: @"HTTP status 200 but no body"];
-	}
-      else
-	{
-          str = [NSString stringWithFormat: @"HTTP status %03d", code];
-	}
-      [self _setProblem: str];
-      [self _completed];
-      return;
-    }
-
-  if (_result != nil)
-    {
-      [_result release];
-      _result = nil;
-    }
-  NS_DURING
-    {
-      if ([_delegate respondsToSelector:
-	@selector(webService:willHandleResponse:)] == YES)
-	{
-	  NSData	*data;
-
-	  data = [_delegate webService: self willHandleResponse: _response];
-	  if (data != _response)
-	    {
-	      [_response release];
-	      _response = [data retain];
-	    }
-	}
-      _result = [_coder parseMessage: _response];
-    }
-  NS_HANDLER
-    {
-      id        reason = [localException reason];
-
-      _result = [NSMutableDictionary dictionaryWithObjects: &reason
-						   forKeys: &GWSFaultKey
-						     count: 1];
-    }
-  NS_ENDHANDLER
-  [_result retain];
-
-  [self _completed];
+  _code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
+  [self _received];
 }
 @end
 #endif

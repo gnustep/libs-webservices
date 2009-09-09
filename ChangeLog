@@ -1,3 +1,17 @@
+2009-09-09 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Add support for handling multiple simultaneous async requests in an
+	orderly manner with prioritised queues to each host.
+
+2009-09-04 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Handle http status code properly.  Allow responses with 204 status
+	to have an empty body.
+
 2009-09-02 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSSOAPCoder.m: Reset before building new rpc.

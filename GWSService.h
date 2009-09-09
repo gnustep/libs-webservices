@@ -36,6 +36,7 @@ extern "C" {
 @class  NSString;
 @class  NSTimer;
 @class  NSTimeZone;
+@class  NSURL;
 @class  NSURLConnection;
 @class  GWSCoder;
 @class  GWSDocument;
@@ -90,7 +91,7 @@ extern "C" {
   GWSElement            *_documentation;
   NSMutableDictionary   *_ports;
   NSMutableArray        *_extensibility;
-  NSString		*_connectionURL;
+  NSURL			*_connectionURL;
   NSURLConnection	*_connection;
   NSMutableData		*_response;
   NSTimer		*_timer;
@@ -101,6 +102,7 @@ extern "C" {
   NSString		*_SOAPAction;
   BOOL			_compact;
   BOOL			_debug;
+  BOOL			_prioritised;
   NSString		*_operation;
   GWSPort		*_port;
   NSMutableDictionary	*_parameters;
@@ -110,7 +112,20 @@ extern "C" {
   NSString		*_clientPassword;
   NSDictionary		*_headers;
   NSMutableDictionary	*_extra;
+  int			_code;
 }
+
+/** Returns a description of the current asynchronous service queues.
+ */
++ (NSString*) description;
+
+/** Sets maximum connections to a single host.
+ */
++ (void) setPerHostPool: (unsigned)max;
+
+/** Sets the maximum number of simultaneous async connections.
+ */
++ (void) setPool: (unsigned)max;
 
 /**
  * Builds an RPC method call.<br />
@@ -154,7 +169,7 @@ extern "C" {
 - (NSDictionary*) headers;
 
 /**
- * Calls -sendRequest:parameters:order:timeout: and waits for the
+ * Calls -sendRequest:parameters:order:timeout:prioritised: and waits for the
  * response.<br />
  * Parameters must be supplied as for the
  * [GWSCoder-buildRequest:parameters:order:] method.<br />
@@ -188,6 +203,15 @@ extern "C" {
 - (NSMutableDictionary*) result;
 
 /**
+ * Calls -sendRequest:parameters:order:timeout:prioritised: for a
+ * normal (non urgent) request.
+ */
+- (BOOL) sendRequest: (NSString*)method
+          parameters: (NSDictionary*)parameters
+               order: (NSArray*)order
+             timeout: (int)seconds;
+
+/**
  * Send an asynchronous RPC method call with the specified timeout.<br />
  * The method argument is the name of the operation to be performed,
  * however, if the receiver is owned by a GWSDocument instance which
@@ -210,7 +234,8 @@ extern "C" {
 - (BOOL) sendRequest: (NSString*)method
           parameters: (NSDictionary*)parameters
                order: (NSArray*)order
-             timeout: (int)seconds;
+             timeout: (int)seconds
+	 prioritised: (BOOL)urgent;
 
 /** Sets the coder to be used by the receiver for encoding to XML and
  * decoding from XML.  If this is not called, the receiver creates a

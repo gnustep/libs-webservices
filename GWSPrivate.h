@@ -68,8 +68,16 @@
 - (void) _remove;
 @end
 @interface      GWSService (Private)
++ (void) _activate: (NSString*)host;
+- (void) _activate;
+- (void) _clean;
+- (void) _completed;
+- (void) _enqueue;
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
+- (void) _received;
 - (void) _remove;
+- (void) _setProblem: (NSString*)s;
+- (NSString*) _setupFrom: (GWSElement*)element in: (id)section;
 @end
 @interface      GWSType (Private)
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
