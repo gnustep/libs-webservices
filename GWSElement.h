@@ -77,6 +77,20 @@ extern "C" {
  */
 - (void) addChild: (GWSElement*)child;
 
+/** Creates a new child element of the receiver with the specified name,
+ * namespace, qualified name, and text content (may be nil).<br />
+ * The content is followed by a nil terminated list of strings in pairs
+ * of attribute names and attribute values.<br />
+ * Alternatively, the content can be followed by a single dictionary of
+ * attributes, in which case the list of arguments does not need to be
+ * nil terminated.<br />
+ * The newly created child element is returned.
+ */
+- (GWSElement*) addChildNamed: (NSString*)name
+		    namespace: (NSString*)namespace
+		    qualified: (NSString*)qualified
+		      content: (NSString*)content, ...;
+		    
 /** Returns the value of the named attribute, or nil if no such attribute
  * has been specified in the receiver.
  */

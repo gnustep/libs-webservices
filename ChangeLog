@@ -1,3 +1,9 @@
+2009-09-10 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.h:
+	* GWSElement.m:
+	Add convenience method for creating child nodes of an existing one.
+
 2009-09-09 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

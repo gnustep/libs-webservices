@@ -69,6 +69,58 @@ static NSCharacterSet	*ws = nil;
   [self insertChild: child atIndex: [_children count]];
 }
 
+- (GWSElement*) addChildNamed: (NSString*)name
+		    namespace: (NSString*)namespace
+		    qualified: (NSString*)qualified
+		      content: (NSString*)content, ...
+{
+  va_list		ap;
+  NSDictionary		*attributes = nil;
+  NSMutableDictionary	*a;
+  GWSElement		*e;
+  NSString		*k;
+  
+  va_start (ap, content);
+  while ((k = va_arg(ap, NSString*)) != nil)
+    {
+      NSString *v;
+
+      if (attributes == nil)
+	{
+	  /* As a special case, we are allowed to have a single NSDictionary
+	   * rather than a nil terminated llist of keys and values.
+	   */
+	  if ([k isKindOfClass: [NSDictionary class]] == YES)
+	    {
+	      attributes = (NSDictionary*)k;
+	      break;
+	    }
+	  a = [NSMutableDictionary new];
+	  attributes = a;
+	}
+      v = va_arg(ap, NSString*);
+      if (v == nil)
+	{
+	  [a release];
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"attribute name/value pairs unbalanced"];
+	}
+      [a setObject: v forKey: k];
+    }
+  va_end (ap);
+  e = [[GWSElement alloc] initWithName: name
+			     namespace: namespace
+			     qualified: qualified
+			    attributes: attributes];
+  if (content != nil)
+    {
+      [e addContent: content];
+    }
+  [self addChild: e];
+  [e release];
+  return e;
+}
+
 - (NSString*) attributeForName: (NSString*)name
 {
   return [_attributes objectForKey: name];
