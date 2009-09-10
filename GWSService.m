@@ -241,6 +241,10 @@ available(NSString *host)
    */
   if (_request != nil)
     {
+      NSString		*host;
+      NSMutableArray	*a;
+      NSUInteger	index;
+
       if ([self debug] == YES)
 	{
 	  if (_request != nil)
@@ -253,40 +257,37 @@ available(NSString *host)
 	    }
 	}
       [self _clean];
+
+      /* Retain self and host in case the delegate changes the URL
+       * or releases us (or removing self from active list would
+       * cause deallocation).
+       */
+      [[self retain] autorelease];
+      host = [[[_connectionURL host] retain] autorelease];
+
+      /* Now make sure the receiver is no longer active.
+       * This must be done before informing the delegate of
+       * completion, in case the delegate wants to schedule
+       * another request to the same host.
+       */
+      a = [active objectForKey: host];
+      index = [a indexOfObjectIdenticalTo: self];
+      if (index == NSNotFound)
+	{
+	  /* Must have timed out while still in local queue.
+	   */
+	  [[queues objectForKey: host] removeObjectIdenticalTo: self];
+	  [queued removeObjectIdenticalTo: self];
+	}
+      else
+	{
+	  [a removeObjectAtIndex: index];
+	  activeCount--;
+	  [GWSService _activate: host];	// start any queued requests
+	}
+
       if ([_delegate respondsToSelector: @selector(completedRPC:)])
 	{
-	  NSString		*host;
-	  NSMutableArray	*a;
-	  NSUInteger		index;
-
-	  /* Retain self and host in case the delegate changes the URL
-	   * or releases us (or removing self from active list would
-	   * cause deallocation).
-	   */
-	  [[self retain] autorelease];
-	  host = [[[_connectionURL host] retain] autorelease];
-
-	  /* Now make sure the receiver is no longer active.
-	   * This must be done before informing the delegate of
-	   * completion, in case the delegate wants to schedule
-	   * another request to the same host.
-	   */
-	  a = [active objectForKey: host];
-	  index = [a indexOfObjectIdenticalTo: self];
-	  if (index == NSNotFound)
-	    {
-	      /* Must have timed out while still in local queue.
-	       */
-	      [[queues objectForKey: host] removeObjectIdenticalTo: self];
-	      [queued removeObjectIdenticalTo: self];
-	    }
-	  else
-	    {
-	      [a removeObjectAtIndex: index];
-	      activeCount--;
-	      [GWSService _activate: host];	// start any queued requests
-	    }
-
 	  [_delegate completedRPC: self];
 	}
     }
