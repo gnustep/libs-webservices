@@ -1,3 +1,7 @@
+2009-09-20 Riccardo Mottola <rmottola@users.sf.net>
+
+    * GWSPrivate.h: define NSUInteger for older platforms
+    
 2009-09-20 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m:
@@ -96,7 +100,7 @@
 	* GWSExtensibility.m: fixup for messages defining part types
 	* GWSSOAPCopder.m: New key to specify a type for a value
 
-2009-06-16 Riccardo Mottola  <multix@gmail.com>
+2009-06-16 Riccardo Mottola  <rmottola@users.sf.net>
 
 	* WSSUsernameToken.m: use alternative random number functions
 	(rand() and srand()) on mswindows as it doesn't have the random()

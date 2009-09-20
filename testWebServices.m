@@ -121,6 +121,7 @@ main()
 
   inner = [NSAutoreleasePool new];
   coder = [GWSXMLRPCCoder new];
+  [coder setDebug:YES];
 
   /* Test encoding and decoding of an XMLRPC request.
    */

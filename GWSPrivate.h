@@ -45,6 +45,31 @@
 #import "GWSService.h"
 #import "GWSType.h"
 
+#if	!defined(GNUSTEP)
+#ifndef ASSIGN
+#define ASSIGN(object,value)     ({\
+  id __value = (id)(value); \
+    id __object = (id)(object); \
+      if (__value != __object) \
+      { \
+        if (__value != nil) \
+        { \
+          [__value retain]; \
+        } \
+        object = __value; \
+          if (__object != nil) \
+          { \
+            [__object release]; \
+          } \
+      } \
+})
+#endif
+
+#if (MAC_OS_X_VERSION_MAX_ALLOWED < MAC_OS_X_VERSION_10_4)
+typedef unsigned int NSUInteger;
+#endif
+
+#endif
 
 @interface      GWSBinding (Private)
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
