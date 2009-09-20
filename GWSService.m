@@ -155,6 +155,10 @@ available(NSString *host)
 	}
       [request setHTTPBody: _request];
 
+      if (_connection != nil)
+	{
+	  [_connection release];
+	}
       _connection = [NSURLConnection alloc];
       _response = [[NSMutableData alloc] init];
       _connection = [_connection initWithRequest: request delegate: self];
@@ -163,8 +167,11 @@ available(NSString *host)
   else
     {
 #if	defined(GNUSTEP)
-      _connection
-	= (NSURLConnection*)[[_connectionURL URLHandleUsingCache: NO] retain];
+      if (_connection == nil)
+	{
+          _connection = (NSURLConnection*)[[_connectionURL
+	    URLHandleUsingCache: NO] retain];
+	}
       [handle setDebug: [self debug]];
       if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
 	{

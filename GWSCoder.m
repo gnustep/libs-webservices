@@ -328,6 +328,7 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
   destlen = length * 2;
   sBuf = (unsigned char*)[source bytes];
   dBuf = NSZoneMalloc(NSDefaultMallocZone(), destlen);
+  dpos = 0;
   for (spos = 0; spos < length; spos++)
     {
       dBuf[dpos++] = hex[sBuf[spos] >> 4];

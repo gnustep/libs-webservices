@@ -1,3 +1,12 @@
+2009-09-20 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m:
+	* GWSElement.m:
+	* GWSCoder.m:
+	* WSSUsernameToken.m:
+	Tweak to keep connection alive if possible.  Fix a few compiler
+	warnings and unitialised variable.
+	
 2009-09-10 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSElement.h:

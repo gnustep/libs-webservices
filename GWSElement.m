@@ -76,7 +76,7 @@ static NSCharacterSet	*ws = nil;
 {
   va_list		ap;
   NSDictionary		*attributes = nil;
-  NSMutableDictionary	*a;
+  NSMutableDictionary	*a = nil;
   GWSElement		*e;
   NSString		*k;
   
@@ -101,7 +101,7 @@ static NSCharacterSet	*ws = nil;
       v = va_arg(ap, NSString*);
       if (v == nil)
 	{
-	  [a release];
+	  [attributes release];
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"attribute name/value pairs unbalanced"];
 	}

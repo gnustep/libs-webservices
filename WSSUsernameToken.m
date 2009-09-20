@@ -66,6 +66,7 @@ static GWSCoder		*coder = nil;
   NSString	*uName;
   NSString	*pName;
 
+  uPrefix = nil;
   ns = @"http://docs.oasis-open.org/wss/2004/01/"
     @"oasis-200401-wss-wssecurity-secext-1.0.xsd";
   uns = @"http://docs.oasis-open.org/wss/2004/01/"
