@@ -1,6 +1,10 @@
+2009-10-01 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	Add some simple regression tests.
+
 2009-09-20 Riccardo Mottola <rmottola@users.sf.net>
 
-    * GWSPrivate.h: define NSUInteger for older platforms
+	* GWSPrivate.h: define NSUInteger for older platforms
     
 2009-09-20 Richard Frith-Macdonald  <rfm@gnu.org>
 

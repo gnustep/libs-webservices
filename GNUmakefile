@@ -100,10 +100,15 @@ endif
 
 WebServices_HEADER_FILES_INSTALL_DIR = WebServices
 
-TEST_TOOL_NAME+=testWebServices
+TEST_TOOL_NAME += testWebServices
 testWebServices_OBJC_FILES = testWebServices.m
 testWebServices_TOOL_LIBS += -lWebServices
 testWebServices_LIB_DIRS += -L./$(GNUSTEP_OBJ_DIR)
+
+TEST_TOOL_NAME += testGWSSOAPCoder
+testGWSSOAPCoder_OBJC_FILES = testGWSSOAPCoder.m
+testGWSSOAPCoder_TOOL_LIBS += -lWebServices
+testGWSSOAPCoder_LIB_DIRS += -L./$(GNUSTEP_OBJ_DIR)
 
 -include GNUmakefile.preamble
 

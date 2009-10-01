@@ -1,0 +1,7 @@
+{
+    GWSCoderFault = {
+	detail = "";
+	faultcode = "soapenv:Server.generalException";
+	faultstring = "";
+    };
+}

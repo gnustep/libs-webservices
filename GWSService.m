@@ -583,8 +583,13 @@ available(NSString *host)
    */
   if (operation && *operation && port && *port)
     {
-      ASSIGN(_operation, *operation);
-      ASSIGN(_port, *port);
+      NSString	*o = [*operation retain];
+      GWSPort	*p = [*port retain];
+
+      [_operation release];
+      _operation = o;
+      [_port release];
+      _port = p;
       return YES;
     }
 
