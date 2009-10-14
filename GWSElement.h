@@ -65,12 +65,8 @@ extern "C" {
   NSMutableArray        *_children;
   NSMutableString       *_content;
   NSString              *_literal;
+  NSString		*_start;
 }
-
-/** Adds a string to the content of the receiver.  New content is appended
- * to any existing content.
- */
-- (void) addContent: (NSString*)content;
 
 /** Adds an element to the list of elements which are direct
  * children of the receiver.
@@ -91,6 +87,12 @@ extern "C" {
 		    qualified: (NSString*)qualified
 		      content: (NSString*)content, ...;
 		    
+/** Adds a string to the content of the receiver.  New content is appended
+ * to any existing content (with any white space between the two parts
+ * being condensed to a single space).
+ */
+- (void) addContent: (NSString*)content;
+
 /** Returns the value of the named attribute, or nil if no such attribute
  * has been specified in the receiver.
  */
@@ -112,7 +114,8 @@ extern "C" {
 - (NSArray*) children;
 
 /** Returns the content text of the receiver.  This may be an empty string
- * if no content has been added to the receiver.
+ * if no content has been added to the receiver (but will never be nil).<br />
+ * The returned value will have no leading or trailing white space.
  */
 - (NSString*) content;
 
@@ -257,10 +260,18 @@ extern "C" {
  */
 - (void) remove;
 
-/** Sets the value for the specified key.  If attribute is nil then any
- * existing value for the key is removed.
+/** Sets the value for the specified key.<br />
+ * If attribute is nil then any existing value for the key is removed.<br />
+ * If the key is nil, then all existing attributes are removed.
  */
 - (void) setAttribute: (NSString*)attribute forKey: (NSString*)key;
+
+/** Sets the value of the content string of the receiver, replacing any
+ * content already present.  Any leading white space is removed.<br />
+ * You may use an empty string or nil to remove content from the
+ * receiver.
+ */
+- (void) setContent: (NSString*)content;
 
 /** Sets the literal text to be used as the XML representing this element
  * and its content and children when encoding to an XML document.<br />

@@ -1,3 +1,13 @@
+2009-10-14 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.h:
+	* GWSElement.m:
+	Add new ([setContent:]) method to allow existing content to be
+	replaced.
+	Allow ([setAttribute:forKey:]) to remove all attributes if key is nil.
+	Allow caching of the start element text to improve performance when
+	encoding the same object repeatedly.
+
 2009-10-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Add some simple regression tests.

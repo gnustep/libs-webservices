@@ -179,6 +179,7 @@ static NSCharacterSet	*ws = nil;
   [_prefix release];
   [_qualified release];
   [_literal release];
+  [_start release];
   [super dealloc];
 }
 
@@ -232,48 +233,59 @@ static NSCharacterSet	*ws = nil;
     {
       NSMutableString   *xml = [coder mutableString];
 
-      [xml appendString: @"<"];
-      [xml appendString: _qualified];
-      if ([_attributes count] > 0)
-        {
-          NSEnumerator      *e = [_attributes keyEnumerator];
-          NSString          *k;
+      if (_start == nil)
+	{
+	  unsigned	pos = [xml length];
 
-          while ((k = [e nextObject]) != nil)
-            {
-              NSString      *v = [_attributes objectForKey: k];
+	  [xml appendString: @"<"];
+	  [xml appendString: _qualified];
+	  if ([_attributes count] > 0)
+	    {
+	      NSEnumerator      *e = [_attributes keyEnumerator];
+	      NSString          *k;
 
-              [xml appendString: @" "];
-              [xml appendString: [coder escapeXMLFrom: k]];
-              [xml appendString: @"=\""];
-              [xml appendString: [coder escapeXMLFrom: v]];
-              [xml appendString: @"\""];
-            }
-        }
-      if ([_namespaces count] > 0)
-        {
-          NSEnumerator      *e = [_namespaces keyEnumerator];
-          NSString          *k;
+	      while ((k = [e nextObject]) != nil)
+		{
+		  NSString      *v = [_attributes objectForKey: k];
 
-          while ((k = [e nextObject]) != nil)
-            {
-              NSString      *v = [_namespaces objectForKey: k];
+		  [xml appendString: @" "];
+		  [xml appendString: [coder escapeXMLFrom: k]];
+		  [xml appendString: @"=\""];
+		  [xml appendString: [coder escapeXMLFrom: v]];
+		  [xml appendString: @"\""];
+		}
+	    }
+	  if ([_namespaces count] > 0)
+	    {
+	      NSEnumerator      *e = [_namespaces keyEnumerator];
+	      NSString          *k;
 
-              [xml appendString: @" "];
-              if ([k length] == 0)
-                {
-                  [xml appendString: @"xmlns"];
-                }
-              else
-                {
-                  [xml appendString: @"xmlns:"];
-                  [xml appendString: [coder escapeXMLFrom: k]];
-                }
-              [xml appendString: @"=\""];
-              [xml appendString: [coder escapeXMLFrom: v]];
-              [xml appendString: @"\""];
-            }
-        }
+	      while ((k = [e nextObject]) != nil)
+		{
+		  NSString      *v = [_namespaces objectForKey: k];
+
+		  [xml appendString: @" "];
+		  if ([k length] == 0)
+		    {
+		      [xml appendString: @"xmlns"];
+		    }
+		  else
+		    {
+		      [xml appendString: @"xmlns:"];
+		      [xml appendString: [coder escapeXMLFrom: k]];
+		    }
+		  [xml appendString: @"=\""];
+		  [xml appendString: [coder escapeXMLFrom: v]];
+		  [xml appendString: @"\""];
+		}
+	    }
+	  _start = [[xml substringFromIndex: pos] retain];
+	}
+      else
+	{
+	  // use cached version of start element
+	  [xml appendString: _start];
+	}
       if (flag == YES && [_content length] == 0 && [_children count] == 0)
         {
           [xml appendString: @" />"];       // Empty element.
@@ -565,7 +577,12 @@ static NSCharacterSet	*ws = nil;
 
 - (void) setAttribute: (NSString*)attribute forKey: (NSString*)key
 {
-  if (attribute == nil)
+  if (key == nil)
+    {
+      [_attributes release];
+      _attributes = nil;
+    }
+  else if (attribute == nil)
     {
       if (_attributes != nil)
         {
@@ -585,6 +602,18 @@ static NSCharacterSet	*ws = nil;
         }
       [_attributes setObject: attribute forKey: key];
     }
+  [_start release];	// Discard any cached start element
+  _start = nil;
+}
+
+- (void) setContent: (NSString*)content
+{
+  if (_content != content)
+    {
+      [_content release];
+      _content = nil;
+      [self addContent: content];
+    }
 }
 
 - (void) setLiteralValue: (NSString*)xml
@@ -596,6 +625,8 @@ static NSCharacterSet	*ws = nil;
       _literal = [xml retain];
       [o release];
     }
+  [_start release];	// Discard any cached start element
+  _start = nil;
 }
 
 - (void) setName: (NSString*)name
@@ -613,6 +644,8 @@ static NSCharacterSet	*ws = nil;
     {
       _qualified = [[NSString alloc] initWithFormat: @"%@:%@", _prefix, _name];
     }
+  [_start release];	// Discard any cached start element
+  _start = nil;
 }
 
 - (void) setNamespace: (NSString*)uri forPrefix: (NSString*)prefix
@@ -648,6 +681,8 @@ static NSCharacterSet	*ws = nil;
       [_namespace release];
       _namespace = [uri copy];
     }
+  [_start release];	// Discard any cached start element
+  _start = nil;
 }
 
 - (void) setPrefix: (NSString*)prefix
@@ -707,6 +742,8 @@ static NSCharacterSet	*ws = nil;
     }
   [_prefix release];
   _prefix = [prefix copy];
+  [_start release];	// Discard any cached start element
+  _start = nil;
 }
 
 - (GWSElement*) sibling
