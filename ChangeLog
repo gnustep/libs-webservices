@@ -1,3 +1,10 @@
+2009-10-15 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.h:
+	* GWSElement.m:
+	Make methods returning collections be consistent and always return a
+	collection (even if it's empty) rather than sometimes returning nil.
+
 2009-10-14 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSElement.h:

@@ -98,8 +98,8 @@ extern "C" {
  */
 - (NSString*) attributeForName: (NSString*)name;
 
-/** Returns the attributes of the receiver, or nil if no attributes
- * dictionary exists.
+/** Returns the attributes of the receiver, or an empty dictionary
+ * if no attributes are set.
  */
 - (NSDictionary*) attributes;
 
@@ -109,7 +109,7 @@ extern "C" {
 - (GWSElement*) childAtIndex: (unsigned)index;
 
 /** Returns an autoreleased array containing all the child elements of
- * the receiver.
+ * the receiver.  Returns an empty array if there are no children.
  */
 - (NSArray*) children;
 
@@ -224,11 +224,12 @@ extern "C" {
  */
 - (NSString*) namespaceForPrefix: (NSString*)prefix;
 
-/** Returns the namespaces mappings introduced by this element.
+/** Returns the namespaces mappings introduced by this element.<br />
+ * If there are no namespaces introduced, this returns an empty dictionary.
  */
 - (NSDictionary*) namespaces;
 
-/** Returns the parent of this element.
+/** Returns the parent of this element, or nil if the receiver has no parent.
  */
 - (GWSElement*) parent;
 
@@ -255,8 +256,8 @@ extern "C" {
  */
 - (NSString*) qualified;
 
-/** Removes the receiver from its parent.  This may cause the receiver to
- * be deallocated.
+/** Removes the receiver (and its children) from its parent.<br />
+ * This may cause the receiver to be deallocated.
  */
 - (void) remove;
 

@@ -128,6 +128,16 @@ static NSCharacterSet	*ws = nil;
 
 - (NSDictionary*) attributes
 {
+  if (_attributes == nil)
+    {
+      static NSDictionary	*empty = nil;
+
+      if (empty == nil)
+	{
+	  empty = [NSDictionary new];
+	}
+      return empty;
+    }
   return [[_attributes copy] autorelease];
 }
 
@@ -138,6 +148,16 @@ static NSCharacterSet	*ws = nil;
 
 - (NSArray*) children
 {
+  if (_children == nil)
+    {
+      static NSArray	*empty = nil;
+
+      if (empty == nil)
+	{
+	  empty = [NSArray new];
+	}
+      return empty;
+    }
   return [[_children copy] autorelease];
 }
 
@@ -491,6 +511,16 @@ static NSCharacterSet	*ws = nil;
 
 - (NSDictionary*) namespaces
 {
+  if (_namespaces == nil)
+    {
+      static NSDictionary	*empty = nil;
+
+      if (empty == nil)
+	{
+	  empty = [NSDictionary new];
+	}
+      return empty;
+    }
   return [[_namespaces copy] autorelease];
 }
 
@@ -567,11 +597,6 @@ static NSCharacterSet	*ws = nil;
 
       _parent = nil;
       [p->_children removeObjectIdenticalTo: self];
-      if ([p->_children count] == 0)
-        {
-          [p->_children release];
-          p->_children = nil;
-        }
     }
 }
 
@@ -579,19 +604,13 @@ static NSCharacterSet	*ws = nil;
 {
   if (key == nil)
     {
-      [_attributes release];
-      _attributes = nil;
+      [_attributes removeAllObjects];
     }
   else if (attribute == nil)
     {
       if (_attributes != nil)
         {
           [_attributes removeObjectForKey: key];
-          if ([_attributes count] == 0)
-            {
-              [_attributes release];
-              _attributes = nil;
-            }
         }
     }
   else
@@ -659,11 +678,6 @@ static NSCharacterSet	*ws = nil;
       if (_namespaces != nil)
         {
           [_namespaces removeObjectForKey: prefix];
-          if ([_namespaces count] == 0)
-            {
-              [_namespaces release];
-              _namespaces = nil;
-            }
         }
     }
   else
