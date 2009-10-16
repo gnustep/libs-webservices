@@ -726,6 +726,7 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
   [_ms setString: @""];
   [_stack removeAllObjects];
   [_nmap removeAllObjects];
+  _level = 0;
 }
 
 - (void) setCompact: (BOOL)flag
