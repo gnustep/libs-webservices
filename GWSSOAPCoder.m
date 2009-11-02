@@ -723,26 +723,24 @@ newHeader(NSString *prefix, id o)
               elem = [children objectAtIndex: i++];
               n = [elem name];
               v = [elem content];
-              if ([n isEqualToString: @"faultcode"] == YES && v != nil)
+              if ([n isEqualToString: @"faultcode"] == YES
+		&& [v length] > 0)
                 {
                   [f setObject: v forKey: @"faultcode"];
                 }
               else if ([n isEqualToString: @"faultstring"] == YES)
                 {
                   /* faultstring must be present but may be empty. */
-                  if (v == nil)
-                    {
-                      v = @"";
-                    }
                   [f setObject: v forKey: @"faultstring"];
                 }
-              else if ([n isEqualToString: @"faultactor"] == YES && v != nil)
+              else if ([n isEqualToString: @"faultactor"] == YES
+		&& [v length] > 0)
                 {
                   [f setObject: v forKey: @"faultactor"];
                 }
               else if ([n isEqualToString: @"detail"] == YES)
                 {
-                  if (v != nil)
+                  if ([v length] > 0)
                     {
                       [f setObject: v forKey: @"detail"];
                     }
