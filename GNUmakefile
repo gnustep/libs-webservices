@@ -117,3 +117,7 @@ include $(GNUSTEP_MAKEFILES)/test-tool.make
 include $(GNUSTEP_MAKEFILES)/documentation.make
 
 -include GNUmakefile.postamble
+
+check::
+	(cd tests; ./test)
+

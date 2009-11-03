@@ -8,7 +8,7 @@
     <ns1:sendSMSFault xmlns:ns1="http://www.o2.com/uk/schema/north/services/SMSService">
      <Exception>
       <resultCode>12004</resultCode>
-      <description>No AccessSession found: app:8638397129625756426</description>
+      <description>No AccessSession found: app:-201949163324752630</description>
      </Exception>
     </ns1:sendSMSFault>
     <ns2:exceptionName xmlns:ns2="http://xml.apache.org/axis/">com.o2.uk.sag.plugin.sms.wespa._sendSMSFault</ns2:exceptionName>
