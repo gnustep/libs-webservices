@@ -202,7 +202,9 @@ newHeader(NSString *prefix, id o)
 
       while ((k = [kEnum nextObject]) != nil)
 	{
-	  if ([k hasPrefix: @"GWSSOAP"] == NO)
+	  if ([k isEqualToString: GWSOrderKey] == NO
+	    && [k hasPrefix: @"GWSSOAP"] == NO
+	    && [a containsObject: k] == NO)
 	    {
 	      [a addObject: k];
 	    }
