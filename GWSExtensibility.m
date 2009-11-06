@@ -315,22 +315,69 @@ promote(NSMutableDictionary *d, NSString *k)
 		    }
 		  if (p != nil)
 		    {
+		      NSString	*found;
+
+		      found = [p objectForKey: partName];
+		      if (found == nil)
+			{
+			  NSEnumerator	*e;
+		          NSString	*ns;
+			  NSString	*key;
+
+			  /* It may be that the value actually has a
+			   * namespace prefix attached and defines that
+			   * namespace itsself ... so we must check all
+			   * values to see if there is one whose namespace
+			   * matches ours, and accept that.
+			   */
+			  ns = [document namespaceForPrefix: prefix];
+			  e = [p keyEnumerator];
+			  while ((key = [e nextObject]) != nil)
+			    {
+			      id	o = [p objectForKey: key];
+			      NSString	*nu;
+			      NSString	*nn;
+			      NSString	*s;
+			      NSRange	r;
+
+			      if (NO == [o isKindOfClass: [NSDictionary class]])
+				continue;
+			      r = [key rangeOfString: @":"];
+			      if (r.length == 0)
+				continue;
+			      nu = [o objectForKey: GWSSOAPNamespaceURIKey];
+			      if (NO == [nu isEqual: ns])
+				continue;
+			      nn = [o objectForKey: GWSSOAPNamespaceNameKey];
+			      if ([nn length] != r.location)
+			        continue;
+			      if (NO == [key hasPrefix: nn])
+				continue;
+			      s = [key substringFromIndex: NSMaxRange(r)];				      if (NO == [s isEqualToString: partName])
+				continue;
+
+			      found = key;
+			      prefix = nil;
+			      break;
+			    }
+			}
+
 		      /* FIXME ... what if there is no value for this
 		       * part ... which parts are mandatory?
 		       */
-		      if ([p objectForKey: partName] != nil)
+		      if (found != nil)
 			{
-			  [order addObject: partName];
+			  [order addObject: found];
 			}
 		      if (prefix != nil)
 			{
-			  [promote(p, partName)
+			  [promote(p, found)
 			    setObject: [document namespaceForPrefix: prefix]
 			    forKey: GWSSOAPNamespaceURIKey];
 			}
 		      if (typeName != nil && literal == NO)
 			{
-			  [promote(p, partName)
+			  [promote(p, found)
 			    setObject: typeName
 			    forKey: GWSSOAPTypeKey];
 			}
@@ -340,13 +387,16 @@ promote(NSMutableDictionary *d, NSString *k)
 		{
 		  NSString	*n;
 
-		  [p setObject: order forKey: GWSOrderKey];
+		  if ([order count] > 0)
+		    {
+		      [p setObject: order forKey: GWSOrderKey];
+		    }
 		  enumerator = [p keyEnumerator];
 		  while ((n = [enumerator nextObject]) != nil)
 		    {
-		      if ([n isEqualToString: GWSOrderKey] == NO
-			&& [n hasPrefix: @"GWSSOAP"] == NO
-			&& [order containsObject: n] == NO)
+		      if (NO == [n hasPrefix: @"GWSCoder"]
+			&& NO == [n hasPrefix: @"GWSSOAP"]
+			&& NO == [order containsObject: n])
 			{
 			  NSLog(@"Unknown value '%@' in message '%@'"
 			    @" with parameters %@",

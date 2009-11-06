@@ -547,6 +547,7 @@ static NSLock			*extLock = nil;
 
 - (NSString*) namespaceForPrefix: (NSString*)prefix
 {
+  if (prefix == nil) prefix = @"";
   return [_namespaces objectForKey: prefix];
 }
 

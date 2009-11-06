@@ -33,6 +33,7 @@ main()
   NSUserDefaults	*defs;
   NSString              *file;
   NSString		*method;
+  NSString		*sName;
   NSString		*wsdl;
 
   pool = [NSAutoreleasePool new];
@@ -48,11 +49,13 @@ main()
 	  file = nil;	// Can't encode without a method/operation
 	}
       wsdl = [defs stringForKey: @"WSDL"];
+      sName = [defs stringForKey: @"Service"];
     }
   else
     {
       method = nil;
       wsdl = nil;
+      sName = nil;
       file = [defs stringForKey: @"Decode"];
       if (file == nil)
 	{
@@ -67,8 +70,8 @@ main()
       GSPrintf(stderr, @"	-Record filename (to store results)\n");
       GSPrintf(stderr, @"	-Compare filename (to check results)\n");
       GSPrintf(stderr, @"	-Method name (method/operation to use)\n");
-// FIXME ... add support for encoding/decoding in conjunction with WSDL
-//      GSPrintf(stderr, @"	-WSDL filename (for WSDL)\n");
+      GSPrintf(stderr, @"	-Service name (for service in WSDL)\n");
+      GSPrintf(stderr, @"	-WSDL filename (for WSDL document)\n");
       return 1;
     }
 
@@ -133,7 +136,6 @@ main()
     {
       NSDictionary	*parameters;
       NSArray		*order;
-      GWSSOAPCoder	*coder;
       GWSService	*service;
       NSData		*result;
 
@@ -145,10 +147,35 @@ main()
 	  return 1;
 	}
 
-      service = [GWSService new];
-      coder = [GWSSOAPCoder new];
-      [service setCoder: coder];
-      [coder release];
+      if (wsdl == nil || sName == nil)
+	{
+          GWSSOAPCoder	*coder;
+
+          service = [GWSService new];
+          coder = [GWSSOAPCoder new];
+          [service setCoder: coder];
+          [coder release];
+	}
+      else
+	{
+          GWSDocument	*document;
+
+	  document = [[GWSDocument alloc] initWithContentsOfFile: wsdl];
+	  [document autorelease];
+	  if (nil == document)
+	    {
+	      GSPrintf(stderr, @"Failed to load WSDL from '%@'\n", wsdl);
+	      return 1;
+	    }
+	  service = [document serviceWithName: sName create: NO];
+	  if (service == nil)
+	    {
+	      GSPrintf(stderr, @"Failed to find service '%@' in WSDL '%@'\n",
+		sName, wsdl);
+	      return 1;
+	    }
+	}
+
       if (nil == [parameters objectForKey: GWSOrderKey])
 	{
 	  /* Make sure parameteres are consistently ordered so that output

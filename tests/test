@@ -25,6 +25,12 @@ if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
+../obj/testGWSSOAPCoder -Encode pl4 -Compare xml4 \
+ -WSDL test4.wsdl -Service ViewDevice -Method getDevice
+if [ $? = 1 ]; then
+  err=`expr $err + 1`
+fi
+
 echo ""
 echo "Error count: $err"
 echo ""
