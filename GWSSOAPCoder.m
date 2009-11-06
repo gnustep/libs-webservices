@@ -202,9 +202,8 @@ newHeader(NSString *prefix, id o)
 
       while ((k = [kEnum nextObject]) != nil)
 	{
-	  if ([k isEqualToString: GWSOrderKey] == NO
-	    && [k hasPrefix: @"GWSSOAP"] == NO
-	    && [a containsObject: k] == NO)
+	  if (NO == [k hasPrefix: @"GWSCoder"]
+	    && NO == [k hasPrefix: @"GWSSOAP"])
 	    {
 	      [a addObject: k];
 	    }
@@ -296,9 +295,9 @@ newHeader(NSString *prefix, id o)
       kEnum = [parameters keyEnumerator];
       while ((k = [kEnum nextObject]) != nil)
 	{
-	  if ([k isEqualToString: GWSOrderKey] == NO
-	    && [k hasPrefix: @"GWSSOAP"] == NO
-	    && [order containsObject: k] == NO)
+	  if (NO == [k hasPrefix: @"GWSCoder"]
+	    && NO == [k hasPrefix: @"GWSSOAP"]
+	    && NO == [order containsObject: k])
 	    {
 	      if (o == nil)
 		{
@@ -359,7 +358,8 @@ newHeader(NSString *prefix, id o)
 
 	      while ((k = [kEnum nextObject]) != nil)
 		{
-		  if ([k hasPrefix: @"GWSSOAP"] == NO)
+		  if (NO == [k hasPrefix: @"GWSCoder"]
+		    && NO == [k hasPrefix: @"GWSSOAP"])
 		    {
 		      [a addObject: k];
 		    }
@@ -1087,19 +1087,17 @@ newHeader(NSString *prefix, id o)
 	  NSString      *k = [order objectAtIndex: i];
 	  id            v = [o objectForKey: k];
 
-	  if ([k hasPrefix: @"GWSSOAP"] == YES)
+	  if (NO == [k hasPrefix: @"GWSCoder"]
+	    && NO == [k hasPrefix: @"GWSSOAP"])
 	    {
-	      /* This is not an element to encode.
-	       */
-	      continue;
+	      v = [o objectForKey: k];
+	      if (v == nil)
+		{
+		  [NSException raise: NSInvalidArgumentException
+		    format: @"Parameter '%@' (order %u) missing", k, i];
+		}
+	      [self _createElementFor: v named: k in: e];
 	    }
-	  v = [o objectForKey: k];
-	  if (v == nil)
-	    {
-	      [NSException raise: NSInvalidArgumentException
-		format: @"Parameter '%@' (order %u) missing", k, i];
-	    }
-	  [self _createElementFor: v named: k in: e];
 	}
     }
   else if (array == YES)
