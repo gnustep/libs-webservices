@@ -31,69 +31,172 @@ main()
 {
   NSAutoreleasePool     *pool;
   NSUserDefaults	*defs;
-  GWSCoder              *coder;
-  NSData                *xml;
   NSString              *file;
-  NSMutableDictionary   *result;
+  NSString		*method;
+  NSString		*wsdl;
 
   pool = [NSAutoreleasePool new];
 
   defs = [NSUserDefaults standardUserDefaults];
 
-  file = [defs stringForKey: @"File"];
-  if (file == nil)
-    {
-      GSPrintf(stderr, @"Usage ... testGWSSOAPCoder -File filename\n");
-      GSPrintf(stderr, @"	-Record filename (to store results)\n");
-      GSPrintf(stderr, @"	-Compare filename (to check results)\n");
-      return 1;
-    }
-  xml = [NSData dataWithContentsOfFile: file];
-  if (xml == nil)
-    {
-      GSPrintf(stderr, @"Unable to load XML from file '%@'\n", file);
-      return 1;
-    }
-
-  coder = [GWSSOAPCoder new];
-  [coder setDebug: [defs boolForKey: @"Debug"]];
-
-  result = [coder parseMessage: xml];
-  if (result == nil)
-    {
-      GSPrintf(stderr, @"Failed to decode data from file '%@'\n", file);
-      return 1;
-    }
-  
-  file = [defs objectForKey: @"Record"];
+  file = [defs stringForKey: @"Encode"];
   if (file != nil)
     {
-      if (NO == [result writeToFile: file atomically: NO])
+      method = [defs stringForKey: @"Method"];
+      if (method == nil)
 	{
-          GSPrintf(stderr, @"Failed to record result to file '%@'\n", file);
-          return 1;
+	  file = nil;	// Can't encode without a method/operation
 	}
-    }
-
-  file = [defs objectForKey: @"Compare"];
-  if (file == nil)
-    {
-      GSPrintf(stdout, @"%@", result);
+      wsdl = [defs stringForKey: @"WSDL"];
     }
   else
     {
-      NSDictionary	*old;
-
-      old = [NSDictionary dictionaryWithContentsOfFile: file];
-      if (old == nil)
+      method = nil;
+      wsdl = nil;
+      file = [defs stringForKey: @"Decode"];
+      if (file == nil)
 	{
-          GSPrintf(stderr, @"Failed to load dictionary from file '%@'\n", file);
-          return 1;
+          file = [defs stringForKey: @"File"];
 	}
-      if ([old isEqual: result] == NO)
+    }
+
+  if (file == nil)
+    {
+      GSPrintf(stderr, @"Usage ... testGWSSOAPCoder -Decode filename\n");
+      GSPrintf(stderr, @"or ...    testGWSSOAPCoder -Encode filename\n");
+      GSPrintf(stderr, @"	-Record filename (to store results)\n");
+      GSPrintf(stderr, @"	-Compare filename (to check results)\n");
+      GSPrintf(stderr, @"	-Method name (method/operation to use)\n");
+// FIXME ... add support for encoding/decoding in conjunction with WSDL
+//      GSPrintf(stderr, @"	-WSDL filename (for WSDL)\n");
+      return 1;
+    }
+
+  if (method == nil)
+    {
+      GWSSOAPCoder          *coder;
+      NSData                *xml;
+      NSMutableDictionary   *result;
+
+      xml = [NSData dataWithContentsOfFile: file];
+      if (xml == nil)
 	{
-          GSPrintf(stderr, @"Decode result does not match file '%@'\n", file);
-          return 1;
+	  GSPrintf(stderr, @"Unable to load XML from file '%@'\n", file);
+	  return 1;
+	}
+
+      coder = [GWSSOAPCoder new];
+      [coder setDebug: [defs boolForKey: @"Debug"]];
+
+      result = [coder parseMessage: xml];
+      if (result == nil)
+	{
+	  GSPrintf(stderr, @"Failed to decode data from file '%@'\n", file);
+	  return 1;
+	}
+      
+      file = [defs objectForKey: @"Record"];
+      if (file != nil)
+	{
+	  if (NO == [result writeToFile: file atomically: NO])
+	    {
+	      GSPrintf(stderr, @"Failed to record result to file '%@'\n", file);
+	      return 1;
+	    }
+	}
+
+      file = [defs objectForKey: @"Compare"];
+      if (file == nil)
+	{
+	  GSPrintf(stdout, @"%@", result);
+	}
+      else
+	{
+	  NSDictionary	*old;
+
+	  old = [NSDictionary dictionaryWithContentsOfFile: file];
+	  if (old == nil)
+	    {
+	      GSPrintf(stderr, @"Failed to load dictionary from file '%@'\n",
+		file);
+	      return 1;
+	    }
+	  if ([old isEqual: result] == NO)
+	    {
+	      GSPrintf(stderr, @"Decode result does not match file '%@'\n",
+		file);
+	      return 1;
+	    }
+	}
+    }
+  else
+    {
+      NSDictionary	*parameters;
+      NSArray		*order;
+      GWSSOAPCoder	*coder;
+      GWSService	*service;
+      NSData		*result;
+
+      parameters = [NSDictionary dictionaryWithContentsOfFile: file];
+      if (parameters == nil)
+	{
+	  GSPrintf(stderr, @"Unable to read request params from '%@'\n",
+	    file);
+	  return 1;
+	}
+
+      service = [GWSService new];
+      coder = [GWSSOAPCoder new];
+      [service setCoder: coder];
+      [coder release];
+      if (nil == [parameters objectForKey: GWSOrderKey])
+	{
+	  /* Make sure parameteres are consistently ordered so that output
+	   * will be reliable for comparison with recorded data.
+	   */
+	  order = [[parameters allKeys]
+	    sortedArrayUsingSelector: @selector(compare:)];
+	}
+      else
+	{
+	  order = nil;	// Not needed ... already in parameters
+	}
+      result = [service buildRequest: method 
+		          parameters: parameters
+			       order: order];
+
+      file = [defs objectForKey: @"Record"];
+      if (file != nil)
+	{
+	  if (NO == [result writeToFile: file atomically: NO])
+	    {
+	      GSPrintf(stderr, @"Failed to record result to file '%@'\n", file);
+	      return 1;
+	    }
+	}
+
+      file = [defs objectForKey: @"Compare"];
+      if (file == nil)
+	{
+	  GSPrintf(stdout, @"%@", result);
+	}
+      else
+	{
+	  NSData	*old;
+
+	  old = [NSData dataWithContentsOfFile: file];
+	  if (old == nil)
+	    {
+	      GSPrintf(stderr, @"Failed to load xml data from file '%@'\n",
+		file);
+	      return 1;
+	    }
+	  if ([old isEqual: result] == NO)
+	    {
+	      GSPrintf(stderr, @"Decode result does not match file '%@'\n",
+		file);
+	      return 1;
+	    }
 	}
     }
 

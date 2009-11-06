@@ -10,17 +10,17 @@ echo ""
 
 err=0
 
-../obj/testGWSSOAPCoder -File xml1 -Compare pl1
+../obj/testGWSSOAPCoder -Decode xml1 -Compare pl1
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSSOAPCoder -File xml2 -Compare pl2
+../obj/testGWSSOAPCoder -Decode xml2 -Compare pl2
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSSOAPCoder -File xml3 -Compare pl3
+../obj/testGWSSOAPCoder -Decode xml3 -Compare pl3
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
