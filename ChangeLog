@@ -1,3 +1,7 @@
+2009-11-13 Riccardo Mottola <rmottola@users.sf.net>
+
+	* GWSPrivate.h: define NSUInteger also for 10.4
+    
 2009-10-15 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSElement.h:
