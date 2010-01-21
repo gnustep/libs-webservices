@@ -655,7 +655,7 @@ static NSCharacterSet	*ws = nil;
   [_name release];
   _name = name;
   [_qualified release];
-  if (_prefix == nil)
+  if ([_prefix length] == 0)
     {
       _qualified = [_name retain];
     }
