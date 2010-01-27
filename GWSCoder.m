@@ -571,7 +571,10 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
       _oldparser = YES;
     }
   [parser setDelegate: self];
-  [parser parse];
+  if ([parser parse] == NO)
+    {
+      [_stack removeAllObjects];
+    }
   [pool release];
   return [_stack lastObject];
 }
