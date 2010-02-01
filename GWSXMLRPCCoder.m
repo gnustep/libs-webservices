@@ -48,27 +48,15 @@ static NSCharacterSet   *ws;
 {
   GWSElement		*container;
   NSMutableString       *ms;
-  id			o;
 
   [self reset];
   container = [GWSElement new];
-
-  o = [parameters objectForKey: GWSOrderKey];
-  if (o != nil)
-    {
-      if (order != nil && [order isEqual: o] == NO)
-	{
-	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
-	}
-      order = o;
-    }
 
   ms = [self mutableString];
   [ms setString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"];
 
   if ([self fault])
     {
-      // FIXME
       [ms appendString: @"<methodResponse>"];
       [self indent];
       [self nl];
@@ -91,6 +79,17 @@ static NSCharacterSet   *ws;
     {
       unsigned	        c;
       unsigned	        i;
+      id		o;
+
+      o = [parameters objectForKey: GWSOrderKey];
+      if (o != nil)
+	{
+	  if (order != nil && [order isEqual: o] == NO)
+	    {
+	      NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
+	    }
+	  order = o;
+	}
 
       if ([order count] == 0)
 	{
@@ -189,76 +188,98 @@ static NSCharacterSet   *ws;
 {
   GWSElement		*container;
   NSMutableString       *ms;
-  unsigned	        c;
-  unsigned	        i;
-  id			o;
   
   [self reset];
 
   container = [GWSElement new];
 
-  o = [parameters objectForKey: GWSOrderKey];
-  if (o != nil)
-    {
-      if (order != nil)
-	{
-	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
-	}
-      order = o;
-    }
-
   ms = [self mutableString];
   [ms setString: @""];
 
-  if ([order count] == 0)
-    {
-      order = [parameters allKeys];
-    }
-  c = [order count];
   [ms appendString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n"];
   [ms appendString: @"<methodResponse>"];
   [self indent];
   [self nl];
-  [ms appendString: @"<params>"];
-  [self indent];
-  for (i = 0; i < c; i++)
+
+  /* Support building a fault as a response as well as doing it as a request.
+   */
+  if ([self fault])
     {
-      NSString  *k = [order objectAtIndex: i];
-      id        v = [parameters objectForKey: k];
-
-      if (v != nil)
-        {
-          GWSElement    *e;
-
-          [self nl];
-          [ms appendString: @"<param>"];
-          [self indent];
-          [self nl];
-          [ms appendString: @"<value>"];
-          [self indent];
-          [[self delegate] encodeWithCoder: self
-				      item: v
-				     named: @"Result"
-					in: container];
-          if ((e = [container firstChild]) == nil)
-            {
-              [self _appendObject: v];
-            }
-          else
-            {
-              [e encodeWith: self];
-	      [e remove];
-            }
-          [self unindent];
-          [ms appendString: @"</value>"];
-          [self unindent];
-          [self nl];
-          [ms appendString: @"</param>"];
-        }
+      [ms appendString: @"<fault>"];
+      [self indent];
+      [self nl];
+      [ms appendString: @"<value>"];
+      [self _appendObject: parameters];
+      [self unindent];
+      [self nl];
+      [ms appendString: @"</value>"];
+      [self unindent];
+      [self nl];
+      [ms appendString: @"</fault>"];
     }
-  [self unindent];
-  [self nl];
-  [ms appendString: @"</params>"];
+  else
+    {
+      unsigned	        c;
+      unsigned	        i;
+      id		o;
+
+      o = [parameters objectForKey: GWSOrderKey];
+      if (o != nil)
+	{
+	  if (order != nil)
+	    {
+	      NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
+	    }
+	  order = o;
+	}
+
+      if ([order count] == 0)
+	{
+	  order = [parameters allKeys];
+	}
+      c = [order count];
+
+      [ms appendString: @"<params>"];
+      [self indent];
+      for (i = 0; i < c; i++)
+	{
+	  NSString  *k = [order objectAtIndex: i];
+	  id        v = [parameters objectForKey: k];
+
+	  if (v != nil)
+	    {
+	      GWSElement    *e;
+
+	      [self nl];
+	      [ms appendString: @"<param>"];
+	      [self indent];
+	      [self nl];
+	      [ms appendString: @"<value>"];
+	      [self indent];
+	      [[self delegate] encodeWithCoder: self
+					  item: v
+					 named: @"Result"
+					    in: container];
+	      if ((e = [container firstChild]) == nil)
+		{
+		  [self _appendObject: v];
+		}
+	      else
+		{
+		  [e encodeWith: self];
+		  [e remove];
+		}
+	      [self unindent];
+	      [ms appendString: @"</value>"];
+	      [self unindent];
+	      [self nl];
+	      [ms appendString: @"</param>"];
+	    }
+	}
+      [self unindent];
+      [self nl];
+      [ms appendString: @"</params>"];
+    }
   [self unindent];
   [self nl];
   [ms appendString: @"</methodResponse>"];

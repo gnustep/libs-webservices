@@ -757,6 +757,7 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
                                order: (NSArray*)order
 {
   NSData	*result = nil;
+  BOOL		old = _fault;
 
   _fault = YES;
   NS_DURING
@@ -770,6 +771,7 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
       [localException raise];
     }
   NS_ENDHANDLER
+  _fault = old;
   return result;
 }
 
