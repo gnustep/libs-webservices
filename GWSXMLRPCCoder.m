@@ -413,11 +413,6 @@ static NSCharacterSet   *ws;
       NSMutableDictionary       *m;
 
       c = [elem countChildren];
-      if (c < 1)
-        {
-	  [NSException raise: NSGenericException
-		      format: @"struct with no members"];
-        }
       m = [NSMutableDictionary dictionaryWithCapacity: c];
       elem = [elem firstChild];
       while (elem != nil)
@@ -533,7 +528,8 @@ static NSCharacterSet   *ws;
               if ([[elem name] isEqualToString: @"params"] == NO)
                 {
                   [NSException raise: NSGenericException
-                              format: @"params missing in methodCall"];
+		    format: @"found %@ when expecting params in methodCall",
+		    [elem name]];
                 }
 
               params = [NSMutableDictionary dictionaryWithCapacity: c];
