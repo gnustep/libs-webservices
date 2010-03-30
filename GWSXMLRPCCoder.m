@@ -509,7 +509,7 @@ static NSCharacterSet   *ws;
           if ([tree countChildren] > 2)
             {
               [NSException raise: NSGenericException
-                          format: @"too many elements in methodResponse"];
+                          format: @"too many elements in methodCall"];
             }
           elem = [tree firstChild]; 
           if ([[elem name] isEqualToString: @"methodName"] == NO)
