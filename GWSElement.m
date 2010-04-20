@@ -458,6 +458,48 @@ static NSCharacterSet	*ws = nil;
     }
 }
 
+- (BOOL) isAncestorOf: (GWSElement*)other
+{
+  GWSElement	*elem = [other parent];
+
+  while (elem != nil)
+    {
+      if (elem == self)
+	{
+	  return YES;
+	}
+      elem = [elem parent];
+    }
+  return NO;
+}
+
+- (BOOL) isDescendantOf: (GWSElement*)other
+{
+  if (other != nil)
+    {
+      GWSElement	*elem = _parent;
+
+      while (elem != nil)
+	{
+	  if (elem == other)
+	    {
+	      return YES;
+	    }
+	  elem = [elem parent];
+	}
+    }
+  return NO;
+}
+
+- (BOOL) isSiblingOf: (GWSElement*)other
+{
+  if (_parent != nil && [other parent] == _parent)
+    {
+      return YES;
+    }
+  return NO;
+}
+
 - (id) mutableCopyWithZone: (NSZone*)aZone
 {
   GWSElement    *copy;
@@ -526,9 +568,10 @@ static NSCharacterSet	*ws = nil;
 
 - (GWSElement*) nextElement: (NSString*)name
 {
-  GWSElement	*elem = [self firstChild];
+  GWSElement	*elem;
   GWSElement	*up;
 
+  elem = [self firstChild];
   while (elem != nil)
     {
       GWSElement	*found = [elem findElement: name];

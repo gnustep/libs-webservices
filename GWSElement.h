@@ -205,6 +205,18 @@ extern "C" {
  */
 - (void) insertChild: (GWSElement*)child atIndex: (unsigned)index;
 
+/** Returns YES if the receiver is a direct or indirect parent of other.
+ */
+- (BOOL) isAncestorOf: (GWSElement*)other;
+
+/** Returns YES if the receiver is a direct or indirect child of other.
+ */
+- (BOOL) isDescendantOf: (GWSElement*)other;
+
+/** Returns YES if the receiver and other share the same direct parent.
+ */
+- (BOOL) isSiblingOf: (GWSElement*)other;
+
 /** Perform a deep copy of the receiver.
  */
 - (id) mutableCopyWithZone: (NSZone*)aZone;
