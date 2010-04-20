@@ -151,6 +151,15 @@ extern "C" {
 - (GWSElement*) parseXML: (NSData*)xml;
 
 /**
+ * Parses simple XSI typed string data into Objective-C objects.<br />
+ * The type is the name of the simple datatype (if nil, 'xsd:string').<br />
+ * The value is the string to be decoded.<br />
+ * The result returned may be an NSString, and NSNumber, an NSDate or
+ * an NSData object.
+ */
+- (id) parseXSI: (NSString*)type string: (NSString*)value;
+
+/**
  * Resets parsing and/or building, releasing any temporary
  * data stored during parse etc.
  */

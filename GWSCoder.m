@@ -579,6 +579,110 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
   return [_stack lastObject];
 }
 
+- (id) parseXSI: (NSString*)type string: (NSString*)value
+{
+  id	result;
+
+  if ([type length] == 0)
+    {
+      type = @"xsd:string";
+    }
+
+  /* Parse simple builtin types from xsd
+   */
+  if ([type isEqualToString: @"xsd:string"] == YES)
+    {
+      result = value;
+    }
+  else if ([type isEqualToString: @"xsd:int"] == YES
+    || [type isEqualToString: @"xsd:integer"] == YES)
+    {
+      result = [NSNumber numberWithInt: [value intValue]];
+    }
+  else if ([type isEqualToString: @"xsd:boolean"] == YES)
+    {
+      if ([value isEqualToString: @"true"]
+	|| [value isEqualToString: @"1"])
+	{
+	  result = [NSNumber numberWithBool: YES];
+	}
+      else
+	{
+	  result = [NSNumber numberWithBool: NO];
+	}
+    }
+  else if ([type isEqualToString: @"xsd:base64Binary"] == YES)
+    {
+      result = [self decodeBase64From: value];
+    }
+  else if ([type isEqualToString: @"xsd:hexBinary"] == YES)
+    {
+      result = [self decodeHexBinaryFrom: value];
+    }
+  else if ([type isEqualToString: @"xsd:dateTime"] == YES
+    || [type isEqualToString: @"xsd:timeInstant"] == YES)
+    {
+      NSTimeZone        *tz;
+      const char	*s;
+      int		year;
+      int		month;
+      int		day;
+      int		hour;
+      int		minute;
+      int		second;
+
+      s = [value UTF8String];
+      if (s != 0 && *s == '-')
+	{
+	  s++;          // Leading '-' in year is ignored.
+	}
+      if (sscanf(s, "%d-%d-%dT%d:%d:%d",
+	&year, &month, &day, &hour, &minute, &second) != 6)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"bad date/time format '%@'", value];
+	}
+      s = strchr(s, ':');
+      s++;
+      s = strchr(s, ':');
+      while (isdigit(*s)) s++;
+      if (*s == 'Z')
+	{
+	  tz = [NSTimeZone timeZoneForSecondsFromGMT: 0];
+	}
+      else if (*s == '+' || *s == '-')
+	{
+	  int   zh = (s[1] - '0') * 10 + s[2] - '0';
+	  int   zm = (s[3] - '0') * 10 + s[4] - '0';
+	  int   zs = ((zh * 60) + zm) * 60;
+
+	  if (*s == '-')
+	    {
+	      zs = - zs;
+	    }
+	  tz = [NSTimeZone timeZoneForSecondsFromGMT: zs];
+	}
+      else
+	{
+	  tz = [self timeZone];
+	}
+
+      result = [[NSCalendarDate alloc] initWithYear: year
+					      month: month
+						day: day
+					       hour: hour
+					     minute: minute
+					     second: second 
+					   timeZone: tz]; 
+    }
+  else if ([type isEqualToString: @"xsd:double"] == YES)
+    {
+      result = [NSNumber numberWithDouble: [value doubleValue]];
+    }
+
+  return result;
+}
+
 - (void) parser: (NSXMLParser *)parser
   didStartMappingPrefix: (NSString *)prefix
   toURI: uri

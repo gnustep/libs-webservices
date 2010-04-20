@@ -4,6 +4,8 @@
 	* GWSElement.m:
 	Add ([-nextElement:]) method to find the next element in the tree
 	with a particular name.
+	Add ([-parseXSI:string:]) method to ease parsing of schema typed
+	information.
 
 2010-02-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
