@@ -155,7 +155,9 @@ extern "C" {
  * The type is the name of the simple datatype (if nil, 'xsd:string').<br />
  * The value is the string to be decoded.<br />
  * The result returned may be an NSString, and NSNumber, an NSDate or
- * an NSData object.
+ * an NSData object.<br />
+ * A result of nil is returned if the value cannot be decoded as the
+ * specified type.
  */
 - (id) parseXSI: (NSString*)type string: (NSString*)value;
 

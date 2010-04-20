@@ -639,8 +639,7 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
       if (sscanf(s, "%d-%d-%dT%d:%d:%d",
 	&year, &month, &day, &hour, &minute, &second) != 6)
 	{
-	  [NSException raise: NSInvalidArgumentException
-		      format: @"bad date/time format '%@'", value];
+	  return nil;
 	}
       s = strchr(s, ':');
       s++;
