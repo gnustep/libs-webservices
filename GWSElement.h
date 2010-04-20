@@ -170,7 +170,9 @@ extern "C" {
 /** A convenience method to search the receiver for an elemement whose
  * name (ignoring any namespace prefix) matches the method argument.<br />
  * The return value could be the receiver itsself, any of it's direct
- * (or indirect) children, or nil if no such element is found.
+ * (or indirect) children, or nil if no such element is found.<br />
+ * The search returns the first element found searching the parse
+ * tree in 'natural' order.
  */
 - (GWSElement*) findElement: (NSString*)name;
 
@@ -228,6 +230,13 @@ extern "C" {
  * If there are no namespaces introduced, this returns an empty dictionary.
  */
 - (NSDictionary*) namespaces;
+
+/** Searches the tree for the next element with the specified name (ignoring
+ * any namespace prefix).  Children of the receiver are searched first,
+ * then siblings of the receiver's parent, then siblings of the parent's
+ * parent and so on.
+ */
+- (GWSElement*) nextElement: (NSString*)name;
 
 /** Returns the parent of this element, or nil if the receiver has no parent.
  */

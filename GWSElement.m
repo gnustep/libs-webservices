@@ -524,6 +524,51 @@ static NSCharacterSet	*ws = nil;
   return [[_namespaces copy] autorelease];
 }
 
+- (GWSElement*) nextElement: (NSString*)name
+{
+  GWSElement	*elem = [self firstChild];
+  GWSElement	*up;
+
+  while (elem != nil)
+    {
+      GWSElement	*found = [elem findElement: name];
+
+      if (found != nil)
+	{
+	  return found;
+	}
+      elem = [elem sibling];
+    }
+  elem = [self sibling];
+  while (elem != nil)
+    {
+      GWSElement	*found = [elem findElement: name];
+
+      if (found != nil)
+	{
+	  return found;
+	}
+      elem = [elem sibling];
+    }
+  up = _parent;
+  while (up != nil)
+    {
+      elem = [up sibling];
+      while (elem != nil)
+	{
+	  GWSElement	*found = [elem findElement: name];
+
+	  if (found != nil)
+	    {
+	      return found;
+	    }
+	  elem = [elem sibling];
+	}
+      up = [up parent];
+    }
+  return nil;
+}
+
 - (GWSElement*) parent
 {
   return _parent;

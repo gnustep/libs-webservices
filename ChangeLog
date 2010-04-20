@@ -1,3 +1,10 @@
+2010-04-20 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.h:
+	* GWSElement.m:
+	Add ([-nextElement:]) method to find the next element in the tree
+	with a particular name.
+
 2010-02-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSXMLRPCCoder.m: permit empty structs
