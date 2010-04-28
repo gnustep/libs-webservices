@@ -695,6 +695,12 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
 }
   
 - (void) parser: (NSXMLParser *)parser
+  foundCDATA: (NSString *)string
+{
+  [[_stack lastObject] addContent: string];
+}
+
+- (void) parser: (NSXMLParser *)parser
   foundCharacters: (NSString *)string
 {
   [[_stack lastObject] addContent: string];
