@@ -6,7 +6,7 @@ over http, https etc (done, but needs more testing etc).
 
 Implement generation of a WSDL document from a GWSDocument (actually, this works but could do with improving).
 
-Implement parsing of schema documents for SOAP type definitions (critical).
+Implement parsing of schema documents for SOAP type definitions (not started).
 
 Apply SOAP type definition information derived from WSDL/schemas to
 encoding/decoding SOAP messages in the 'literal' style.

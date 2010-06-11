@@ -146,7 +146,11 @@ extern "C" {
 - (void) nl;
 
 /**
- * Parses XML data to form a tree of GWSElement objects.
+ * Parses XML data to form a tree of GWSElement objects.<br />
+ * This method uses the [NSXMLParser] class to perform the actual parsing
+ * by acting as a delegate to build a tree of [GWSElement] objects, so you
+ * may use your own subclass and override the NSXMLParser delegate methods
+ * to provide additional control over the parsing operation.
  */
 - (GWSElement*) parseXML: (NSData*)xml;
 
