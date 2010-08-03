@@ -461,7 +461,7 @@ available(NSString *host)
     }
   else
     {
-      /* OK ... parse the body ... which sould contain some sort of data
+      /* OK ... parse the body ... which should contain some sort of data
        * unless we had a 204 response (some services may accept an empty
        * response, even though xmlrpc and soap do not).
        */
@@ -1151,8 +1151,10 @@ available(NSString *host)
   if ([url isKindOfClass: [NSURL class]] == NO)
     {
       NSURL	*u = [NSURL URLWithString: url];
+      NSString	*s = [u scheme];
 
-      if (u == nil)
+      if (u == nil || [u host] == nil
+	|| ([s isEqual: @"http"] == NO && [s isEqual: @"https"] == NO))
 	{
 	  [NSException raise: NSInvalidArgumentException
 		      format: @"Bad URL (%@) supplied", url];

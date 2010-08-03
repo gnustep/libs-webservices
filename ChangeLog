@@ -1,3 +1,8 @@
+2010-08-03 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Check that the URL we set is http or https and there
+	is a host specified (needed as dictionary key).
+
 2010-04-28 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSCoder.m: Add support for parsing CDATA elements as character
