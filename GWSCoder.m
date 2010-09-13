@@ -678,6 +678,10 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
     {
       result = [NSNumber numberWithDouble: [value doubleValue]];
     }
+  else
+    {
+      result = value;
+    }
 
   return result;
 }

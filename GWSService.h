@@ -119,13 +119,21 @@ extern "C" {
  */
 + (NSString*) description;
 
-/** Sets maximum connections to a single host.
+/** Sets maximum active requests to a single host.
  */
 + (void) setPerHostPool: (unsigned)max;
 
-/** Sets the maximum number of simultaneous async connections.
+/** Sets maximum queued requests to a single host.
+ */
++ (void) setPerHostQMax: (unsigned)max;
+
+/** Sets the maximum number of simultaneous active async requests.
  */
 + (void) setPool: (unsigned)max;
+
+/** Sets the maximum number of queued async requests.
+ */
++ (void) setQMax: (unsigned)max;
 
 /**
  * Builds an RPC method call.<br />
@@ -224,8 +232,8 @@ extern "C" {
  * call has not completed.<br />
  * The call may be cancelled by calling the -timeout: method<br />
  * This method returns YES if the call was started,
- * NO if it could not be started
- * (eg because another call is in progress or because of bad arguments).<br />
+ * NO if it could not be started (eg because too many other calls are
+ * in progress or because of bad arguments).<br />
  * NB. For the asynchronous operation to proceed, the current [NSRunLoop]
  * must be run.<br />
  * Parameters must be supplied as for the

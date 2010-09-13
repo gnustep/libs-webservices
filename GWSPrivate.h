@@ -74,10 +74,10 @@ typedef unsigned int NSUInteger;
 @end
 @interface      GWSService (Private)
 + (void) _activate: (NSString*)host;
-- (void) _activate;
+- (BOOL) _activate;
 - (void) _clean;
 - (void) _completed;
-- (void) _enqueue;
+- (BOOL) _enqueue;
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
 - (void) _received;
 - (void) _remove;

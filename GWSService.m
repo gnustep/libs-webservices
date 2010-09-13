@@ -27,7 +27,9 @@
 #import "GWSPrivate.h"
 
 static unsigned perHostPool = 20;
+static unsigned perHostQMax = 200;
 static unsigned	pool = 200;
+static unsigned	qMax = 2000;
 static unsigned	activeCount = 0;
 
 static NSMutableDictionary	*active = nil;
@@ -92,23 +94,23 @@ available(NSString *host)
     }
 }
 
-- (void) _activate
+- (BOOL) _activate
 {
   NSString		*host;
-  NSMutableArray	*queue;
+  NSMutableArray	*hostQueue;
 
   /* Add self to active list.
    * Keep the count of active requests up to date.
    */
   host = [_connectionURL host];
-  queue = [active objectForKey: host];
-  if (queue == nil)
+  hostQueue = [active objectForKey: host];
+  if (hostQueue == nil)
     {
-      queue = [NSMutableArray new];
-      [active setObject: queue forKey: host];
-      [queue release];
+      hostQueue = [NSMutableArray new];
+      [active setObject: hostQueue forKey: host];
+      [hostQueue release];
     }
-  [queue addObject: self];
+  [hostQueue addObject: self];
   activeCount++;
 
   /* The next two lines will do nothing if the receiver was not
@@ -215,6 +217,7 @@ available(NSString *host)
       [handle loadInBackground];
 #endif
     }
+  return YES;
 }
 
 - (void) _clean
@@ -300,50 +303,62 @@ available(NSString *host)
     }
 }
 
-- (void) _enqueue
+- (BOOL) _enqueue
 {
-  NSString		*host = [_connectionURL host];
-  NSMutableArray	*queue = [queues objectForKey: host];
-
-  if (queue == nil)
+  if ([queued count] >= qMax)
     {
-      queue = [NSMutableArray new];
-      [queues setObject: queue forKey: host];
-      [queue release];
-    }
-  if (YES == _prioritised)
-    {
-      unsigned	count;
-      unsigned	index;
-
-      count = [queue count];
-      for (index = 0; index < count; index++)
-	{
-	  GWSService	*tmp = [queue objectAtIndex: index];
-
-	  if (tmp->_prioritised == NO)
-	    {
-	      break;
-	    }
-	}
-      [queue insertObject: self atIndex: index];
-
-      count = [queued count];
-      for (index = 0; index < count; index++)
-	{
-	  GWSService	*tmp = [queued objectAtIndex: index];
-
-	  if (tmp->_prioritised == NO)
-	    {
-	      break;
-	    }
-	}
-      [queued insertObject: self atIndex: index];
+      return NO;	// Too many requests queued already
     }
   else
     {
-      [queue addObject: self];
-      [queued addObject: self];
+      NSString		*host = [_connectionURL host];
+      NSMutableArray	*hostQueue = [queues objectForKey: host];
+
+      if ([hostQueue count] >= perHostQMax)
+	{
+	  return NO;	// Too many requests queued already
+	}
+      if (hostQueue == nil)
+	{
+	  hostQueue = [NSMutableArray new];
+	  [queues setObject: hostQueue forKey: host];
+	  [hostQueue release];
+	}
+      if (YES == _prioritised)
+	{
+	  unsigned	count;
+	  unsigned	index;
+
+	  count = [hostQueue count];
+	  for (index = 0; index < count; index++)
+	    {
+	      GWSService	*tmp = [hostQueue objectAtIndex: index];
+
+	      if (tmp->_prioritised == NO)
+		{
+		  break;
+		}
+	    }
+	  [hostQueue insertObject: self atIndex: index];
+
+	  count = [queued count];
+	  for (index = 0; index < count; index++)
+	    {
+	      GWSService	*tmp = [queued objectAtIndex: index];
+
+	      if (tmp->_prioritised == NO)
+		{
+		  break;
+		}
+	    }
+	  [queued insertObject: self atIndex: index];
+	}
+      else
+	{
+	  [hostQueue addObject: self];
+	  [queued addObject: self];
+	}
+      return YES;
     }
 }
 
@@ -564,9 +579,19 @@ available(NSString *host)
   perHostPool = max;
 }
 
++ (void) setPerHostQMax: (unsigned)max
+{
+  perHostQMax = max;
+}
+
 + (void) setPool: (unsigned)max
 {
   pool = max;
+}
+
++ (void) setQMax: (unsigned)max
+{
+  qMax = max;
 }
 
 - (BOOL) beginMethod: (NSString*)method 
@@ -1025,13 +1050,12 @@ available(NSString *host)
 
   if (available([_connectionURL host]) == YES)
     {
-      [self _activate];
+      return [self _activate];
     }
   else
     {
-      [self _enqueue];
+      return [self _enqueue];
     }
-  return YES;
 }
 
 - (void) setCoder: (GWSCoder*)aCoder
