@@ -73,8 +73,8 @@ typedef unsigned int NSUInteger;
 - (void) _remove;
 @end
 @interface      GWSService (Private)
-+ (void) _activate: (NSString*)host;
-- (BOOL) _activate;
++ (void) _run: (NSString*)host;
+- (void) _activate;
 - (void) _clean;
 - (void) _completed;
 - (BOOL) _enqueue;
@@ -83,6 +83,7 @@ typedef unsigned int NSUInteger;
 - (void) _remove;
 - (void) _setProblem: (NSString*)s;
 - (NSString*) _setupFrom: (GWSElement*)element in: (id)section;
+- (void) _start;
 @end
 @interface      GWSType (Private)
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;

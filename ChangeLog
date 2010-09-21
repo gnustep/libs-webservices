@@ -1,3 +1,8 @@
+2010-09-21 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Protect global queue data structures with lock so that
+	queueing of requests is thread-safe.
+
 2010-08-03 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Check that the URL we set is http or https and there

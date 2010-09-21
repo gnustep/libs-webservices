@@ -26,6 +26,7 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
+static NSRecursiveLock	*queueLock = nil;
 static unsigned perHostPool = 20;
 static unsigned perHostQMax = 200;
 static unsigned	pool = 200;
@@ -38,6 +39,7 @@ static NSMutableArray		*queued = nil;
 
 /* Return YES if there is an available slot to send a request to the
  * specified host, NO otherwise.
+ * The global lock must be locked before this is called.
  */
 static BOOL
 available(NSString *host)
@@ -67,19 +69,26 @@ available(NSString *host)
 #endif
 
 @implementation	GWSService (Private)
-+ (void) _activate: (NSString*)host
++ (void) _run: (NSString*)host
 {
+  NSMutableArray	*a = nil;
+
+  [queueLock lock];
   if (activeCount < pool && [queued count] > 0)
     {
       unsigned	i;
 
       if (available(host) == YES)
 	{
-	  NSArray	*a = [queues objectForKey: host];
+	  NSArray	*q = [queues objectForKey: host];
 
-	  if ([a count] > 0)
+	  if ([q count] > 0)
 	    {
-	      [[a objectAtIndex: 0] _activate];
+	      GWSService	*svc = [q objectAtIndex: 0];
+
+	      [svc _activate];
+	      if (nil == a) a = [[NSMutableArray alloc] initWithCapacity: 100];
+	      [a addObject: svc];
 	    }
 	}
       for (i = 0; activeCount < pool && i < [queued count]; i++)
@@ -89,12 +98,19 @@ available(NSString *host)
 	  if (available([svc->_connectionURL host]) == YES)
 	    {
 	      [svc _activate];
+	      if (nil == a) a = [[NSMutableArray alloc] initWithCapacity: 100];
+	      [a addObject: svc];
 	    }
 	}
     }
+  [queueLock unlock];
+  [a makeObjectsPerformSelector: @selector(_start)];
+  [a release];
 }
 
-- (BOOL) _activate
+/* NB. This must be called with the global lock already locked.
+ */
+- (void) _activate
 {
   NSString		*host;
   NSMutableArray	*hostQueue;
@@ -121,103 +137,6 @@ available(NSString *host)
    */
   [[queues objectForKey: host] removeObjectIdenticalTo: self];
   [queued removeObjectIdenticalTo: self];
-
-  _code = 0;
-  if (_clientCertificate == nil
-#if	defined(GNUSTEP)
-/* GNUstep has better debugging with NSURLHandle than NSURLConnection
- */
-&& [self debug] == NO
-#endif
-    )
-    {
-      NSMutableURLRequest   *request;
-
-      request = [NSMutableURLRequest alloc];
-      request = [request initWithURL: _connectionURL];
-      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
-      [request setHTTPMethod: @"POST"];  
-      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
-      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
-      if (_SOAPAction != nil)
-	{
-	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
-	}
-      if ([_headers count] > 0)
-	{
-	  NSEnumerator	*e = [_headers keyEnumerator];
-	  NSString	*k;
-
-	  while ((k = [e nextObject]) != nil)
-	    {
-	      NSString	*v = [_headers objectForKey: k];
-
-	      [request setValue: v forHTTPHeaderField: k];
-	    }
-	}
-      [request setHTTPBody: _request];
-
-      if (_connection != nil)
-	{
-	  [_connection release];
-	}
-      _connection = [NSURLConnection alloc];
-      _response = [[NSMutableData alloc] init];
-      _connection = [_connection initWithRequest: request delegate: self];
-      [request release];
-    }
-  else
-    {
-#if	defined(GNUSTEP)
-      if (_connection == nil)
-	{
-          _connection = (NSURLConnection*)[[_connectionURL
-	    URLHandleUsingCache: NO] retain];
-	}
-      [handle setDebug: [self debug]];
-      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
-	{
-          [handle setReturnAll: YES];
-	}
-      if (_clientCertificate != nil)
-	{
-	  [handle writeProperty: _clientCertificate 
-			 forKey: GSHTTPPropertyCertificateFileKey];
-	}
-      if (_clientKey != nil)
-	{
-	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
-	}
-      if (_clientPassword != nil)
-	{
-	  [handle writeProperty: _clientPassword
-			 forKey: GSHTTPPropertyPasswordKey];
-	}
-      if (_SOAPAction != nil)
-	{
-	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
-	}
-      [handle addClient: (id<NSURLHandleClient>)self];
-      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
-      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
-      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
-      if ([_headers count] > 0)
-	{
-	  NSEnumerator	*e = [_headers keyEnumerator];
-	  NSString	*k;
-
-	  while ((k = [e nextObject]) != nil)
-	    {
-	      NSString	*v = [_headers objectForKey: k];
-
-	      [handle writeProperty: v forKey: k];
-	    }
-	}
-      [handle writeData: _request];
-      [handle loadInBackground];
-#endif
-    }
-  return YES;
 }
 
 - (void) _clean
@@ -280,6 +199,7 @@ available(NSString *host)
        * completion, in case the delegate wants to schedule
        * another request to the same host.
        */
+      [queueLock lock];
       a = [active objectForKey: host];
       index = [a indexOfObjectIdenticalTo: self];
       if (index == NSNotFound)
@@ -293,8 +213,9 @@ available(NSString *host)
 	{
 	  [a removeObjectAtIndex: index];
 	  activeCount--;
-	  [GWSService _activate: host];	// start any queued requests
 	}
+      [queueLock unlock];
+      [GWSService _run: host];	// start any queued requests for host
 
       if ([_delegate respondsToSelector: @selector(completedRPC:)])
 	{
@@ -305,61 +226,61 @@ available(NSString *host)
 
 - (BOOL) _enqueue
 {
-  if ([queued count] >= qMax)
-    {
-      return NO;	// Too many requests queued already
-    }
-  else
+  BOOL	result = NO;
+
+  [queueLock lock];
+  if ([queued count] < qMax)
     {
       NSString		*host = [_connectionURL host];
       NSMutableArray	*hostQueue = [queues objectForKey: host];
 
-      if ([hostQueue count] >= perHostQMax)
+      if ([hostQueue count] < perHostQMax)
 	{
-	  return NO;	// Too many requests queued already
-	}
-      if (hostQueue == nil)
-	{
-	  hostQueue = [NSMutableArray new];
-	  [queues setObject: hostQueue forKey: host];
-	  [hostQueue release];
-	}
-      if (YES == _prioritised)
-	{
-	  unsigned	count;
-	  unsigned	index;
-
-	  count = [hostQueue count];
-	  for (index = 0; index < count; index++)
+	  if (hostQueue == nil)
 	    {
-	      GWSService	*tmp = [hostQueue objectAtIndex: index];
-
-	      if (tmp->_prioritised == NO)
-		{
-		  break;
-		}
+	      hostQueue = [NSMutableArray new];
+	      [queues setObject: hostQueue forKey: host];
+	      [hostQueue release];
 	    }
-	  [hostQueue insertObject: self atIndex: index];
-
-	  count = [queued count];
-	  for (index = 0; index < count; index++)
+	  if (YES == _prioritised)
 	    {
-	      GWSService	*tmp = [queued objectAtIndex: index];
+	      unsigned	count;
+	      unsigned	index;
 
-	      if (tmp->_prioritised == NO)
+	      count = [hostQueue count];
+	      for (index = 0; index < count; index++)
 		{
-		  break;
+		  GWSService	*tmp = [hostQueue objectAtIndex: index];
+
+		  if (tmp->_prioritised == NO)
+		    {
+		      break;
+		    }
 		}
+	      [hostQueue insertObject: self atIndex: index];
+
+	      count = [queued count];
+	      for (index = 0; index < count; index++)
+		{
+		  GWSService	*tmp = [queued objectAtIndex: index];
+
+		  if (tmp->_prioritised == NO)
+		    {
+		      break;
+		    }
+		}
+	      [queued insertObject: self atIndex: index];
 	    }
-	  [queued insertObject: self atIndex: index];
+	  else
+	    {
+	      [hostQueue addObject: self];
+	      [queued addObject: self];
+	    }
+	  result = YES;
 	}
-      else
-	{
-	  [hostQueue addObject: self];
-	  [queued addObject: self];
-	}
-      return YES;
     }
+  [queueLock unlock];
+  return result;
 }
 
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document
@@ -552,6 +473,106 @@ available(NSString *host)
     }
   return nil;
 }
+
+- (void) _start
+{
+  _code = 0;
+  if (_clientCertificate == nil
+#if	defined(GNUSTEP)
+/* GNUstep has better debugging with NSURLHandle than NSURLConnection
+ */
+&& [self debug] == NO
+#endif
+    )
+    {
+      NSMutableURLRequest   *request;
+
+      request = [NSMutableURLRequest alloc];
+      request = [request initWithURL: _connectionURL];
+      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
+      [request setHTTPMethod: @"POST"];  
+      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
+      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+      if (_SOAPAction != nil)
+	{
+	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
+	}
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [request setValue: v forHTTPHeaderField: k];
+	    }
+	}
+      [request setHTTPBody: _request];
+
+      if (_connection != nil)
+	{
+	  [_connection release];
+	}
+      _connection = [NSURLConnection alloc];
+      _response = [[NSMutableData alloc] init];
+      _connection = [_connection initWithRequest: request delegate: self];
+      [request release];
+    }
+  else
+    {
+#if	defined(GNUSTEP)
+      if (_connection == nil)
+	{
+          _connection = (NSURLConnection*)[[_connectionURL
+	    URLHandleUsingCache: NO] retain];
+	}
+      [handle setDebug: [self debug]];
+      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
+	{
+          [handle setReturnAll: YES];
+	}
+      if (_clientCertificate != nil)
+	{
+	  [handle writeProperty: _clientCertificate 
+			 forKey: GSHTTPPropertyCertificateFileKey];
+	}
+      if (_clientKey != nil)
+	{
+	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
+	}
+      if (_clientPassword != nil)
+	{
+	  [handle writeProperty: _clientPassword
+			 forKey: GSHTTPPropertyPasswordKey];
+	}
+      if (_SOAPAction != nil)
+	{
+	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
+	}
+      [handle addClient: (id<NSURLHandleClient>)self];
+      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
+      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [handle writeProperty: v forKey: k];
+	    }
+	}
+      [handle writeData: _request];
+      [handle loadInBackground];
+#endif
+    }
+}
+
 @end
 
 
@@ -561,6 +582,7 @@ available(NSString *host)
 {
   if (self == [GWSService class])
     {
+      queueLock = [NSRecursiveLock new];
       active = [NSMutableDictionary new];
       queues = [NSMutableDictionary new];
       queued = [NSMutableArray new];
@@ -569,9 +591,14 @@ available(NSString *host)
 
 + (NSString*) description
 {
-  return [NSString stringWithFormat: @"GWSService async request status..."
+  NSString	*result;
+
+  [queueLock lock];
+  result = [NSString stringWithFormat: @"GWSService async request status..."
     @" Pool: %u (per host: %u) Active: %@ Queues: %@",
     pool, perHostPool, active, queues];
+  [queueLock unlock];
+  return result;
 }
 
 + (void) setPerHostPool: (unsigned)max
@@ -1048,12 +1075,17 @@ available(NSString *host)
 					  userInfo: nil
 					   repeats: NO];
 
+  [queueLock lock];
   if (available([_connectionURL host]) == YES)
     {
-      return [self _activate];
+      [self _activate];
+      [queueLock unlock];
+      [self _start];
+      return YES;
     }
   else
     {
+      [queueLock unlock];
       return [self _enqueue];
     }
 }
