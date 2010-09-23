@@ -67,6 +67,8 @@ WebServices_HEADER_FILES += \
 	GWSType.h \
 	WSSUsernameToken.h \
 
+ADDITIONAL_OBJC_LIBS += -lPerformance
+WebServices_LIBRARIES_DEPEND_UPON += -lPerformance
 
 WebServices_AGSDOC_FILES += \
 	WebServices.gsdoc \

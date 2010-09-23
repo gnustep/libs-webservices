@@ -1,3 +1,10 @@
+2010-09-23 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	* GNUmakefile:
+	Start work on allowing RPC's to be performed in multiple threads.
+
 2010-09-21 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Protect global queue data structures with lock so that

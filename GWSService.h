@@ -135,6 +135,11 @@ extern "C" {
  */
 + (void) setQMax: (unsigned)max;
 
+/** Sets whether asynchronous requests are to be performed in separate
+ * threads.
+ */
++ (void) setThreaded: (BOOL)aFlag;
+
 /**
  * Builds an RPC method call.<br />
  * The method argument is the name of the operation to be performed,

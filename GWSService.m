@@ -25,6 +25,7 @@
 
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
+#import <Performance/GSThreadPool.h>
 
 static NSRecursiveLock	*queueLock = nil;
 static unsigned perHostPool = 20;
@@ -32,7 +33,7 @@ static unsigned perHostQMax = 200;
 static unsigned	pool = 200;
 static unsigned	qMax = 2000;
 static unsigned	activeCount = 0;
-
+static GSThreadPool		*thread = nil;
 static NSMutableDictionary	*active = nil;
 static NSMutableDictionary	*queues = nil;
 static NSMutableArray		*queued = nil;
@@ -586,6 +587,9 @@ available(NSString *host)
       active = [NSMutableDictionary new];
       queues = [NSMutableDictionary new];
       queued = [NSMutableArray new];
+      thread = [GSThreadPool new];
+      [thread setThreads: 0];
+      [thread setOperations: 0];
     }
 }
 
@@ -619,6 +623,22 @@ available(NSString *host)
 + (void) setQMax: (unsigned)max
 {
   qMax = max;
+}
+
++ (void) setThreaded: (BOOL)aFlag
+{
+  [queueLock lock];
+  if (YES == aFlag)
+    {
+      [thread setOperations: pool];
+      [thread setThreads: pool];
+    }
+  else
+    {
+      [thread setOperations: 0];
+      [thread setThreads: 0];
+    }
+  [queueLock unlock];
 }
 
 - (BOOL) beginMethod: (NSString*)method 
