@@ -1,4 +1,4 @@
-/** 
+ /** 
    Copyright (C) 2008 Free Software Foundation, Inc.
    
    Written by:  Richard Frith-Macdonald <rfm@gnu.org>
@@ -33,7 +33,8 @@ static unsigned perHostQMax = 200;
 static unsigned	pool = 200;
 static unsigned	qMax = 2000;
 static unsigned	activeCount = 0;
-static GSThreadPool		*thread = nil;
+static GSThreadPool		*ioThreads = nil;
+static GSThreadPool		*workThreads = nil;
 static NSMutableDictionary	*active = nil;
 static NSMutableDictionary	*queues = nil;
 static NSMutableArray		*queued = nil;
@@ -73,39 +74,81 @@ available(NSString *host)
 + (void) _run: (NSString*)host
 {
   NSMutableArray	*a = nil;
+  NSUInteger		index;
+  NSUInteger		count;
 
   [queueLock lock];
   if (activeCount < pool && [queued count] > 0)
     {
-      unsigned	i;
-
       if (available(host) == YES)
 	{
 	  NSArray	*q = [queues objectForKey: host];
 
-	  if ([q count] > 0)
+	  count = [q count];
+	  for (index = 0; index < count; index++)
 	    {
-	      GWSService	*svc = [q objectAtIndex: 0];
+	      GWSService	*svc = [q objectAtIndex: index];
 
-	      [svc _activate];
-	      if (nil == a) a = [[NSMutableArray alloc] initWithCapacity: 100];
-	      [a addObject: svc];
+	      if (svc->_request != nil)
+		{
+		  /* Found a service which is ready to send ...
+		   */
+		  [svc _activate];
+		  if (nil == a)
+		    {
+		      a = [[NSMutableArray alloc] initWithCapacity: 100];
+		    }
+		  [a addObject: svc];
+		  break;
+		}
 	    }
 	}
-      for (i = 0; activeCount < pool && i < [queued count]; i++)
+      for (index = 0; activeCount < pool && index < [queued count]; index++)
 	{
-	  GWSService	*svc = [queued objectAtIndex: i];
+	  GWSService	*svc = [queued objectAtIndex: index];
 
-	  if (available([svc->_connectionURL host]) == YES)
+	  if (svc->_request != nil)
 	    {
-	      [svc _activate];
-	      if (nil == a) a = [[NSMutableArray alloc] initWithCapacity: 100];
-	      [a addObject: svc];
+	      if (available([svc->_connectionURL host]) == YES)
+		{
+		  [svc _activate];
+		  if (nil == a)
+		    {
+		      a = [[NSMutableArray alloc] initWithCapacity: 100];
+		    }
+		  [a addObject: svc];
+		}
 	    }
 	}
     }
   [queueLock unlock];
-  [a makeObjectsPerformSelector: @selector(_start)];
+  count = [a count];
+  if (count > 0)
+    {
+      if ([ioThreads maxThreads] == 0)
+	{
+	  for (index = 0; index < count; index++)
+	    {
+	      GWSService	*svc = [a objectAtIndex: index];
+	    
+	      [svc performSelector: @selector(_start)
+			  onThread: svc->_queueThread
+			withObject: nil
+		     waitUntilDone: NO];
+	    }
+	}
+      else
+	{
+	  for (index = 0; index < count; index++)
+	    {
+	      GWSService	*svc = [a objectAtIndex: index];
+	    
+	      [ioThreads scheduleSelector: @selector(_run)
+			       onReceiver: svc
+			       withObject: nil];
+	    }
+	}
+    }
   [a release];
 }
 
@@ -140,510 +183,9 @@ available(NSString *host)
   [queued removeObjectIdenticalTo: self];
 }
 
-- (void) _clean
-{
-  if (_operation != nil)
-    {
-      [_operation release];
-      _operation = nil;
-    }
-  if (_parameters != nil)
-    {
-      [_parameters release];
-      _parameters = nil;
-    }
-  if (_port != nil)
-    {
-      [_port release];
-      _port = nil;
-    }
-  if (_request != nil)
-    {
-      [_request release];
-      _request = nil;
-    }
-}
-
-- (void) _completed
-{
-  /* We can safely call this more than once, since we do nothing unless
-   * a request is actually in progress.
-   */
-  if (_request != nil)
-    {
-      NSString		*host;
-      NSMutableArray	*a;
-      NSUInteger	index;
-
-      if ([self debug] == YES)
-	{
-	  if (_request != nil)
-	    {
-	      [_result setObject: _request forKey: GWSRequestDataKey];
-	    }
-	  if (_response != nil)
-	    {
-	      [_result setObject: _response forKey: GWSResponseDataKey];
-	    }
-	}
-      [self _clean];
-
-      /* Retain self and host in case the delegate changes the URL
-       * or releases us (or removing self from active list would
-       * cause deallocation).
-       */
-      [[self retain] autorelease];
-      host = [[[_connectionURL host] retain] autorelease];
-
-      /* Now make sure the receiver is no longer active.
-       * This must be done before informing the delegate of
-       * completion, in case the delegate wants to schedule
-       * another request to the same host.
-       */
-      [queueLock lock];
-      a = [active objectForKey: host];
-      index = [a indexOfObjectIdenticalTo: self];
-      if (index == NSNotFound)
-	{
-	  /* Must have timed out while still in local queue.
-	   */
-	  [[queues objectForKey: host] removeObjectIdenticalTo: self];
-	  [queued removeObjectIdenticalTo: self];
-	}
-      else
-	{
-	  [a removeObjectAtIndex: index];
-	  activeCount--;
-	}
-      [queueLock unlock];
-      [GWSService _run: host];	// start any queued requests for host
-
-      if ([_delegate respondsToSelector: @selector(completedRPC:)])
-	{
-	  [_delegate completedRPC: self];
-	}
-    }
-}
-
-- (BOOL) _enqueue
-{
-  BOOL	result = NO;
-
-  [queueLock lock];
-  if ([queued count] < qMax)
-    {
-      NSString		*host = [_connectionURL host];
-      NSMutableArray	*hostQueue = [queues objectForKey: host];
-
-      if ([hostQueue count] < perHostQMax)
-	{
-	  if (hostQueue == nil)
-	    {
-	      hostQueue = [NSMutableArray new];
-	      [queues setObject: hostQueue forKey: host];
-	      [hostQueue release];
-	    }
-	  if (YES == _prioritised)
-	    {
-	      unsigned	count;
-	      unsigned	index;
-
-	      count = [hostQueue count];
-	      for (index = 0; index < count; index++)
-		{
-		  GWSService	*tmp = [hostQueue objectAtIndex: index];
-
-		  if (tmp->_prioritised == NO)
-		    {
-		      break;
-		    }
-		}
-	      [hostQueue insertObject: self atIndex: index];
-
-	      count = [queued count];
-	      for (index = 0; index < count; index++)
-		{
-		  GWSService	*tmp = [queued objectAtIndex: index];
-
-		  if (tmp->_prioritised == NO)
-		    {
-		      break;
-		    }
-		}
-	      [queued insertObject: self atIndex: index];
-	    }
-	  else
-	    {
-	      [hostQueue addObject: self];
-	      [queued addObject: self];
-	    }
-	  result = YES;
-	}
-    }
-  [queueLock unlock];
-  return result;
-}
-
-- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
-{
-  if ((self = [super init]) != nil)
-    {
-      GWSElement        *elem;
-
-      _SOAPAction = @"\"\"";
-      _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
-      _name = [name copy];
-      _document = document;
-      elem = [_document initializing];
-      elem = [elem firstChild];
-      if ([[elem name] isEqualToString: @"documentation"] == YES)
-        {
-          _documentation = [elem retain];
-          elem = [elem sibling];
-          [_documentation remove];
-        }
-      while (elem != nil && [[elem name] isEqualToString: @"port"] == YES)
-        {
-          GWSElement    *used = nil;
-          NSString      *name;
-          NSString      *binding;
-
-          name = [[elem attributes] objectForKey: @"name"];
-          binding = [[elem attributes] objectForKey: @"binding"];
-          if (name == nil)
-            {
-              NSLog(@"Port without a name in WSDL!");
-            }
-          else if (binding == nil)
-            {
-              NSLog(@"Port named '%@' without a binding in WSDL!", name);
-            }
-          else if ([_document bindingWithName: binding create: NO] == nil)
-	    {
-              NSLog(@"Port named '%@' with binding '%@' in service but "
-		@"not in bindings", name, binding);
-	    }
-	  else
-            {
-              GWSPort	*port;
-
-              port = [[GWSPort alloc] _initWithName: name
-					   document: _document
-					       from: elem];
-              if (_ports == nil)
-                {
-                  _ports = [NSMutableDictionary new];
-                }
-              if (port != nil)
-                {
-                  [_ports setObject: port forKey: [port name]];
-                  [port release];
-                }
-              used = elem;
-            }
-          elem = [elem sibling];
-          [used remove];
-        }
-      while (elem != nil)
-        {
-	  NSString	*problem;
-
-	  problem = [_document _validate: elem in: self];
-	  if (problem != nil)
-	    {
-	      NSLog(@"Bad service extensibility: % @", problem);
-	    }
-          if (_extensibility == nil)
-            {
-              _extensibility = [NSMutableArray new];
-            }
-          [_extensibility addObject: elem];
-          elem = [elem sibling];
-          [[_extensibility lastObject] remove];
-        }
-    }
-  return self;
-}
-
-- (void) _received
-{
-  if (_result != nil)
-    {
-      [_result release];
-      _result = nil;
-    }
-
-  if (_code != 200 && [_coder isKindOfClass: [GWSXMLRPCCoder class]] == YES)
-    {
-      NSString	*str;
-
-      str = [NSString stringWithFormat: @"HTTP status %03d", _code];
-      [self _setProblem: str];
-    }
-  else if (_code != 204 && [_response length] == 0)
-    {
-      NSString	*str;
-
-      /* Unless we got a 204 response, we expect to have a body to parse.
-       */
-      if (_code == 200)
-	{
-          str = [NSString stringWithFormat: @"HTTP status 200 but no body"];
-	}
-      else
-	{
-          str = [NSString stringWithFormat: @"HTTP status %03d", _code];
-	}
-      [self _setProblem: str];
-    }
-  else
-    {
-      /* OK ... parse the body ... which should contain some sort of data
-       * unless we had a 204 response (some services may accept an empty
-       * response, even though xmlrpc and soap do not).
-       */
-      NS_DURING
-	{
-	  if ([_delegate respondsToSelector:
-	    @selector(webService:willHandleResponse:)] == YES)
-	    {
-	      NSData	*data;
-
-	      data = [_delegate webService: self willHandleResponse: _response];
-	      if (data != _response)
-		{
-		  [_response release];
-		  _response = [data retain];
-		}
-	    }
-	  _result = [[_coder parseMessage: _response] retain];
-	}
-      NS_HANDLER
-	{
-	  id        reason = [localException reason];
-
-	  _result = [[NSMutableDictionary alloc] initWithObjects: &reason
-						         forKeys: &GWSFaultKey
-							   count: 1];
-	}
-      NS_ENDHANDLER
-    }
-
-  [self _completed];
-}
-
-- (void) _remove
-{
-  _document = nil;
-}
-
-- (void) _setProblem: (NSString*)s
-{
-  if (_result == nil)
-    {
-      _result = [NSMutableDictionary new];
-    }
-  [_result setObject: s forKey: GWSErrorKey];
-}
-
-- (NSString*) _setupFrom: (GWSElement*)element in: (id)section
-{
-  NSString	*n;
-
-  n = [element namespace];
-  if ([n length] == 0)
-    {
-      /* No namespace recorded directly in the element ... 
-       * See if the document has a namespace for the element's prefix.
-       */
-      n = [element prefix];
-      if (n == nil)
-	{
-	  n = @"";
-	}
-      n = [_document namespaceForPrefix: n];
-    }
-  if (n != nil)
-    {
-      GWSExtensibility	*e = [_document extensibilityForNamespace: n];
-
-      if (e != nil)
-	{
-	  return [e validate: element for: _document in: section setup: self];
-	}
-    }
-  return nil;
-}
-
-- (void) _start
-{
-  _code = 0;
-  if (_clientCertificate == nil
-#if	defined(GNUSTEP)
-/* GNUstep has better debugging with NSURLHandle than NSURLConnection
- */
-&& [self debug] == NO
-#endif
-    )
-    {
-      NSMutableURLRequest   *request;
-
-      request = [NSMutableURLRequest alloc];
-      request = [request initWithURL: _connectionURL];
-      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
-      [request setHTTPMethod: @"POST"];  
-      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
-      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
-      if (_SOAPAction != nil)
-	{
-	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
-	}
-      if ([_headers count] > 0)
-	{
-	  NSEnumerator	*e = [_headers keyEnumerator];
-	  NSString	*k;
-
-	  while ((k = [e nextObject]) != nil)
-	    {
-	      NSString	*v = [_headers objectForKey: k];
-
-	      [request setValue: v forHTTPHeaderField: k];
-	    }
-	}
-      [request setHTTPBody: _request];
-
-      if (_connection != nil)
-	{
-	  [_connection release];
-	}
-      _connection = [NSURLConnection alloc];
-      _response = [[NSMutableData alloc] init];
-      _connection = [_connection initWithRequest: request delegate: self];
-      [request release];
-    }
-  else
-    {
-#if	defined(GNUSTEP)
-      if (_connection == nil)
-	{
-          _connection = (NSURLConnection*)[[_connectionURL
-	    URLHandleUsingCache: NO] retain];
-	}
-      [handle setDebug: [self debug]];
-      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
-	{
-          [handle setReturnAll: YES];
-	}
-      if (_clientCertificate != nil)
-	{
-	  [handle writeProperty: _clientCertificate 
-			 forKey: GSHTTPPropertyCertificateFileKey];
-	}
-      if (_clientKey != nil)
-	{
-	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
-	}
-      if (_clientPassword != nil)
-	{
-	  [handle writeProperty: _clientPassword
-			 forKey: GSHTTPPropertyPasswordKey];
-	}
-      if (_SOAPAction != nil)
-	{
-	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
-	}
-      [handle addClient: (id<NSURLHandleClient>)self];
-      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
-      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
-      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
-      if ([_headers count] > 0)
-	{
-	  NSEnumerator	*e = [_headers keyEnumerator];
-	  NSString	*k;
-
-	  while ((k = [e nextObject]) != nil)
-	    {
-	      NSString	*v = [_headers objectForKey: k];
-
-	      [handle writeProperty: v forKey: k];
-	    }
-	}
-      [handle writeData: _request];
-      [handle loadInBackground];
-#endif
-    }
-}
-
-@end
-
-
-@implementation	GWSService
-
-+ (void) initialize
-{
-  if (self == [GWSService class])
-    {
-      queueLock = [NSRecursiveLock new];
-      active = [NSMutableDictionary new];
-      queues = [NSMutableDictionary new];
-      queued = [NSMutableArray new];
-      thread = [GSThreadPool new];
-      [thread setThreads: 0];
-      [thread setOperations: 0];
-    }
-}
-
-+ (NSString*) description
-{
-  NSString	*result;
-
-  [queueLock lock];
-  result = [NSString stringWithFormat: @"GWSService async request status..."
-    @" Pool: %u (per host: %u) Active: %@ Queues: %@",
-    pool, perHostPool, active, queues];
-  [queueLock unlock];
-  return result;
-}
-
-+ (void) setPerHostPool: (unsigned)max
-{
-  perHostPool = max;
-}
-
-+ (void) setPerHostQMax: (unsigned)max
-{
-  perHostQMax = max;
-}
-
-+ (void) setPool: (unsigned)max
-{
-  pool = max;
-}
-
-+ (void) setQMax: (unsigned)max
-{
-  qMax = max;
-}
-
-+ (void) setThreaded: (BOOL)aFlag
-{
-  [queueLock lock];
-  if (YES == aFlag)
-    {
-      [thread setOperations: pool];
-      [thread setThreads: pool];
-    }
-  else
-    {
-      [thread setOperations: 0];
-      [thread setThreads: 0];
-    }
-  [queueLock unlock];
-}
-
-- (BOOL) beginMethod: (NSString*)method 
-           operation: (NSString**)operation
-	        port: (GWSPort**)port
+- (BOOL) _beginMethod: (NSString*)method 
+            operation: (NSString**)operation
+	         port: (GWSPort**)port
 {
   if (_operation != nil)
     {
@@ -748,7 +290,7 @@ available(NSString *host)
       return nil;
     }
 
-  if ([self beginMethod: method operation: 0 port: 0] == NO)
+  if ([self _beginMethod: method operation: 0 port: 0] == NO)
     {
       return nil;
     }
@@ -891,6 +433,637 @@ available(NSString *host)
     }
   [_coder setDebug: [self debug]];
   return [_coder buildRequest: method parameters: _parameters order: order];
+}
+
+- (void) _clean
+{
+  [_timeout release];
+  _timeout = nil;
+  [_prepMethod release];
+  _prepMethod = nil;
+  [_prepParameters release];
+  _prepParameters = nil;
+  [_prepOrder release];
+  _prepOrder = nil;
+  [_queueThread release];
+  _queueThread = nil;
+  [_operation release];
+  _operation = nil;
+  [_parameters release];
+  _parameters = nil;
+  [_port release];
+  _port = nil;
+  [_request release];
+  _request = nil;
+}
+
+- (void) _completed
+{
+  /* We can safely call this more than once, since we do nothing unless
+   * a request is actually in progress.
+   */
+  if (nil == _request)
+    {
+      return;
+    }
+
+  /* Check that this is running in the thread which queued it.
+   */
+  if ([NSThread currentThread] != _queueThread)
+    {
+      [self performSelector: @selector(_completed)
+		   onThread: _queueThread
+		 withObject: nil
+	      waitUntilDone: NO];
+    }
+  else
+    {
+      NSString		*host;
+      NSMutableArray	*a;
+      NSUInteger	index;
+
+      if ([self debug] == YES)
+	{
+	  if (_request != nil)
+	    {
+	      [_result setObject: _request forKey: GWSRequestDataKey];
+	    }
+	  if (_response != nil)
+	    {
+	      [_result setObject: _response forKey: GWSResponseDataKey];
+	    }
+	}
+      [self _clean];
+
+      /* Retain self and host in case the delegate changes the URL
+       * or releases us (or removing self from active list would
+       * cause deallocation).
+       */
+      [[self retain] autorelease];
+      host = [[[_connectionURL host] retain] autorelease];
+
+      /* Now make sure the receiver is no longer active.
+       * This must be done before informing the delegate of
+       * completion, in case the delegate wants to schedule
+       * another request to the same host.
+       */
+      [queueLock lock];
+      a = [active objectForKey: host];
+      index = [a indexOfObjectIdenticalTo: self];
+      if (index == NSNotFound)
+	{
+	  /* Must have timed out while still in local queue.
+	   */
+	  [[queues objectForKey: host] removeObjectIdenticalTo: self];
+	  [queued removeObjectIdenticalTo: self];
+	}
+      else
+	{
+	  [a removeObjectAtIndex: index];
+	  activeCount--;
+	}
+      [queueLock unlock];
+      [GWSService _run: host];	// start any queued requests for host
+
+      if ([_delegate respondsToSelector: @selector(completedRPC:)])
+	{
+	  [_delegate completedRPC: self];
+	}
+    }
+}
+
+- (BOOL) _enqueue
+{
+  BOOL	result = NO;
+
+  [queueLock lock];
+  if ([queued count] < qMax)
+    {
+      NSString		*host = [_connectionURL host];
+      NSMutableArray	*hostQueue = [queues objectForKey: host];
+
+      if ([hostQueue count] < perHostQMax)
+	{
+	  if (hostQueue == nil)
+	    {
+	      hostQueue = [NSMutableArray new];
+	      [queues setObject: hostQueue forKey: host];
+	      [hostQueue release];
+	    }
+	  if (YES == _prioritised)
+	    {
+	      unsigned	count;
+	      unsigned	index;
+
+	      count = [hostQueue count];
+	      for (index = 0; index < count; index++)
+		{
+		  GWSService	*tmp = [hostQueue objectAtIndex: index];
+
+		  if (tmp->_prioritised == NO)
+		    {
+		      break;
+		    }
+		}
+	      [hostQueue insertObject: self atIndex: index];
+
+	      count = [queued count];
+	      for (index = 0; index < count; index++)
+		{
+		  GWSService	*tmp = [queued objectAtIndex: index];
+
+		  if (tmp->_prioritised == NO)
+		    {
+		      break;
+		    }
+		}
+	      [queued insertObject: self atIndex: index];
+	    }
+	  else
+	    {
+	      [hostQueue addObject: self];
+	      [queued addObject: self];
+	    }
+	  result = YES;
+	  /* Make a note of which thread queued the request.
+	   */
+	  _queueThread = [[NSThread currentThread] retain];
+	}
+    }
+  [queueLock unlock];
+  return result;
+}
+
+- (id) _initWithName: (NSString*)name document: (GWSDocument*)document
+{
+  if ((self = [super init]) != nil)
+    {
+      GWSElement        *elem;
+
+      _SOAPAction = @"\"\"";
+      _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
+      _name = [name copy];
+      _document = document;
+      elem = [_document initializing];
+      elem = [elem firstChild];
+      if ([[elem name] isEqualToString: @"documentation"] == YES)
+        {
+          _documentation = [elem retain];
+          elem = [elem sibling];
+          [_documentation remove];
+        }
+      while (elem != nil && [[elem name] isEqualToString: @"port"] == YES)
+        {
+          GWSElement    *used = nil;
+          NSString      *name;
+          NSString      *binding;
+
+          name = [[elem attributes] objectForKey: @"name"];
+          binding = [[elem attributes] objectForKey: @"binding"];
+          if (name == nil)
+            {
+              NSLog(@"Port without a name in WSDL!");
+            }
+          else if (binding == nil)
+            {
+              NSLog(@"Port named '%@' without a binding in WSDL!", name);
+            }
+          else if ([_document bindingWithName: binding create: NO] == nil)
+	    {
+              NSLog(@"Port named '%@' with binding '%@' in service but "
+		@"not in bindings", name, binding);
+	    }
+	  else
+            {
+              GWSPort	*port;
+
+              port = [[GWSPort alloc] _initWithName: name
+					   document: _document
+					       from: elem];
+              if (_ports == nil)
+                {
+                  _ports = [NSMutableDictionary new];
+                }
+              if (port != nil)
+                {
+                  [_ports setObject: port forKey: [port name]];
+                  [port release];
+                }
+              used = elem;
+            }
+          elem = [elem sibling];
+          [used remove];
+        }
+      while (elem != nil)
+        {
+	  NSString	*problem;
+
+	  problem = [_document _validate: elem in: self];
+	  if (problem != nil)
+	    {
+	      NSLog(@"Bad service extensibility: % @", problem);
+	    }
+          if (_extensibility == nil)
+            {
+              _extensibility = [NSMutableArray new];
+            }
+          [_extensibility addObject: elem];
+          elem = [elem sibling];
+          [[_extensibility lastObject] remove];
+        }
+    }
+  return self;
+}
+
+/* Method to be run from thread pool in order to prepare request data
+ * to be sent.
+ */
+- (void) _prepare
+{
+  static NSData		*empty = nil;
+  NSData		*req;
+
+  if (nil == empty)
+    {
+      empty = [NSData new];
+    }
+
+  NS_DURING
+    {
+      req = [self _buildRequest: _prepMethod
+		     parameters: _prepParameters
+			  order: _prepOrder];
+      if ([_delegate respondsToSelector:
+	@selector(webService:willSendRequest:)] == YES)
+	{
+	  req = [_delegate webService: self willSendRequest: req];
+	}
+    }
+  NS_HANDLER
+    {
+      NSLog(@"Problem preparing RPC for %@: %@", self, localException);
+      req = nil;
+    }
+  NS_ENDHANDLER
+
+  /* We can't send a nil request ... so we use an empty data object
+   * instead if necessary.
+   */
+  if (nil == req)
+    {
+      req = empty;
+    }
+  _request = [req retain];
+
+  /* Make sure that this is de-queued and run if possible.
+   */
+  [GWSService _run: [_connectionURL host]];
+}
+
+- (void) _received
+{
+  if (_result != nil)
+    {
+      [_result release];
+      _result = nil;
+    }
+
+  if (_code != 200 && [_coder isKindOfClass: [GWSXMLRPCCoder class]] == YES)
+    {
+      NSString	*str;
+
+      str = [NSString stringWithFormat: @"HTTP status %03d", _code];
+      [self _setProblem: str];
+    }
+  else if (_code != 204 && [_response length] == 0)
+    {
+      NSString	*str;
+
+      /* Unless we got a 204 response, we expect to have a body to parse.
+       */
+      if (_code == 200)
+	{
+          str = [NSString stringWithFormat: @"HTTP status 200 but no body"];
+	}
+      else
+	{
+          str = [NSString stringWithFormat: @"HTTP status %03d", _code];
+	}
+      [self _setProblem: str];
+    }
+  else
+    {
+      /* OK ... parse the body ... which should contain some sort of data
+       * unless we had a 204 response (some services may accept an empty
+       * response, even though xmlrpc and soap do not).
+       */
+      NS_DURING
+	{
+	  if ([_delegate respondsToSelector:
+	    @selector(webService:willHandleResponse:)] == YES)
+	    {
+	      NSData	*data;
+
+	      data = [_delegate webService: self willHandleResponse: _response];
+	      if (data != _response)
+		{
+		  [_response release];
+		  _response = [data retain];
+		}
+	    }
+	  _result = [[_coder parseMessage: _response] retain];
+	}
+      NS_HANDLER
+	{
+	  id        reason = [localException reason];
+
+	  _result = [[NSMutableDictionary alloc] initWithObjects: &reason
+						         forKeys: &GWSFaultKey
+							   count: 1];
+	}
+      NS_ENDHANDLER
+    }
+
+  [self _completed];
+}
+
+- (void) _remove
+{
+  _document = nil;
+}
+
+- (void) _run
+{
+  NSRunLoop	*loop;
+
+  [self _start];
+  loop = [NSRunLoop currentRunLoop];
+  while (_timer != nil)
+    {
+      [loop runMode: NSDefaultRunLoopMode beforeDate: _timeout];
+    }
+}
+
+- (void) _setProblem: (NSString*)s
+{
+  if (_result == nil)
+    {
+      _result = [NSMutableDictionary new];
+    }
+  [_result setObject: s forKey: GWSErrorKey];
+}
+
+- (NSString*) _setupFrom: (GWSElement*)element in: (id)section
+{
+  NSString	*n;
+
+  n = [element namespace];
+  if ([n length] == 0)
+    {
+      /* No namespace recorded directly in the element ... 
+       * See if the document has a namespace for the element's prefix.
+       */
+      n = [element prefix];
+      if (n == nil)
+	{
+	  n = @"";
+	}
+      n = [_document namespaceForPrefix: n];
+    }
+  if (n != nil)
+    {
+      GWSExtensibility	*e = [_document extensibilityForNamespace: n];
+
+      if (e != nil)
+	{
+	  return [e validate: element for: _document in: section setup: self];
+	}
+    }
+  return nil;
+}
+
+- (void) _start
+{
+  /* Stop the timer which was handling the timeout for a request in the
+   * queue (waiting to be sent).  This timer may have been running in the
+   * main thread and we may now be running in another thread.
+   */
+  [_timer invalidate];
+
+  /* Start a new timer to handle a timeout for the active request in
+   * the current thread.
+   */
+  _timer = [NSTimer
+    scheduledTimerWithTimeInterval: [_timeout timeIntervalSinceNow]
+    target: self
+    selector: @selector(timeout:)
+    userInfo: nil
+    repeats: NO];
+
+  /* Now we initiate the asynchronous I/O process.
+   */
+  _code = 0;
+  if (_clientCertificate == nil
+#if	defined(GNUSTEP)
+/* GNUstep has better debugging with NSURLHandle than NSURLConnection
+ */
+&& [self debug] == NO
+#endif
+    )
+    {
+      NSMutableURLRequest   *request;
+
+      request = [NSMutableURLRequest alloc];
+      request = [request initWithURL: _connectionURL];
+      [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
+      [request setHTTPMethod: @"POST"];  
+      [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
+      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+      if (_SOAPAction != nil)
+	{
+	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
+	}
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [request setValue: v forHTTPHeaderField: k];
+	    }
+	}
+      [request setHTTPBody: _request];
+
+      if (_connection != nil)
+	{
+	  [_connection release];
+	}
+      _connection = [NSURLConnection alloc];
+      _response = [[NSMutableData alloc] init];
+      _connection = [_connection initWithRequest: request delegate: self];
+      [request release];
+    }
+  else
+    {
+#if	defined(GNUSTEP)
+      if (_connection == nil)
+	{
+          _connection = (NSURLConnection*)[[_connectionURL
+	    URLHandleUsingCache: NO] retain];
+	}
+      [handle setDebug: [self debug]];
+      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
+	{
+          [handle setReturnAll: YES];
+	}
+      if (_clientCertificate != nil)
+	{
+	  [handle writeProperty: _clientCertificate 
+			 forKey: GSHTTPPropertyCertificateFileKey];
+	}
+      if (_clientKey != nil)
+	{
+	  [handle writeProperty: _clientKey forKey: GSHTTPPropertyKeyFileKey];
+	}
+      if (_clientPassword != nil)
+	{
+	  [handle writeProperty: _clientPassword
+			 forKey: GSHTTPPropertyPasswordKey];
+	}
+      if (_SOAPAction != nil)
+	{
+	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
+	}
+      [handle addClient: (id<NSURLHandleClient>)self];
+      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
+      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
+      if ([_headers count] > 0)
+	{
+	  NSEnumerator	*e = [_headers keyEnumerator];
+	  NSString	*k;
+
+	  while ((k = [e nextObject]) != nil)
+	    {
+	      NSString	*v = [_headers objectForKey: k];
+
+	      [handle writeProperty: v forKey: k];
+	    }
+	}
+      [handle writeData: _request];
+      [handle loadInBackground];
+#endif
+    }
+}
+
+@end
+
+
+@implementation	GWSService
+
++ (void) initialize
+{
+  if (self == [GWSService class])
+    {
+      queueLock = [NSRecursiveLock new];
+      active = [NSMutableDictionary new];
+      queues = [NSMutableDictionary new];
+      queued = [NSMutableArray new];
+      ioThreads = [GSThreadPool new];
+      [ioThreads setThreads: 0];
+      [ioThreads setOperations: 0];
+      workThreads = [GSThreadPool new];
+      [workThreads setThreads: 0];
+      [workThreads setOperations: pool * 2];
+    }
+}
+
++ (NSString*) description
+{
+  NSString	*result;
+
+  [queueLock lock];
+  result = [NSString stringWithFormat: @"GWSService async request status..."
+    @" Pool: %u (per host: %u) Active: %@ Queues: %@\nWorkers: %@\nIO: %@",
+    pool, perHostPool, active, queues, workThreads, ioThreads];
+  [queueLock unlock];
+  return result;
+}
+
++ (void) setPerHostPool: (unsigned)max
+{
+  [queueLock lock];
+  if (max < 1)
+    {
+      max = 1;
+    }
+  if (max != perHostPool)
+    {
+      if (max > pool)
+	{
+	  max = pool;
+	}
+      perHostPool = max;
+    }
+  [queueLock unlock];
+}
+
++ (void) setPerHostQMax: (unsigned)max
+{
+  perHostQMax = max;
+}
+
++ (void) setPool: (unsigned)max
+{
+  [queueLock lock];
+  if (max < 1)
+    {
+      max = 1;
+    }
+  if (max != pool)
+    {
+      if (max > perHostPool)
+	{
+	  perHostPool = max;
+	}
+      pool = max;
+    }
+  if ([ioThreads maxThreads] != 0)
+    {
+      [ioThreads setOperations: pool];
+      [ioThreads setThreads: pool];
+    }
+  [workThreads setOperations: pool * 2];
+  [queueLock lock];
+}
+
++ (void) setQMax: (unsigned)max
+{
+  qMax = max;
+}
+
++ (void) setUseIOThreads: (BOOL)aFlag
+{
+  [queueLock lock];
+  if (YES == aFlag)
+    {
+      [ioThreads setOperations: pool];
+      [ioThreads setThreads: pool];
+    }
+  else
+    {
+      [ioThreads setOperations: 0];
+      [ioThreads setThreads: 0];
+    }
+  [queueLock unlock];
+}
+
++ (void) setWorkThreads: (NSUInteger)count
+{
+  [workThreads setThreads: count];
 }
 
 - (NSData*) buildRequest: (NSString*)method 
@@ -1062,8 +1235,6 @@ available(NSString *host)
              timeout: (int)seconds
 	 prioritised: (BOOL)urgent
 {
-  NSData	*req;
-
   if (_result != nil)
     {
       [_result release];
@@ -1074,40 +1245,42 @@ available(NSString *host)
       [_response release];
       _response = nil;
     }
+  _prioritised = urgent;
 
-  req = [self _buildRequest: method parameters: parameters order: order];
-  if (req == nil)
+  /* The timer runs in the thread which queued the request ...
+   * so the loop for that thread needs to be run in order to
+   * deal with timeouts of queued operations.
+   */
+  _timeout = [[NSDate alloc] initWithTimeIntervalSinceNow: seconds];
+  _timer = [NSTimer
+    scheduledTimerWithTimeInterval: [_timeout timeIntervalSinceNow]
+    target: self
+    selector: @selector(timeout:)
+    userInfo: nil
+    repeats: NO];
+
+  _prepMethod = [method copy]; 
+  _prepParameters = [parameters copy]; 
+  _prepOrder = [order copy]; 
+  
+  if (NO == [self _enqueue])
     {
-      [self _clean];
+      [_prepMethod release];
+      [_prepParameters release];
+      [_prepOrder release];
       return NO;
     }
 
-  if ([_delegate respondsToSelector:
-    @selector(webService:willSendRequest:)] == YES)
-    {
-      req = [_delegate webService: self willSendRequest: req];
-    }
-  _request = [req retain];
-  _prioritised = urgent;
-  _timer = [NSTimer scheduledTimerWithTimeInterval: seconds
-					    target: self
-					  selector: @selector(timeout:)
-					  userInfo: nil
-					   repeats: NO];
+  /* Get the request data built ... either asynchronously in another
+   * thread or synchronously in this one if threading is not enabled.
+   * At the end of the -_prepare method the sending of the request
+   * is automatically started if possible.
+   */
+  [workThreads scheduleSelector: @selector(_prepare)
+		     onReceiver: self
+		     withObject: nil];
 
-  [queueLock lock];
-  if (available([_connectionURL host]) == YES)
-    {
-      [self _activate];
-      [queueLock unlock];
-      [self _start];
-      return YES;
-    }
-  else
-    {
-      [queueLock unlock];
-      return [self _enqueue];
-    }
+  return YES;
 }
 
 - (void) setCoder: (GWSCoder*)aCoder
@@ -1374,7 +1547,20 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
       [_response release];
       _response = nil;
     }
-  [self _received];
+  if ([workThreads maxThreads] == 0
+    && [NSThread currentThread] != _queueThread)
+    {
+      [self performSelector: @selector(_received)
+		   onThread: _queueThread
+		 withObject: nil
+	      waitUntilDone: NO];
+    }
+  else
+    {
+      [workThreads scheduleSelector: @selector(_received)
+			 onReceiver: self
+			 withObject: nil];
+    }
 }
 
 - (NSString*) webServiceOperation
@@ -1470,7 +1656,20 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   [_response release];
   _response = [[handle availableResourceData] retain];
   _code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
-  [self _received];
+  if ([workThreads maxThreads] == 0
+    && [NSThread currentThread] != _queueThread)
+    {
+      [self performSelector: @selector(_received)
+		   onThread: _queueThread
+		 withObject: nil
+	      waitUntilDone: NO];
+    }
+  else
+    {
+      [workThreads scheduleSelector: @selector(_received)
+			 onReceiver: self
+			 withObject: nil];
+    }
 }
 @end
 #endif

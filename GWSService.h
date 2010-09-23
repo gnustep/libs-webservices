@@ -34,6 +34,7 @@ extern "C" {
 
 @class  NSMutableData;
 @class  NSString;
+@class  NSThread;
 @class  NSTimer;
 @class  NSTimeZone;
 @class  NSURL;
@@ -113,6 +114,11 @@ extern "C" {
   NSDictionary		*_headers;
   NSMutableDictionary	*_extra;
   int			_code;
+  NSDate		*_timeout;
+  NSString		*_prepMethod;
+  NSDictionary		*_prepParameters;
+  NSArray		*_prepOrder;
+  NSThread		*_queueThread;
 }
 
 /** Returns a description of the current asynchronous service queues.
@@ -135,10 +141,27 @@ extern "C" {
  */
 + (void) setQMax: (unsigned)max;
 
-/** Sets whether asynchronous requests are to be performed in separate
- * threads.
+/** Sets whether the I/O for requests is to be performed in separate
+ * threads rather than the thread which queued the RPC.<br />
+ * Setting this option causes a large thread pool (one thread for each
+ * active async request) to be created and used to handle the I/O to
+ * the remote host.<br />
+ * If no work threads (see +setWorkThreads:) are enabled, the parsing
+ * of the response to the request is performed in the same thread that
+ * performed the I/O.<br />
+ * In any case, the -completedRPC: callback is sent to the thread which
+ * originally queued the RPC.
  */
-+ (void) setThreaded: (BOOL)aFlag;
++ (void) setUseIOThreads: (BOOL)aFlag;
+
+/** Sets the number of threads to be used for the building of request
+ * data to be POSTed to the remote system, the parsing of data received
+ * in response to that POST, and the callbacks to the delegate involved
+ * up to but excluding the execution of the -completedRPC: callback.<br />
+ * By default this is zero ... so request data is built, and response
+ * data is parsed, in the thread which queues the request.
+ */
++ (void) setWorkThreads: (NSUInteger)count;
 
 /**
  * Builds an RPC method call.<br />

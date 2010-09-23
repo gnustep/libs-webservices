@@ -2,6 +2,14 @@
 
 	* GWSService.h:
 	* GWSService.m:
+	Support two separate sets of threading ... one pool for handling the
+	HTTP/HTTPS requests themselves, and one for doing the work of building
+	a request from parameters and parsing the response data.
+
+2010-09-23 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
 	* GNUmakefile:
 	Start work on allowing RPC's to be performed in multiple threads.
 
