@@ -539,9 +539,16 @@ available(NSString *host)
   [queueLock lock];
   if ([queued count] < qMax)
     {
-      NSString		*host = [_connectionURL host];
-      NSMutableArray	*hostQueue = [queues objectForKey: host];
+      NSString		*host;
+      NSMutableArray	*hostQueue;
 
+      host = [_connectionURL host];
+      if (nil == host)
+	{
+	  [queueLock unlock];
+	  return NO;		// No destination ... can't enqeue
+	}
+      hostQueue = [queues objectForKey: host];
       if ([hostQueue count] < perHostQMax)
 	{
 	  if (hostQueue == nil)
@@ -714,6 +721,11 @@ available(NSString *host)
       req = empty;
     }
   _request = [req retain];
+}
+
+- (void) _prepareAndRun
+{
+  [self _prepare];
 
   /* Make sure that this is de-queued and run if possible.
    */
@@ -1263,6 +1275,16 @@ available(NSString *host)
   _prepParameters = [parameters copy]; 
   _prepOrder = [order copy]; 
   
+  if (nil == _connectionURL)
+    {
+      /* We have nowhere to connect to ... so try building the request in
+       * case the build process is also going to set the connection URL.
+       * We have to do that now since we can't queue the request until we
+       * know where it's going.
+       */
+      [self _prepare];
+    }
+
   if (NO == [self _enqueue])
     {
       [_prepMethod release];
@@ -1271,15 +1293,17 @@ available(NSString *host)
       return NO;
     }
 
-  /* Get the request data built ... either asynchronously in another
-   * thread or synchronously in this one if threading is not enabled.
-   * At the end of the -_prepare method the sending of the request
-   * is automatically started if possible.
-   */
-  [workThreads scheduleSelector: @selector(_prepare)
-		     onReceiver: self
-		     withObject: nil];
-
+  if (nil == _request)
+    {
+      /* Get the request data built ... either asynchronously in another
+       * thread or synchronously in this one if threading is not enabled.
+       * At the end of the -_prepareAndRun method the sending of the request
+       * is automatically started if possible.
+       */
+      [workThreads scheduleSelector: @selector(_prepareAndRun)
+			 onReceiver: self
+			 withObject: nil];
+    }
   return YES;
 }
 

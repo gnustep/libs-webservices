@@ -1,3 +1,11 @@
+2010-09-24 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Fix bug sending RPC with late setting of
+	connection URL (during build of request data).
+	* GWSElement.h: Change ivar layout and add a few convenience methods.
+	* GWSElement.m: Rewrite to store children in linked list rather than
+	array for faster access.
+
 2010-09-23 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

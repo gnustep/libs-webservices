@@ -29,25 +29,36 @@
 @implementation GWSElement
 
 static NSCharacterSet	*ws = nil;
+static SEL 		cimSel = 0;
+static BOOL		(*cimImp)(id, SEL, unichar) = 0;
+static Class		GWSElementClass = Nil;
 
 + (void) initialize
 {
-  ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
+  if ([GWSElement class] == self)
+    {
+      GWSElementClass = self;
+      ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
+      cimSel = @selector(characterIsMember:);
+      cimImp = (BOOL(*)(id,SEL,unichar))[ws methodForSelector: cimSel]; 
+    }
 }
+
+#define	MEMBER(X)	(*cimImp)(ws, cimSel, (X))
 
 - (void) addContent: (NSString*)content
 {
-  if ([content length] > 0)
+  NSUInteger	length = [content length];
+
+  if (length > 0)
     {
       if (_content == nil)
         {
-	  unsigned	length = [content length];
-	  unsigned	pos = 0;
+	  NSUInteger	pos = 0;
 
 	  /* Ignore leading white space within an element.
 	   */
-	  while (pos < length
-	    && [ws characterIsMember: [content characterAtIndex: pos]] == YES)
+	  while (pos < length && MEMBER([content characterAtIndex: pos]))
 	    {
 	      pos++;
 	    }
@@ -66,7 +77,31 @@ static NSCharacterSet	*ws = nil;
 
 - (void) addChild: (GWSElement*)child
 {
-  [self insertChild: child atIndex: [_children count]];
+  if (NO == [child isKindOfClass: GWSElementClass])
+    {
+      [NSException raise: NSInvalidArgumentException
+		  format: @"-addChild: child is not a GWSElement"];
+    }
+  if (YES == [child isAncestorOf: self])
+    {
+      [NSException raise: NSInvalidArgumentException
+		  format: @"-addChild: child is ancestor"];
+    }
+  [child retain];
+  [child remove];
+  if (nil == _first)
+    {
+      _first = child;
+    }
+  else
+    {
+      child->_next = _first;
+      child->_prev = _first->_prev;
+      _first->_prev = child;
+      child->_prev->_next = child;
+    }
+  child->_parent = self;
+  _children++;
 }
 
 - (GWSElement*) addChildNamed: (NSString*)name
@@ -116,8 +151,19 @@ static NSCharacterSet	*ws = nil;
     {
       [e addContent: content];
     }
-  [self addChild: e];
-  [e release];
+  if (nil == _first)
+    {
+      _first = e;
+    }
+  else
+    {
+      e->_next = _first;
+      e->_prev = _first->_prev;
+      e->_next->_prev = e;
+      e->_prev->_next = e;
+    }
+  e->_parent = self;
+  _children++;
   return e;
 }
 
@@ -141,14 +187,29 @@ static NSCharacterSet	*ws = nil;
   return [[_attributes copy] autorelease];
 }
 
-- (GWSElement*) childAtIndex: (unsigned)index
+- (GWSElement*) childAtIndex: (NSUInteger)index
 {
-  return [_children objectAtIndex: index];
+  if (index >= _children)
+    {
+      [NSException raise: NSRangeException
+		  format: @"-childAtIndex: index out of range"];
+      return nil;
+    }
+  else
+    {
+      GWSElement	*tmp = _first;
+
+      while (index-- > 0)
+	{
+	  tmp = tmp->_next;
+	}
+      return tmp;
+    }
 }
 
 - (NSArray*) children
 {
-  if (_children == nil)
+  if (0 == _children)
     {
       static NSArray	*empty = nil;
 
@@ -158,7 +219,19 @@ static NSCharacterSet	*ws = nil;
 	}
       return empty;
     }
-  return [[_children copy] autorelease];
+  else
+    {
+      NSMutableArray	*m = [NSMutableArray arrayWithCapacity: _children];
+      NSUInteger	counter = _children;
+      GWSElement	*tmp = _first;
+
+      while (counter-- > 0)
+	{
+	  [m addObject: tmp];
+	  tmp = tmp->_next;
+	}
+      return m;
+    }
 }
 
 - (NSString*) content
@@ -169,13 +242,12 @@ static NSCharacterSet	*ws = nil;
     }
   else
     {
-      unsigned	pos = [_content length];
+      NSUInteger	pos = [_content length];
 
       /* Strip trailing white space (leading space was already stripped as
        * content was added).
        */
-      while (pos > 0
-	&& [ws characterIsMember: [_content characterAtIndex: pos-1]] == YES)
+      while (pos > 0 && MEMBER([_content characterAtIndex: pos-1]))
 	{
 	  pos--;
 	}
@@ -183,16 +255,19 @@ static NSCharacterSet	*ws = nil;
     }
 }
 
-- (unsigned) countChildren
+- (NSUInteger) countChildren
 {
-  return [_children count];
+  return _children;
 }
 
 - (void) dealloc
 {
   [_attributes release];
   [_content release];
-  [_children release];
+  while (nil != _first)
+    {
+      [_first remove];
+    }
   [_name release];
   [_namespace release];
   [_namespaces release];
@@ -213,16 +288,16 @@ static NSCharacterSet	*ws = nil;
 {
   if (_literal == nil)
     {
-      unsigned  c = [_children count];
-
-      if (c > 0)
+      if (_children > 0)
         {
-          unsigned      i;
+          NSUInteger	count = _children;
+	  GWSElement	*tmp = _first;
 
           [coder indent];
-          for (i = 0; i < c; i++)
+          while (count-- > 0)
             {
-              [[_children objectAtIndex: i] encodeWith: coder];
+              [tmp encodeWith: coder];
+	      tmp = tmp->_next;
             }
           [coder unindent];
           [coder nl];
@@ -255,7 +330,7 @@ static NSCharacterSet	*ws = nil;
 
       if (_start == nil)
 	{
-	  unsigned	pos = [xml length];
+	  NSUInteger	pos = [xml length];
 
 	  [xml appendString: @"<"];
 	  [xml appendString: _qualified];
@@ -306,7 +381,7 @@ static NSCharacterSet	*ws = nil;
 	  // use cached version of start element
 	  [xml appendString: _start];
 	}
-      if (flag == YES && [_content length] == 0 && [_children count] == 0)
+      if (flag == YES && [_content length] == 0 && _children == 0)
         {
           [xml appendString: @" />"];       // Empty element.
           return YES;
@@ -342,9 +417,10 @@ static NSCharacterSet	*ws = nil;
     }
   else
     {
-      GWSElement	*child = [self firstChild];
+      GWSElement	*child = _first;
+      NSUInteger	count = _children;
 
-      while (child != nil)
+      while (count-- > 0)
 	{
 	  GWSElement	*found = [child findElement: name];
 
@@ -352,7 +428,7 @@ static NSCharacterSet	*ws = nil;
 	    {
 	      return found;
 	    }
-	  child = [child sibling];
+	  child = child->_next;
 	}
       return nil;
     }
@@ -360,20 +436,28 @@ static NSCharacterSet	*ws = nil;
 
 - (GWSElement*) firstChild
 {
-  if ([_children count] == 0)
-    {
-      return nil;
-    }
-  return [_children objectAtIndex: 0];
+  return _first;
 }
 
-- (unsigned) index
+- (NSUInteger) index
 {
-  if (_parent == nil)
+  if (nil != _parent)
     {
-      return NSNotFound;
+      NSUInteger	i = 0;
+      NSUInteger	c = _parent->_children;
+      GWSElement	*tmp = _parent->_first;
+
+      while (c-- > 0)
+	{
+	  if (tmp == self)
+	    {
+	      return i;
+	    }
+	  i++;
+	  tmp = tmp->_next;
+	}
     }
-  return [_parent->_children indexOfObjectIdenticalTo: self];
+  return NSNotFound;
 }
 
 - (id) initWithName: (NSString*)name
@@ -385,6 +469,7 @@ static NSCharacterSet	*ws = nil;
     {
       NSZone    *z = [self zone];
 
+      _next = _prev = self;
       _name = [name copyWithZone: z];
       _namespace = [namespace copyWithZone: z];
       if (qualified == nil)
@@ -415,67 +500,121 @@ static NSCharacterSet	*ws = nil;
   return self;
 }
 
-- (void) insertChild: (GWSElement*)child atIndex: (unsigned)index
+- (void) insertChild: (GWSElement*)child atIndex: (NSUInteger)index
 {
-  unsigned	count = [_children count];
-
-  if (child->_parent == self)
+  if (index > _children)
     {
-      unsigned  pos = [_children indexOfObjectIdenticalTo: child];
+      [NSException raise: NSRangeException
+		  format: @"-insertChild:atIndex: index out of range"];
+    }
+  else if (NO == [child isKindOfClass: GWSElementClass])
+    {
+      [NSException raise: NSInvalidArgumentException
+		  format: @"-insertChild:atIndex: child is not a GWSElement"];
+    }
+  else if (child->_parent == self)
+    {
+      /* The child is being moved within the list (unless it's the only one)
+       */
+      if (_children > 1)
+	{
+	  GWSElement	*tmp;
 
-      if (index > count)
-	{
-	  [NSException raise: NSInvalidArgumentException
-		      format: @"index too large"];
+	  /* Adjust the start of the list if the child was the first element.
+	   */
+	  if (_first == child)
+	    {
+	      _first = child->_next;
+	    }
+
+	  /* Remove the child from its current position.
+	   */
+	  child->_next->_prev = child->_prev; 
+	  child->_prev->_next = child->_next; 
+
+	  /* Determine insertion point.
+	   */
+	  tmp = _first;
+	  if (0 == index)
+	    {
+	      _first = child;			// Child will be first in list
+	    }
+	  else if (index != _children)
+	    {
+	      while (--index > 0)
+		{
+		  tmp = tmp->_next;
+		}
+	    }
+
+	  /* Insert the child.
+	   */
+	  child->_next = tmp;
+	  child->_prev = tmp->_prev;
+	  child->_next->_prev = child;
+	  child->_prev->_next = child;
 	}
-      if (index > pos)
-	{
-          [_children insertObject: child atIndex: index];
-          [_children removeObjectAtIndex: pos];
-	}
-      else if (index < pos)
-	{
-          [_children insertObject: child atIndex: index];
-          [_children removeObjectAtIndex: pos + 1];
-	}
+    }
+  else if (YES == [child isAncestorOf: self])
+    {
+      [NSException raise: NSInvalidArgumentException
+		  format: @"-insertChild:atIndex: child is ancestor"];
     }
   else
     {
-      if (index > count)
-	{
-	  [NSException raise: NSInvalidArgumentException
-		      format: @"index too large"];
-	}
       [child retain];
       [child remove];
-      if (_children == nil)
+      if (nil == _first)
         {
-          _children = [[NSMutableArray alloc] initWithCapacity: 2];
+          _first = child;
         }
-      [_children insertObject: child atIndex: index];
+      else
+	{
+	  GWSElement	*tmp;
+
+	  tmp = _first;
+	  if (0 == index)
+	    {
+	      _first = child;	// New start of children
+	    }
+	  else if (index != _children)
+	    {
+	      while (--index > 0)
+		{
+		  tmp = tmp->_next;
+		}
+	    }
+	  child->_next = tmp;
+	  child->_prev = tmp->_prev;
+	  child->_next->_prev = child;
+	  child->_prev->_next = child;
+	}
       child->_parent = self;
-      [child release];
+      _children++;
     }
 }
 
 - (BOOL) isAncestorOf: (GWSElement*)other
 {
-  GWSElement	*elem = [other parent];
-
-  while (elem != nil)
+  if (YES == [other isKindOfClass: GWSElementClass])
     {
-      if (elem == self)
+      GWSElement	*elem = other->_parent;
+
+      while (elem != nil)
 	{
-	  return YES;
-	}
-      elem = [elem parent];
+	  if (elem == self)
+	    {
+	      return YES;
+	    }
+	  elem = elem->_parent;
+        }
     }
   return NO;
 }
 
 - (BOOL) isDescendantOf: (GWSElement*)other
 {
-  if (other != nil)
+  if (YES == [other isKindOfClass: GWSElementClass])
     {
       GWSElement	*elem = _parent;
 
@@ -485,26 +624,41 @@ static NSCharacterSet	*ws = nil;
 	    {
 	      return YES;
 	    }
-	  elem = [elem parent];
+	  elem = elem->_parent;
 	}
     }
   return NO;
 }
 
+- (BOOL) isNamed: (NSString*)aName
+{
+  return [_name isEqualToString: aName];
+}
+
 - (BOOL) isSiblingOf: (GWSElement*)other
 {
-  if (_parent != nil && [other parent] == _parent)
+  if (YES == [other isKindOfClass: GWSElementClass])
     {
-      return YES;
+      if (_parent != nil && other->_parent == _parent)
+	{
+	  return YES;
+	}
     }
   return NO;
+}
+
+- (GWSElement*) lastChild
+{
+  if (nil == _first)
+    {
+      return nil;
+    }
+  return _first->_prev;
 }
 
 - (id) mutableCopyWithZone: (NSZone*)aZone
 {
   GWSElement    *copy;
-  unsigned      count;
-  unsigned      index;
 
   copy = [GWSElement allocWithZone: aZone];
   copy = [copy initWithName: _name
@@ -513,14 +667,26 @@ static NSCharacterSet	*ws = nil;
                  attributes: _attributes];
   copy->_content = [_content mutableCopyWithZone: aZone];
   copy->_namespaces = [_namespaces mutableCopyWithZone: aZone];
-  count = [_children count];
-  for (index = 0; index < count; index++)
+  if (_children > 0)
     {
-      GWSElement        *c;
+      NSUInteger	count = _children - 1;
+      GWSElement	*from = _first;
+      GWSElement	*first = [from mutableCopyWithZone: aZone];
+      
+      while (count-- > 0)
+	{
+	  GWSElement        *c;
 
-      c = [[_children objectAtIndex: index] mutableCopyWithZone: aZone];
-      [copy addChild: c];
-      [c release];
+	  from = from->_next;
+	  c = [from mutableCopyWithZone: aZone];
+	  c->_parent = copy;
+	  c->_next = first;
+	  c->_prev = first->_prev;
+	  c->_next->_prev = c;
+	  c->_prev->_next = c;
+	}
+      copy->_first = first;
+      copy->_children = _children;
     }
   return copy;
 }
@@ -568,11 +734,11 @@ static NSCharacterSet	*ws = nil;
 
 - (GWSElement*) nextElement: (NSString*)name
 {
-  GWSElement	*elem;
+  NSUInteger	count = _children;
+  GWSElement	*elem = _first;
   GWSElement	*up;
 
-  elem = [self firstChild];
-  while (elem != nil)
+  while (count-- > 0)
     {
       GWSElement	*found = [elem findElement: name];
 
@@ -580,7 +746,7 @@ static NSCharacterSet	*ws = nil;
 	{
 	  return found;
 	}
-      elem = [elem sibling];
+      elem = elem->_next;
     }
   elem = [self sibling];
   while (elem != nil)
@@ -667,9 +833,18 @@ static NSCharacterSet	*ws = nil;
 		}
 	    }
 	}
-      toSearch = [toSearch parent];
+      toSearch = toSearch->_parent;
     }
   return nil;
+}
+
+- (GWSElement*) previous
+{
+  if (self == _first)
+    {
+      return nil;
+    }
+  return _prev;
 }
 
 - (NSString*) qualified
@@ -681,10 +856,23 @@ static NSCharacterSet	*ws = nil;
 {
   if (_parent != nil)
     {
-      GWSElement    *p = _parent;
-
+      _parent->_children--;
+      if (0 == _parent->_children)
+	{
+	  _parent->_first = nil;
+	}
+      else
+	{
+	  _next->_prev = _prev;
+	  _prev->_next = _next;
+	  if (_parent->_first == self)
+	    {
+	      _parent->_first = _next;
+	    }
+	}
       _parent = nil;
-      [p->_children removeObjectIdenticalTo: self];
+      _next = _prev = self;
+      [self release];
     }
 }
 
@@ -850,13 +1038,20 @@ static NSCharacterSet	*ws = nil;
 
 - (GWSElement*) sibling
 {
-  unsigned      index = [self index];
-
-  if (index == NSNotFound || (index + 1) >= [_parent countChildren])
+  if (nil == _parent)
     {
       return nil;
     }
-  return [_parent childAtIndex: index + 1];
+  else
+    {
+      GWSElement	*sib = _next;
+
+      if (sib == _parent->_first)
+	{
+	  return nil;	// We are the last child
+	}
+      return sib;
+    }
 }
 
 @end

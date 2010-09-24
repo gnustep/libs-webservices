@@ -56,13 +56,16 @@ extern "C" {
 {
 @private
   GWSElement            *_parent;       // not retained.
+  GWSElement            *_next;		// not retained.
+  GWSElement            *_prev;		// not retained.
+  GWSElement		*_first;	// all retained.
+  NSUInteger		_children;
   NSString              *_name;
   NSString              *_namespace;
   NSString		*_prefix;
   NSString              *_qualified;
   NSMutableDictionary   *_attributes;
   NSMutableDictionary   *_namespaces;
-  NSMutableArray        *_children;
   NSMutableString       *_content;
   NSString              *_literal;
   NSString		*_start;
@@ -106,7 +109,7 @@ extern "C" {
 /** Returns the child of the receiver at the specified index in the list
  * of children. Raises an exception if the index does not lie in the list.
  */
-- (GWSElement*) childAtIndex: (unsigned)index;
+- (GWSElement*) childAtIndex: (NSUInteger)index;
 
 /** Returns an autoreleased array containing all the child elements of
  * the receiver.  Returns an empty array if there are no children.
@@ -121,7 +124,7 @@ extern "C" {
 
 /** returns the number of direct child elements.
  */
-- (unsigned) countChildren;
+- (NSUInteger) countChildren;
 
 /** Appends a string representation of the receiver's content
  * and/or child elements to the coder's mutable string.<br />
@@ -184,7 +187,7 @@ extern "C" {
  * which are direct children of its parent.<br />
  * Returns NSNotFound if the receiver has no parent.
  */
-- (unsigned) index;
+- (NSUInteger) index;
 
 /* <init />
  * Initialises the receiver with the name, namespace URI, fully qualified
@@ -203,7 +206,7 @@ extern "C" {
  * inserts it at the new location and then removes it from the old
  * location.
  */
-- (void) insertChild: (GWSElement*)child atIndex: (unsigned)index;
+- (void) insertChild: (GWSElement*)child atIndex: (NSUInteger)index;
 
 /** Returns YES if the receiver is a direct or indirect parent of other.
  */
@@ -213,9 +216,17 @@ extern "C" {
  */
 - (BOOL) isDescendantOf: (GWSElement*)other;
 
+/** Returns YES if the name of the receiver element is equal to aName
+ */
+- (BOOL) isNamed: (NSString*)aName;
+
 /** Returns YES if the receiver and other share the same direct parent.
  */
 - (BOOL) isSiblingOf: (GWSElement*)other;
+
+/** Returns the last child element or nil if there are no children.
+ */
+- (GWSElement*) lastChild;
 
 /** Perform a deep copy of the receiver.
  */
@@ -270,6 +281,11 @@ extern "C" {
  * mapping to the specified namespace.  Returns nil if there is none.
  */
 - (NSString*) prefixForNamespace: (NSString*)uri;
+
+/**
+ * Returns the previous sibling of the receiver (if any).
+ */
+- (GWSElement*) previous;
 
 /** Returns the fully qualified name of the receiver
  * (as set when it was initialised, or using the -setName: and -setPrefix:
