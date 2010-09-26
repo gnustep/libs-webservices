@@ -38,6 +38,7 @@ static GSThreadPool		*workThreads = nil;
 static NSMutableDictionary	*active = nil;
 static NSMutableDictionary	*queues = nil;
 static NSMutableArray		*queued = nil;
+static NSMutableDictionary	*perHostReserve = nil;
 
 /* Return YES if there is an available slot to send a request to the
  * specified host, NO otherwise.
@@ -462,7 +463,7 @@ available(NSString *host)
   /* We can safely call this more than once, since we do nothing unless
    * a request is actually in progress.
    */
-  if (nil == _request)
+  if (nil == _queueThread)
     {
       return;
     }
@@ -482,6 +483,8 @@ available(NSString *host)
       NSMutableArray	*a;
       NSUInteger	index;
 
+      [_timer invalidate];
+      _timer = nil;
       if ([self debug] == YES)
 	{
 	  if (_request != nil)
@@ -534,22 +537,31 @@ available(NSString *host)
 
 - (BOOL) _enqueue
 {
-  BOOL	result = NO;
+  NSString	*host = [_connectionURL host];
+  BOOL		result = NO;
 
-  [queueLock lock];
-  if ([queued count] < qMax)
+  if (nil != host)
     {
-      NSString		*host;
       NSMutableArray	*hostQueue;
+      NSInteger		used;
 
-      host = [_connectionURL host];
-      if (nil == host)
-	{
-	  [queueLock unlock];
-	  return NO;		// No destination ... can't enqeue
-	}
+      [queueLock lock];
+      result = YES;
       hostQueue = [queues objectForKey: host];
-      if ([hostQueue count] < perHostQMax)
+      used = (NSInteger)[hostQueue count];
+      if ([queued count] >= qMax)
+	{
+	  result = NO;	// Too many queued in total.
+	}
+      else if (used >= (NSInteger)perHostQMax)
+	{
+	  result = NO;	// Too many queued for an individual host.
+	}
+      if (NO == result && used < [[perHostReserve objectForKey: host] intValue])
+	{
+	  result = YES;	// Reserved space for this host was not filled.
+	}
+      if (YES == result)
 	{
 	  if (hostQueue == nil)
 	    {
@@ -591,13 +603,10 @@ available(NSString *host)
 	      [hostQueue addObject: self];
 	      [queued addObject: self];
 	    }
-	  result = YES;
-	  /* Make a note of which thread queued the request.
-	   */
-	  _queueThread = [[NSThread currentThread] retain];
+	  _stage = RPCQueued;
 	}
+      [queueLock unlock];
     }
-  [queueLock unlock];
   return result;
 }
 
@@ -607,6 +616,7 @@ available(NSString *host)
     {
       GWSElement        *elem;
 
+      _lock = [NSRecursiveLock new];
       _SOAPAction = @"\"\"";
       _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
       _name = [name copy];
@@ -695,6 +705,8 @@ available(NSString *host)
       empty = [NSData new];
     }
 
+  [_lock lock];
+  _stage = RPCPreparing;
   NS_DURING
     {
       req = [self _buildRequest: _prepMethod
@@ -712,6 +724,7 @@ available(NSString *host)
       req = nil;
     }
   NS_ENDHANDLER
+  [_lock unlock];
 
   /* We can't send a nil request ... so we use an empty data object
    * instead if necessary.
@@ -726,6 +739,7 @@ available(NSString *host)
 - (void) _prepareAndRun
 {
   [self _prepare];
+  _stage = RPCQueued;
 
   /* Make sure that this is de-queued and run if possible.
    */
@@ -806,13 +820,16 @@ available(NSString *host)
 
 - (void) _run
 {
-  NSRunLoop	*loop;
-
   [self _start];
-  loop = [NSRunLoop currentRunLoop];
-  while (_timer != nil)
+  if (RPCActive == _stage)
     {
-      [loop runMode: NSDefaultRunLoopMode beforeDate: _timeout];
+      NSRunLoop	*loop;
+
+      loop = [NSRunLoop currentRunLoop];
+      while (NO == _completedIO)
+	{
+	  [loop runMode: NSDefaultRunLoopMode beforeDate: _timeout];
+	}
     }
 }
 
@@ -856,21 +873,16 @@ available(NSString *host)
 
 - (void) _start
 {
-  /* Stop the timer which was handling the timeout for a request in the
-   * queue (waiting to be sent).  This timer may have been running in the
-   * main thread and we may now be running in another thread.
-   */
-  [_timer invalidate];
-
-  /* Start a new timer to handle a timeout for the active request in
-   * the current thread.
-   */
-  _timer = [NSTimer
-    scheduledTimerWithTimeInterval: [_timeout timeIntervalSinceNow]
-    target: self
-    selector: @selector(timeout:)
-    userInfo: nil
-    repeats: NO];
+  [_lock lock];
+  if (YES == _cancelled)
+    {
+      [_lock unlock];
+      [self _completed];
+      return;
+    }
+  _ioThread = [NSThread currentThread];
+  _stage = RPCActive;
+  [_lock unlock];
 
   /* Now we initiate the asynchronous I/O process.
    */
@@ -984,6 +996,7 @@ available(NSString *host)
       active = [NSMutableDictionary new];
       queues = [NSMutableDictionary new];
       queued = [NSMutableArray new];
+      perHostReserve = [NSMutableDictionary new];
       ioThreads = [GSThreadPool new];
       [ioThreads setThreads: 0];
       [ioThreads setOperations: 0];
@@ -1057,6 +1070,14 @@ available(NSString *host)
   qMax = max;
 }
 
++ (void) setReserve: (unsigned)reserve forHost: (NSString*)host
+{
+  [queueLock lock];
+  [perHostReserve setObject: [NSNumber numberWithInteger: reserve]
+		     forKey: host];
+  [queueLock unlock];
+}
+
 + (void) setUseIOThreads: (BOOL)aFlag
 {
   [queueLock lock];
@@ -1122,14 +1143,11 @@ available(NSString *host)
 
 - (void) dealloc
 {
+  NSAssert(nil == _timer, NSInternalInconsistencyException);
   [self _clean];
   [_coder release];
   _coder = nil;
   [_tz release];
-  if (_timer != nil)
-    {
-      [self timeout: nil];	// Treat as immediate timeout.
-    }
   [_result release];
   if (_connection)
     {
@@ -1144,6 +1162,7 @@ available(NSString *host)
   [_name release];
   [_headers release];
   [_extra release];
+  [_lock release];
   [super dealloc];
 }
 
@@ -1259,11 +1278,19 @@ available(NSString *host)
     }
   _prioritised = urgent;
 
+  _cancelled = NO;
+  _completedIO = NO;
+  _stage = RPCIdle;
+  _timeout = [[NSDate alloc] initWithTimeIntervalSinceNow: seconds];
+
+  /* Make a note of which thread queued the request.
+   */
+  _queueThread = [[NSThread currentThread] retain];
+
   /* The timer runs in the thread which queued the request ...
    * so the loop for that thread needs to be run in order to
    * deal with timeouts of queued operations.
    */
-  _timeout = [[NSDate alloc] initWithTimeIntervalSinceNow: seconds];
   _timer = [NSTimer
     scheduledTimerWithTimeInterval: [_timeout timeIntervalSinceNow]
     target: self
@@ -1287,9 +1314,10 @@ available(NSString *host)
 
   if (NO == [self _enqueue])
     {
-      [_prepMethod release];
-      [_prepParameters release];
-      [_prepOrder release];
+      _stage = RPCIdle;
+      [_timer invalidate];
+      _timer = nil;
+      [self _clean];
       return NO;
     }
 
@@ -1452,26 +1480,47 @@ available(NSString *host)
   _response = nil;
 }
 
+/* This must be performed on the I/O thread.
+ */
+- (void) _cancel
+{
+  if (nil != _ioThread)
+    {
+#if	defined(GNUSTEP)
+      if ([_connection isKindOfClass: [NSURLConnection class]])
+	{
+	  [_connection cancel];
+	}
+      else
+	{
+	  [handle cancelLoadInBackground];
+	}
+#else
+      [_connection cancel];
+#endif
+    }
+}
+
 - (void) timeout: (NSTimer*)t
 {
-  [self retain];
-  [_timer invalidate];
-  _timer = nil;
-  [self _setProblem: @"timed out"];
-#if	defined(GNUSTEP)
-  if ([_connection isKindOfClass: [NSURLConnection class]])
+  NSThread	*cancelThread = nil;
+
+  [_lock lock];
+  if (NO == _cancelled && NO == _completedIO)
     {
-      [_connection cancel];
+      _cancelled = YES;
+      [self _setProblem: @"timed out"];
+      cancelThread = [[_ioThread retain] autorelease];
     }
-  else
+  [_lock unlock];
+
+  if (nil != cancelThread)
     {
-      [handle cancelLoadInBackground];
+      [self performSelector: @selector(_cancel)
+		   onThread: cancelThread
+		 withObject: nil
+	      waitUntilDone: YES];
     }
-#else
-  [_connection cancel];
-#endif
-  [self _completed];
-  [self release];
 }
 
 - (NSTimeZone*) timeZone
@@ -1527,9 +1576,12 @@ didCancelAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (void) connection: (NSURLConnection*)connection
    didFailWithError: (NSError*)error
 {
+  [_lock lock];
+  _completedIO = YES;
+  _ioThread = nil;
+  [_lock unlock];
+
   [self _setProblem: [error localizedDescription]];
-  [_timer invalidate];
-  _timer = nil;
   [self _completed];
 }
 
@@ -1564,8 +1616,12 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) connectionDidFinishLoading: (NSURLConnection*)connection 
 {
-  [_timer invalidate];
-  _timer = nil;
+  [_lock lock];
+  _completedIO = YES;
+  _ioThread = nil;
+  _stage = RPCParsing;
+  [_lock unlock];
+
   if ([_response length] == 0)	// No response received
     {
       [_response release];
@@ -1640,8 +1696,11 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (void) URLHandle: (NSURLHandle*)sender
   resourceDidFailLoadingWithReason: (NSString*)reason
 {
-  [_timer invalidate];
-  _timer = nil;
+  [_lock lock];
+  _completedIO = YES;
+  _ioThread = nil;
+  [_lock unlock];
+
   [handle removeClient: (id<NSURLHandleClient>)self];
   [self _setProblem: reason];
   [self _completed];
@@ -1656,8 +1715,11 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 {
   NSString	*str;
 
-  [_timer invalidate];
-  _timer = nil;
+  [_lock lock];
+  _completedIO = YES;
+  _ioThread = nil;
+  [_lock unlock];
+
   [handle removeClient: (id<NSURLHandleClient>)self];
   str = [handle propertyForKeyIfAvailable: NSHTTPPropertyStatusCodeKey];
   if (str == nil)
@@ -1674,8 +1736,12 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) URLHandleResourceDidFinishLoading: (NSURLHandle*)sender
 {
-  [_timer invalidate];
-  _timer = nil;
+  [_lock lock];
+  _completedIO = YES;
+  _ioThread = nil;
+  _stage = RPCParsing;
+  [_lock unlock];
+
   [handle removeClient: (id<NSURLHandleClient>)self];
   [_response release];
   _response = [[handle availableResourceData] retain];

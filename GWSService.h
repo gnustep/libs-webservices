@@ -104,6 +104,8 @@ extern "C" {
   BOOL			_compact;
   BOOL			_debug;
   BOOL			_prioritised;
+  BOOL			_cancelled;	// Timeout occurred
+  BOOL			_completedIO;	// Comms completed
   NSString		*_operation;
   GWSPort		*_port;
   NSMutableDictionary	*_parameters;
@@ -119,6 +121,15 @@ extern "C" {
   NSDictionary		*_prepParameters;
   NSArray		*_prepOrder;
   NSThread		*_queueThread;
+  NSThread		*_ioThread;
+  NSLock		*_lock;
+  enum {
+    RPCIdle = 0,	// Not performing RPC
+    RPCQueued,		// In local queue waiting to do I/O or prepare
+    RPCPreparing,	// Building request data to send.
+    RPCActive,		// In the I/O thread
+    RPCParsing		// Parsing the response data
+  } _stage;
 }
 
 /** Returns a description of the current asynchronous service queues.
@@ -129,7 +140,9 @@ extern "C" {
  */
 + (void) setPerHostPool: (unsigned)max;
 
-/** Sets maximum queued requests to a single host.
+/** Sets maximum queued requests to any single host.<br />
+ * This may be overridden for an individual host by using
+ * the +setReserve:forHost: method.
  */
 + (void) setPerHostQMax: (unsigned)max;
 
@@ -137,9 +150,19 @@ extern "C" {
  */
 + (void) setPool: (unsigned)max;
 
-/** Sets the maximum number of queued async requests.
+/** Sets the maximum number of queued async requests.<br />
+ * This may be overridden for an individual host by using
+ * the +setReserve:forHost: method.
  */
 + (void) setQMax: (unsigned)max;
+
+/** Sets a minimum queue size for a specific host ... if the queue for
+ * this host is not full, an RPC can be queued even if the normal queue
+ * limits have been reached.<br />
+ * This overrides the values defined by the +setPerHostQMax: and +setQMax:
+ * methods.
+ */
++ (void) setReserve: (unsigned)reserve forHost: (NSString*)host;
 
 /** Sets whether the I/O for requests is to be performed in separate
  * threads rather than the thread which queued the RPC.<br />
