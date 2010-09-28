@@ -1062,7 +1062,7 @@ available(NSString *host)
       [ioThreads setThreads: pool];
     }
   [workThreads setOperations: pool * 2];
-  [queueLock lock];
+  [queueLock unlock];
 }
 
 + (void) setQMax: (unsigned)max
