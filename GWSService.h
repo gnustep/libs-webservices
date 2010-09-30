@@ -166,9 +166,8 @@ extern "C" {
 
 /** Sets whether the I/O for requests is to be performed in separate
  * threads rather than the thread which queued the RPC.<br />
- * Setting this option causes a large thread pool (one thread for each
- * active async request) to be created and used to handle the I/O to
- * the remote host.<br />
+ * Setting this option causes a small group of threads to be created
+ * and used to handle the I/O to the remote host.<br />
  * If no work threads (see +setWorkThreads:) are enabled, the parsing
  * of the response to the request is performed in the same thread that
  * performed the I/O.<br />
