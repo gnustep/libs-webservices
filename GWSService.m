@@ -43,8 +43,8 @@ static BOOL			useIOThreads = NO;
 static NSThread			*ioThreads[IOTHREADS] = { 0 };
 static NSUInteger		ioRequests[IOTHREADS] = { 0 };
 
-static inline NSThread*
-threadAdd()
+static inline void
+threadAdd(NSThread **t)
 {
   unsigned	index = IOTHREADS;
   NSUInteger	offset = NSNotFound;
@@ -61,21 +61,22 @@ threadAdd()
 	}
     }
   ioRequests[offset]++;		// Record that we have added to this thread.
-  return best;
+  *t = best;
 }
 
 static inline void
-threadRem(NSThread *t)
+threadRem(NSThread **t)
 {
   unsigned	index = IOTHREADS;
 
   while (index-- > 0)
     {
-      if (ioThreads[index] == t)
+      if (ioThreads[index] == *t)
 	{
 	  ioRequests[index]--;	// Record that we have removed from this thread.
 	}
     }
+  *t = nil;
 }
 
 /* Return YES if there is an available slot to send a request to the
@@ -176,7 +177,7 @@ available(NSString *host)
 	
 	  if (YES == useIOThreads)
 	    {
-	      svc->_ioThread = threadAdd();
+	      threadAdd(&svc->_ioThread);
 	    }
 	  else
 	    {
@@ -914,7 +915,7 @@ available(NSString *host)
   [_lock lock];
   if (YES == _cancelled)
     {
-      threadRem(_ioThread);
+      threadRem(&_ioThread);
       [_lock unlock];
       [self _completed];
       return;
@@ -1049,6 +1050,19 @@ available(NSString *host)
   result = [NSString stringWithFormat: @"GWSService async request status..."
     @" Pool: %u (per host: %u) Active: %@ Queues: %@\nWorkers: %@\n",
     pool, perHostPool, active, queues, workThreads];
+  if (YES == useIOThreads)
+    {
+      unsigned	i;
+
+      for (i = 0; i < IOTHREADS; i++)
+	{
+	  if (ioRequests[i] > 0)
+	    {
+	      result = [result stringByAppendingFormat:
+		@"  Thread %u ... %u current.\n", i, (unsigned)ioRequests[i]];
+	    }
+	}
+    }
   [queueLock unlock];
   return result;
 }
@@ -1545,7 +1559,7 @@ available(NSString *host)
     {
       _cancelled = YES;
       [self _setProblem: @"timed out"];
-      cancelThread = [[_ioThread retain] autorelease];
+      cancelThread = _ioThread;
     }
   [_lock unlock];
 
@@ -1554,7 +1568,7 @@ available(NSString *host)
       [self performSelector: @selector(_cancel)
 		   onThread: cancelThread
 		 withObject: nil
-	      waitUntilDone: YES];
+	      waitUntilDone: NO];
     }
 }
 
@@ -1613,8 +1627,7 @@ didCancelAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 {
   [_lock lock];
   _completedIO = YES;
-  threadRem(_ioThread);
-  _ioThread = nil;
+  threadRem(&_ioThread);
   [_lock unlock];
 
   [self _setProblem: [error localizedDescription]];
@@ -1654,8 +1667,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 {
   [_lock lock];
   _completedIO = YES;
-  threadRem(_ioThread);
-  _ioThread = nil;
+  threadRem(&_ioThread);
   _stage = RPCParsing;
   [_lock unlock];
 
@@ -1735,8 +1747,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 {
   [_lock lock];
   _completedIO = YES;
-  threadRem(_ioThread);
-  _ioThread = nil;
+  threadRem(&_ioThread);
   [_lock unlock];
 
   [handle removeClient: (id<NSURLHandleClient>)self];
@@ -1755,8 +1766,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
   [_lock lock];
   _completedIO = YES;
-  threadRem(_ioThread);
-  _ioThread = nil;
+  threadRem(&_ioThread);
   [_lock unlock];
 
   [handle removeClient: (id<NSURLHandleClient>)self];
@@ -1777,8 +1787,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 {
   [_lock lock];
   _completedIO = YES;
-  threadRem(_ioThread);
-  _ioThread = nil;
+  threadRem(&_ioThread);
   _stage = RPCParsing;
   [_lock unlock];
 
