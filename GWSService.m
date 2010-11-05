@@ -1047,9 +1047,18 @@ available(NSString *host)
   NSString	*result;
 
   [queueLock lock];
-  result = [NSString stringWithFormat: @"GWSService async request status..."
-    @" Pool: %u (per host: %u) Active: %@ Queues: %@\nWorkers: %@\n",
-    pool, perHostPool, active, queues, workThreads];
+  if (0 == [workThreads maxThreads])
+    {
+      result = [NSString stringWithFormat: @"GWSService async request status..."
+        @" Pool: %u (per host: %u) Active: %@ Queues: %@\n",
+        pool, perHostPool, active, queues];
+    }
+  else
+    {
+      result = [NSString stringWithFormat: @"GWSService async request status..."
+        @" Pool: %u (per host: %u) Active: %@ Queues: %@\nWorkers: %@\n",
+        pool, perHostPool, active, queues, workThreads];
+    }
   if (YES == useIOThreads)
     {
       unsigned	i;
