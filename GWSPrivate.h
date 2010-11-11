@@ -45,9 +45,9 @@
 #import "GWSService.h"
 #import "GWSType.h"
 
-#if	!defined(GNUSTEP)
+#if !defined(GNUSTEP)
 #if (MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4)
-typedef unsigned int NSUInteger;
+typedef int NSInteger;
 #endif
 #endif
 

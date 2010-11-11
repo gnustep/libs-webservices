@@ -1126,8 +1126,15 @@ available(NSString *host)
 + (void) setReserve: (unsigned)reserve forHost: (NSString*)host
 {
   [queueLock lock];
+  
+// is there a better way to maintain backward compatibility?
+#if !defined(GNUSTEP) && (MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4)
+  [perHostReserve setObject: [NSNumber numberWithInt: reserve]
+		     forKey: host];
+#else
   [perHostReserve setObject: [NSNumber numberWithInteger: reserve]
 		     forKey: host];
+#endif
   [queueLock unlock];
 }
 

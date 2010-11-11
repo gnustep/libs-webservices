@@ -1,3 +1,10 @@
+2010-11-11 Riccardo Mottola
+
+	* GWSService.m
+	* GWSPrivate.h
+	* GWSElement.h
+	Improve macros for mac compatibility.
+
 2010-09-26 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:
