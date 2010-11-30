@@ -1397,6 +1397,12 @@ available(NSString *host)
 			 onReceiver: self
 			 withObject: nil];
     }
+  else
+    {
+      /* Make sure that this is de-queued and run if possible.
+       */
+      [GWSService _run: [_connectionURL host]];
+    }
   return YES;
 }
 

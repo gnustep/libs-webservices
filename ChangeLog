@@ -3,6 +3,9 @@
 	* GWSDocument.m:
 	* GWSCoder.m:
 	Log parse errors during initialisation of GWSDocument from wsdl source.
+	* GWSService.m:
+	Fix to startup connectins in the case where a URL is provided during
+	the request build process.
 
 2010-11-11 Riccardo Mottola
 
