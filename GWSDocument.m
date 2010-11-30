@@ -271,6 +271,7 @@ static NSLock			*extLock = nil;
           GWSElement    *root = nil;
 
           parser = [[GWSCoder new] autorelease];
+	  [parser setDebug: YES];
           root = [parser parseXML: xml];
           if (root == nil)
             {

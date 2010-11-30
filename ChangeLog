@@ -1,3 +1,9 @@
+2010-11-30 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSDocument.m:
+	* GWSCoder.m:
+	Log parse errors during initialisation of GWSDocument from wsdl source.
+
 2010-11-11 Riccardo Mottola
 
 	* GWSService.m

@@ -574,6 +574,12 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
   if ([parser parse] == NO)
     {
       [_stack removeAllObjects];
+      if (YES == _debug)
+	{
+	  NSError	*e = [parser parserError];
+
+	  NSLog(@"XML parse error %@ %@", e, [e userInfo]);
+	}
     }
   [pool release];
   return [_stack lastObject];
