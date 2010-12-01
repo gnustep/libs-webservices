@@ -317,8 +317,7 @@ promote(NSMutableDictionary *d, NSString *k)
 		    {
 		      NSString	*found;
 
-		      found = [p objectForKey: partName];
-		      if (found == nil)
+		      if (nil == [p objectForKey: partName])
 			{
 			  NSEnumerator	*e;
 		          NSString	*ns;
@@ -332,6 +331,7 @@ promote(NSMutableDictionary *d, NSString *k)
 			   */
 			  ns = [document namespaceForPrefix: prefix];
 			  e = [p keyEnumerator];
+			  found = nil;
 			  while ((key = [e nextObject]) != nil)
 			    {
 			      id	o = [p objectForKey: key];
@@ -361,13 +361,17 @@ promote(NSMutableDictionary *d, NSString *k)
 			      break;
 			    }
 			}
+		      else
+			{
+			  found = partName;
+			}
 
 		      /* FIXME ... what if there is no value for this
 		       * part ... which parts are mandatory?
 		       */
 		      if (found != nil)
 			{
-			  [order addObject: partName];
+			  [order addObject: found];
 			}
 		      if (prefix != nil)
 			{
