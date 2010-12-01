@@ -367,7 +367,7 @@ promote(NSMutableDictionary *d, NSString *k)
 		       */
 		      if (found != nil)
 			{
-			  [order addObject: found];
+			  [order addObject: partName];
 			}
 		      if (prefix != nil)
 			{

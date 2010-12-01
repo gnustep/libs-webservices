@@ -1,3 +1,8 @@
+2010-12-01 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSExtensisibility.m:
+	Fix error setting order of parts in soap method.
+
 2010-11-30 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSDocument.m:
