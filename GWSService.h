@@ -32,7 +32,13 @@
 extern "C" {
 #endif
 
+@class  NSArray;
+@class  NSDate;
+@class  NSDictionary;
+@class  NSLock;
+@class  NSMutableArray;
 @class  NSMutableData;
+@class  NSMutableDictionary;
 @class  NSString;
 @class  NSThread;
 @class  NSTimer;
