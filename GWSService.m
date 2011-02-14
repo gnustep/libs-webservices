@@ -1577,6 +1577,10 @@ available(NSString *host)
   NSThread	*cancelThread = nil;
 
   [_lock lock];
+  if (t == _timer)
+    {
+      _timer = nil;
+    }
   if (NO == _cancelled && NO == _completedIO)
     {
       _cancelled = YES;
