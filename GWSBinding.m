@@ -51,7 +51,7 @@
 	  problem = [_document _validate: elem in: self];
 	  if (problem != nil)
 	    {
-	      NSLog(@"Bad binding extensibility: % @", problem);
+	      NSLog(@"Bad binding extensibility: %@", problem);
 	    }
           if (_extensibility == nil)
             {

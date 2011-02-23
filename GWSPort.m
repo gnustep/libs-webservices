@@ -45,7 +45,7 @@
 	  problem = [_document _validate: elem in: self];
 	  if (problem != nil)
 	    {
-	      NSLog(@"Bad port extensibility: % @", problem);
+	      NSLog(@"Bad port extensibility: %@", problem);
 	    }
           if (_extensibility == nil)
             {

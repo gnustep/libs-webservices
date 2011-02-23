@@ -732,7 +732,7 @@ available(NSString *host)
 	  problem = [_document _validate: elem in: self];
 	  if (problem != nil)
 	    {
-	      NSLog(@"Bad service extensibility: % @", problem);
+	      NSLog(@"Bad service extensibility: %@", problem);
 	    }
           if (_extensibility == nil)
             {
