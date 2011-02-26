@@ -72,6 +72,7 @@ main()
       GSPrintf(stderr, @"	-Method name (method/operation to use)\n");
       GSPrintf(stderr, @"	-Service name (for service in WSDL)\n");
       GSPrintf(stderr, @"	-WSDL filename (for WSDL document)\n");
+      [pool release];
       return 1;
     }
 
@@ -85,16 +86,18 @@ main()
       if (xml == nil)
 	{
 	  GSPrintf(stderr, @"Unable to load XML from file '%@'\n", file);
+          [pool release];
 	  return 1;
 	}
 
-      coder = [GWSSOAPCoder new];
+      coder = [[GWSSOAPCoder new] autorelease];
       [coder setDebug: [defs boolForKey: @"Debug"]];
 
       result = [coder parseMessage: xml];
-      if (result == nil)
+      if (nil == result)
 	{
 	  GSPrintf(stderr, @"Failed to decode data from file '%@'\n", file);
+          [pool release];
 	  return 1;
 	}
       
@@ -104,6 +107,7 @@ main()
 	  if (NO == [result writeToFile: file atomically: NO])
 	    {
 	      GSPrintf(stderr, @"Failed to record result to file '%@'\n", file);
+              [pool release];
 	      return 1;
 	    }
 	}
@@ -122,12 +126,14 @@ main()
 	    {
 	      GSPrintf(stderr, @"Failed to load dictionary from file '%@'\n",
 		file);
+              [pool release];
 	      return 1;
 	    }
 	  if ([old isEqual: result] == NO)
 	    {
 	      GSPrintf(stderr, @"Decode result does not match file '%@'\n",
 		file);
+              [pool release];
 	      return 1;
 	    }
 	}
@@ -144,6 +150,7 @@ main()
 	{
 	  GSPrintf(stderr, @"Unable to read request params from '%@'\n",
 	    file);
+          [pool release];
 	  return 1;
 	}
 
@@ -151,7 +158,7 @@ main()
 	{
           GWSSOAPCoder	*coder;
 
-          service = [GWSService new];
+          service = [[GWSService new] autorelease];
           coder = [GWSSOAPCoder new];
           [service setCoder: coder];
           [coder release];
@@ -165,6 +172,7 @@ main()
 	  if (nil == document)
 	    {
 	      GSPrintf(stderr, @"Failed to load WSDL from '%@'\n", wsdl);
+              [pool release];
 	      return 1;
 	    }
 	  service = [document serviceWithName: sName create: NO];
@@ -172,6 +180,7 @@ main()
 	    {
 	      GSPrintf(stderr, @"Failed to find service '%@' in WSDL '%@'\n",
 		sName, wsdl);
+              [pool release];
 	      return 1;
 	    }
 	}
@@ -191,13 +200,13 @@ main()
       result = [service buildRequest: method 
 		          parameters: parameters
 			       order: order];
-
       file = [defs objectForKey: @"Record"];
       if (file != nil)
 	{
 	  if (NO == [result writeToFile: file atomically: NO])
 	    {
 	      GSPrintf(stderr, @"Failed to record result to file '%@'\n", file);
+              [pool release];
 	      return 1;
 	    }
 	}
@@ -216,12 +225,14 @@ main()
 	    {
 	      GSPrintf(stderr, @"Failed to load xml data from file '%@'\n",
 		file);
+              [pool release];
 	      return 1;
 	    }
 	  if ([old isEqual: result] == NO)
 	    {
 	      GSPrintf(stderr, @"Decode result does not match file '%@'\n",
 		file);
+              [pool release];
 	      return 1;
 	    }
 	}

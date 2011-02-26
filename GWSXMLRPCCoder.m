@@ -98,6 +98,7 @@ static NSCharacterSet   *ws;
       c = [order count];
       if ([method length] == 0)
 	{
+	  [container release];
 	  return nil;
 	}
       else
@@ -120,6 +121,7 @@ static NSCharacterSet   *ws;
 	  r = [method rangeOfCharacterFromSet: illegal];
 	  if (r.length > 0)
 	    {
+	      [container release];
 	      return nil;	// Bad method name.
 	    }
 	}

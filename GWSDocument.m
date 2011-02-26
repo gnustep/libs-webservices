@@ -137,7 +137,6 @@ static NSLock			*extLock = nil;
     {
       binding = [[GWSBinding alloc] _initWithName: name document: self];
       [_bindings setObject: binding forKey: name];
-      [binding release];
     }
   else
     {
@@ -531,7 +530,6 @@ static NSLock			*extLock = nil;
     {
       message = [[GWSType alloc] _initWithName: name document: self];
       [_messages setObject: message forKey: name];
-      [message release];
     }
   else
     {
@@ -579,7 +577,6 @@ static NSLock			*extLock = nil;
     {
       portType = [[GWSType alloc] _initWithName: name document: self];
       [_portTypes setObject: portType forKey: name];
-      [portType release];
     }
   else
     {
@@ -675,7 +672,6 @@ static NSLock			*extLock = nil;
     {
       service = [[GWSType alloc] _initWithName: name document: self];
       [_services setObject: service forKey: name];
-      [service release];
     }
   else
     {
@@ -867,7 +863,6 @@ static NSLock			*extLock = nil;
     {
       type = [[GWSType alloc] _initWithName: name document: self];
       [_types setObject: type forKey: name];
-      [type release];
     }
   else
     {

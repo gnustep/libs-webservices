@@ -332,7 +332,7 @@ main()
                          timeout: 30];
   fprintf(stdout, "Result: %s\n", [[result description] UTF8String]);
   [service release];
-
+  [del release];
   [coder release];
   [inner release];
 

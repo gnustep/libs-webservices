@@ -118,11 +118,11 @@ static GWSCoder		*coder = nil;
 	   */
 	  if ([[[header parent] name] isEqualToString: @"Envelope"])
 	    {
-              [[header parent] setNamespace: ns forPrefix: @"wsse"];
+              [[header parent] setNamespace: ns forPrefix: prefix];
 	    }
 	  else
 	    {
-              [security setNamespace: ns forPrefix: @"wsse"];
+              [security setNamespace: ns forPrefix: prefix];
 	    }
 	}
       if (_ttl > 0 && [uPrefix length] == 0)
@@ -293,9 +293,12 @@ static GWSCoder		*coder = nil;
 	   password: (NSString*)password
 	 timeToLive: (unsigned)ttl
 {
-  _name = [name copy];
-  _password = [password copy];
-  _ttl = ttl;
+  if (nil != (self = [super init]))
+    {
+      _name = [name copy];
+      _password = [password copy];
+      _ttl = ttl;
+    }
   return self;
 }
 

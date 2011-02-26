@@ -523,6 +523,10 @@ promote(NSMutableDictionary *d, NSString *k)
 		}
 	      else
 		{
+		  if (created == YES)
+		    {
+		      [h release];
+		    }
 		  return [NSString stringWithFormat:
 		    @"no part in header in %@", section];
 		}

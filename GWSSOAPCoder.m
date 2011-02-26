@@ -641,10 +641,6 @@ newHeader(NSString *prefix, id o)
       unsigned                  c;
       unsigned                  i;
 
-      envelope = nil;
-      header = nil;
-      body = nil;
-
       parser = [[GWSCoder new] autorelease];
       envelope = [parser parseXML: data];
       if (envelope == nil)
@@ -678,7 +674,7 @@ newHeader(NSString *prefix, id o)
           elem = [enumerator nextObject];
           if ([self delegate] != nil)
             {
-              header = [[self delegate] coder: self willDecode: header];
+              [[self delegate] coder: self willDecode: header];
             }
         }
       if (elem == nil)

@@ -60,7 +60,7 @@ NSString * const GWSResponseDataKey = @"GWSCoderResponseData";
 {
   if ((self = [super init]) != 0)
     {
-      name = [name copy];
+      _name = [name copy];
       _document = document;
     }
   return self;

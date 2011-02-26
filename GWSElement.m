@@ -147,6 +147,7 @@ static Class		GWSElementClass = Nil;
 			     namespace: namespace
 			     qualified: qualified
 			    attributes: attributes];
+  [attributes release];
   if (content != nil)
     {
       [e addContent: content];

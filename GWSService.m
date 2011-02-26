@@ -855,10 +855,12 @@ available(NSString *host)
 	}
       NS_HANDLER
 	{
-	  id        reason = [localException reason];
+	  id	reason = [localException reason];
+	  id	keys[1];
 
+	  keys[0] = GWSFaultKey;
 	  _result = [[NSMutableDictionary alloc] initWithObjects: &reason
-						         forKeys: &GWSFaultKey
+						         forKeys: keys
 							   count: 1];
 	}
       NS_ENDHANDLER

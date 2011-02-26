@@ -638,7 +638,11 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
       int		second;
 
       s = [value UTF8String];
-      if (s != 0 && *s == '-')
+      if (0 == s)
+	{
+	  s = "";
+	}
+      else if (*s == '-')
 	{
 	  s++;          // Leading '-' in year is ignored.
 	}
@@ -672,13 +676,13 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
 	  tz = [self timeZone];
 	}
 
-      result = [[NSCalendarDate alloc] initWithYear: year
-					      month: month
-						day: day
-					       hour: hour
-					     minute: minute
-					     second: second 
-					   timeZone: tz]; 
+      result = [[[NSCalendarDate alloc] initWithYear: year
+					       month: month
+						 day: day
+					        hour: hour
+					      minute: minute
+					      second: second 
+					    timeZone: tz] autorelease]; 
     }
   else if ([type isEqualToString: @"xsd:double"] == YES)
     {
