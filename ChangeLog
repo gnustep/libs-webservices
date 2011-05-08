@@ -1,3 +1,13 @@
+2011-05-08 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: Add JSON support
+	* GWSCoder.h: Add JSON coder and convenience methods
+	* GWSJSONCoder.m: Implement JSON coding/decoding
+	* testGWSJSONCoder.m: test program for JSON coding/decoding
+	* tests/test: Add JSON support
+	* tests/jjson1: JSON test data
+	* test/jpl1: parsed JSON test data
+
 2011-04-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Version 0.4.0:

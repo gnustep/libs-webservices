@@ -32,6 +32,88 @@
 
 @end
 
+static NSString*
+JSONQuote(NSString *str)
+{
+  unsigned	length = [str length];
+  unsigned	output = 2;
+  unichar	*from;
+  unsigned	i = 0;
+  unichar	*to;
+  unsigned	j = 0;
+
+  if (length == 0)
+    {
+      return @"\"\"";
+    }
+  from = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * length);
+  [str getCharacters: from];
+
+  for (i = 0; i < length; i++)
+    {
+      unichar	c = from[i];
+
+      if (c == '"' || c == '\\'
+	|| c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
+	{
+	  output += 2;
+	}
+      else if (c < 0x20)
+	{
+	  output += 6;
+	}
+      else
+	{
+	  output++;
+	}
+    }
+
+  to = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * output);
+  to[j++] = '"';
+  for (i = 0; i < length; i++)
+    {
+      unichar	c = from[i];
+
+      if (c == '"' || c == '\\'
+	|| c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
+	{
+	  to[j++] = '\\';
+          switch (c)
+	    {
+	      case '\\': to[j++] = '\\'; break;
+	      case '\b': to[j++] = 'b'; break;
+	      case '\f': to[j++] = 'f'; break;
+	      case '\n': to[j++] = 'n'; break;
+	      case '\r': to[j++] = 'r'; break;
+	      case '\t': to[j++] = 't'; break;
+	      default: to[j++] = '"'; break;
+	    }
+	}
+      else if (c < 0x20)
+	{
+	  char	buf[5];
+
+	  to[j++] = '\\';
+	  to[j++] = 'u';
+	  sprintf(buf, "%04x", c);
+	  to[j++] = buf[0];
+	  to[j++] = buf[1];
+	  to[j++] = buf[2];
+	  to[j++] = buf[3];
+	}
+      else
+	{
+	  to[j++] = c;
+	}
+    }
+  to[j] = '"';
+  str = [[NSString alloc] initWithCharacters: to length: output];
+  NSZoneFree (NSDefaultMallocZone (), to);
+  [str autorelease];
+  NSZoneFree (NSDefaultMallocZone (), from);
+  return str;
+}
+
 typedef struct {
   const unsigned char	*buffer;
   unsigned		length;
@@ -521,87 +603,6 @@ static NSCharacterSet   *ws;
 
 @implementation GWSJSONCoder (Private)
 
-- (NSString*) _jsonString: (NSString*)str
-{
-  unsigned	length = [str length];
-  unsigned	output = 2;
-  unichar	*from;
-  unsigned	i = 0;
-  unichar	*to;
-  unsigned	j = 0;
-
-  if (length == 0)
-    {
-      return @"\"\"";
-    }
-  from = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * length);
-  [str getCharacters: from];
-
-  for (i = 0; i < length; i++)
-    {
-      unichar	c = from[i];
-
-      if (c == '"' || c == '\\'
-	|| c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
-	{
-	  output += 2;
-	}
-      else if (c < 0x20)
-	{
-	  output += 6;
-	}
-      else
-	{
-	  output++;
-	}
-    }
-
-  to = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * output);
-  to[j++] = '"';
-  for (i = 0; i < length; i++)
-    {
-      unichar	c = from[i];
-
-      if (c == '"' || c == '\\'
-	|| c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
-	{
-	  to[j++] = '\\';
-          switch (c)
-	    {
-	      case '\\': to[j++] = '\\'; break;
-	      case '\b': to[j++] = 'b'; break;
-	      case '\f': to[j++] = 'f'; break;
-	      case '\n': to[j++] = 'n'; break;
-	      case '\r': to[j++] = 'r'; break;
-	      case '\t': to[j++] = 't'; break;
-	      default: to[j++] = '"'; break;
-	    }
-	}
-      else if (c < 0x20)
-	{
-	  char	buf[5];
-
-	  to[j++] = '\\';
-	  to[j++] = 'u';
-	  sprintf(buf, "%04x", c);
-	  to[j++] = buf[0];
-	  to[j++] = buf[1];
-	  to[j++] = buf[2];
-	  to[j++] = buf[3];
-	}
-      else
-	{
-	  to[j++] = c;
-	}
-    }
-  to[j] = '"';
-  str = [[NSString alloc] initWithCharacters: to length: output];
-  NSZoneFree (NSDefaultMallocZone (), to);
-  [str autorelease];
-  NSZoneFree (NSDefaultMallocZone (), from);
-  return str;
-}
-
 - (void) _appendObject: (id)o
 {
   NSMutableString       *ms = [self mutableString];
@@ -612,7 +613,7 @@ static NSCharacterSet   *ws;
     }
   else if (YES == [o isKindOfClass: [NSString class]])
     {
-      [ms appendString: [self _jsonString: o]];
+      [ms appendString: JSONQuote(o)];
     }
   else if (YES == [o isKindOfClass: [NSNumber class]])
     {
@@ -710,4 +711,82 @@ static NSCharacterSet   *ws;
 
 @end
 
+
+@implementation	NSArray (JSON)
+- (NSData*) JSONText
+{
+  NSAutoreleasePool	*pool;
+  GWSJSONCoder		*coder;
+  NSDictionary		*p;
+  NSData		*data;
+
+  pool = [NSAutoreleasePool new];
+  coder = [[GWSJSONCoder new] autorelease];
+  p = [NSDictionary dictionaryWithObject: self forKey: @"text"];
+  data = [coder buildRequest: @"text" parameters: p order: nil];
+  [data retain];
+  [pool release];
+  return [data autorelease];
+}
+@end
+
+@implementation	NSData (JSON)
+- (id) JSONPropertyList
+{
+  id			o = nil;
+  
+  NS_DURING
+    {
+      NSAutoreleasePool	*pool;
+      context	x;
+
+      pool = [NSAutoreleasePool new];
+      x.buffer = (const unsigned char*)[self bytes];
+      x.length = [self length];
+      x.line = 1;
+      x.column = 1;
+      x.index = 0;
+
+      o = parse(&x);
+      if (skipSpace(&x) >= 0)
+	{
+	  o = nil;	// Excess data
+	}
+      [o retain];
+      [pool release];
+      [o autorelease];
+    }
+  NS_HANDLER
+    {
+      o = nil;		// Problem
+    }
+  NS_ENDHANDLER
+  return o;
+}
+@end
+
+@implementation	NSDictionary (JSON)
+- (NSData*) JSONText
+{
+  NSAutoreleasePool	*pool;
+  GWSJSONCoder		*coder;
+  NSDictionary		*p;
+  NSData		*data;
+
+  pool = [NSAutoreleasePool new];
+  coder = [[GWSJSONCoder new] autorelease];
+  p = [NSDictionary dictionaryWithObject: self forKey: @"text"];
+  data = [coder buildRequest: @"text" parameters: p order: nil];
+  [data retain];
+  [pool release];
+  return [data autorelease];
+}
+@end
+
+@implementation	NSString (JSON)
+- (id) JSONPropertyList
+{
+  return [[self dataUsingEncoding: NSUTF8StringEncoding] JSONPropertyList];
+}
+@end
 

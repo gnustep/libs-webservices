@@ -480,6 +480,30 @@ extern "C" {
 
 @end
 
+@interface	NSArray (JSON)
+/** Return the receiver encoded as a JSON text in UTF-8 encoding.
+ */
+- (NSData*) JSONText;
+@end
+
+@interface	NSData (JSON)
+/** Parse the receiver as a JSON property list and return the result.
+ */
+- (id) JSONPropertyList;
+@end
+
+@interface	NSDictionary (JSON)
+/** Return the receiver encoded as a JSON text in UTF-8 encoding.
+ */
+- (NSData*) JSONText;
+@end
+
+@interface	NSString (JSON)
+/** Parse the receiver as a JSON property list and return the result.
+ */
+- (id) JSONPropertyList;
+@end
+
 /** <p>The GWSSOAPCCoder class is a concrete subclass of [GWSCoder] which
  * implements coding/decoding for the SOAP protocol.
  * </p>
