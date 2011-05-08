@@ -49,6 +49,7 @@ WebServices_OBJC_FILES +=\
 	GWSService.m \
 	GWSSOAPCoder.m \
 	GWSXMLRPCCoder.m \
+	GWSJSONCoder.m \
 	WSSUsernameToken.m \
 
 

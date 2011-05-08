@@ -394,9 +394,58 @@ extern "C" {
 @interface GWSXMLRPCCoder : GWSCoder
 {
 }
-/** Take the supplied data and encode it as an XMLRPC timestamp.<br />
+/** Take the supplied date and encode it as an XMLRPC timestamp.<br />
  * This uses the timezone currently set in the receiver to determine
  * the time of day encoded.
+ */
+- (NSString*) encodeDateTimeFrom: (NSDate*)source;
+
+@end
+
+/** <p>The GWSJSONCoder class is a concrete subclass of [GWSCoder] which
+ * implements coding/decoding for JSON texts.
+ * </p>
+ * <p>The correspondence between JSON values and Objective-C objects
+ * is as follows -
+ * </p>
+ * <list>
+ *   <item><strong>null</strong>
+ *   is the [NSNull] object.</item>
+ *   <item><strong>true</strong>
+ *   is an [NSNumber] created as a BOOL.</item>
+ *   <item><strong>false</strong>
+ *   is an [NSNumber] created as a BOOL.</item>
+ *   <item><strong>numeric</strong>
+ *   is an [NSNumber] other than a boolean.</item>
+ *   <item><strong>string</strong>
+ *   is an [NSString] object.</item>
+ *   <item><strong>array</strong>
+ *   is an [NSArray] object.</item>
+ *   <item><strong>object</strong>
+ *   is an [NSDictionary] object.</item>
+ * </list>
+ * <p>In addition, any [NSDate] object is encoded as a string using the
+ * -encodeDateTimeFrom: method, and any [NSData] object is encoded as a
+ * string by using base64 encoding.
+ * </p>
+ * <p>If you attempt to use any other type of object in the construction
+ * of a JSON text, the [NSObject-description] method of that
+ * object will be used to create a string, and the resulting object
+ * will be encoded as a JSON <em>string</em> element.
+ * </p>
+ * <p>In particular, the names of members in a JSON <em>object</em>
+ * must be strings, so if you provide an [NSDictionary] object
+ * to represent a JSON <em>object</em> the keys of the dictionary
+ * will be converted to strings where necessary.
+ * </p>
+ */
+@interface GWSJSONCoder : GWSCoder
+{
+}
+/** Take the supplied date and encode it as a string.<br />
+ * This uses the timezone currently set in the receiver to determine
+ * the time of day encoded.<br />
+ * There is no standard for JSON timestamps.
  */
 - (NSString*) encodeDateTimeFrom: (NSDate*)source;
 
