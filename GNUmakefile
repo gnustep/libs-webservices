@@ -117,6 +117,11 @@ testWebServices_OBJC_FILES = testWebServices.m
 testWebServices_TOOL_LIBS += -lWebServices
 testWebServices_LIB_DIRS += -L./$(GNUSTEP_OBJ_DIR)
 
+TEST_TOOL_NAME += testGWSJSONCoder
+testGWSJSONCoder_OBJC_FILES = testGWSJSONCoder.m
+testGWSJSONCoder_TOOL_LIBS += -lWebServices
+testGWSJSONCoder_LIB_DIRS += -L./$(GNUSTEP_OBJ_DIR)
+
 TEST_TOOL_NAME += testGWSSOAPCoder
 testGWSSOAPCoder_OBJC_FILES = testGWSSOAPCoder.m
 testGWSSOAPCoder_TOOL_LIBS += -lWebServices
