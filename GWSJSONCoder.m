@@ -213,6 +213,7 @@ parse(context *ctxt)
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
+	  get(ctxt);	// Skip past comma
 	}
     }
   else if ('{' == c)
@@ -257,7 +258,7 @@ parse(context *ctxt)
 	      [d setObject: v forKey: k];
 	      get(ctxt);
 	    }
-	  else if ('}' ==  'c')
+	  else if ('}' == c)
 	    {
 	      [d setObject: v forKey: k];
 	      get(ctxt);
