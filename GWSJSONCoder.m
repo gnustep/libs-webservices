@@ -32,6 +32,366 @@
 
 @end
 
+typedef struct {
+  const unsigned char	*buffer;
+  unsigned		length;
+  unsigned		line;
+  unsigned		column;
+  unsigned		index;
+  const char		*error;
+} context;
+
+static inline int
+get(context *ctxt)
+{
+  if (ctxt->index < ctxt->length)
+    {
+      int	c = ctxt->buffer[ctxt->index++];
+
+      ctxt->column++;
+      if (c == '\n')
+	{
+	  ctxt->line++;
+	  ctxt->column = 1;
+	}
+      return c;
+    }
+  return -1;
+}
+
+static inline int
+skipSpace(context *ctxt)
+{
+  while (ctxt->index < ctxt->length && isspace(ctxt->buffer[ctxt->index]))
+    {
+      get(ctxt);
+    }
+  if (ctxt->index < ctxt->length)
+    {
+      return ctxt->buffer[ctxt->index];
+    }
+  return -1;
+}
+
+static id
+parse(context *ctxt)
+{
+  int	c;
+
+  skipSpace(ctxt);
+  c = get(ctxt);
+  if (c < 0)
+    {
+      return nil;
+    }
+  else if ('"' == c)
+    {
+      BOOL	escapes = NO;
+      unsigned	start = ctxt->index;
+      NSString	*s;
+
+      while ((c = get(ctxt)) >= 0)
+	{
+	  if ('\\' == c)
+	    {
+	      escapes = YES;
+	      c = get(ctxt);
+	    }
+	  else if ('"' == c)
+	    {
+	      break;
+	    }
+	  else if (c < 0)
+	    {
+	      ctxt->error = "premature end of string";
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	}
+      if (NO == escapes)
+	{
+	  s = [NSString alloc];
+	  s = [s initWithBytes: ctxt->buffer + start
+			length: ctxt->index - start - 1
+		      encoding: NSUTF8StringEncoding];
+	  [s autorelease];
+	}
+      else
+	{
+	  NSMutableString	*m;
+	  NSRange		r;
+
+	  m = [NSMutableString alloc];
+	  m = [m initWithBytes: ctxt->buffer + start
+			length: ctxt->index - start - 1
+		      encoding: NSUTF8StringEncoding];
+	  [m autorelease];
+	  r = NSMakeRange(0, [m length]);
+	  r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
+	  while (r.length > 0)
+	    {
+	      unsigned	pos = r.location;
+	      NSString	*rep;
+
+	      c = [m characterAtIndex: pos + 1];
+	      if ('u' == c)
+		{
+		  const char	*hex;
+		  unichar	u;
+
+		  if (pos + 6 > [m length])
+		    {
+		      ctxt->error = "short unicode escape in string";
+		      ctxt->index = ctxt->length;
+		      return nil;
+		    }
+		  hex = [[m substringWithRange: NSMakeRange(pos + 2, 4)]
+		    UTF8String];
+		  if (isxdigit(hex[0]) && isxdigit(hex[1])
+		    && isxdigit(hex[2]) && isxdigit(hex[3]))
+		    {
+		      u = (unichar) strtol(hex, 0, 16);
+		    }
+		  else
+		    {
+		      ctxt->error = "invalid unicode escape in string";
+		      ctxt->index = ctxt->length;
+		      return nil;
+		    }
+		  rep = [NSString stringWithCharacters: &u length: 1];
+		}
+	      else
+		{
+		  if ('"' == c) rep = @"\"";
+		  else if ('\\' == c) rep = @"\\";
+		  else if ('b' == c) rep = @"\b";
+		  else if ('f' == c) rep = @"\f";
+		  else if ('r' == c) rep = @"\r";
+		  else if ('n' == c) rep = @"\n";
+		  else if ('t' == c) rep = @"\t";
+		  else rep = [NSString stringWithFormat: @"%c", (char)c];
+		}
+	      [m replaceCharactersInRange: r withString: rep];
+	      pos++;
+	      r = NSMakeRange(pos, [m length] - pos);
+	      r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
+	    }
+	  s = [[m copy] autorelease];
+	}
+      return s;
+    }
+  else if ('[' == c)
+    {
+      NSMutableArray	*a = [NSMutableArray array];
+
+      for (;;)
+	{
+	  id	o;
+
+	  if (nil != (o = parse(ctxt)))
+	    {
+	      [a addObject: o];
+	    }
+
+	  c = skipSpace(ctxt);
+	  if (']' == c)
+	    {
+	      get(ctxt);
+	      return a;
+	    }
+
+	  if (c != ',')
+	    {
+	      if (c < 0)
+		{
+		  ctxt->error = "premature end of array";
+		}
+	      else
+		{
+		  ctxt->error = "bad character in array";
+		}
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	}
+    }
+  else if ('{' == c)
+    {
+      NSMutableDictionary	*d = [NSMutableDictionary dictionary];
+
+      for (;;)
+	{
+	  id	k;
+	  id	v;
+
+	  k = parse(ctxt);
+	  c = skipSpace(ctxt);
+	  if ('}' == c && nil == k)
+	    {
+	      get(ctxt);
+	      return d;	// Empty
+	    }
+	  if (NO == [k isKindOfClass: [NSString class]])
+	    {
+	      ctxt->error = "non-string value for key";
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	  if (':' != c)
+	    {
+	      ctxt->error = "missing colon after key";
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	  get(ctxt);	// Skip the colon
+	  v = parse(ctxt);
+	  if (nil == v)
+	    {
+	      ctxt->error = "missing value after colon";
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	  c = skipSpace(ctxt);
+	  if (',' == c)
+	    {
+	      [d setObject: v forKey: k];
+	      get(ctxt);
+	    }
+	  else if ('}' ==  'c')
+	    {
+	      [d setObject: v forKey: k];
+	      get(ctxt);
+	      return d;
+	    }
+	  else
+	    {
+	      if (c < 0)
+		{
+		  ctxt->error = "premature end of object";
+		}
+	      else
+		{
+		  ctxt->error = "bad character in object";
+		}
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	}
+    }
+  else if ('-' == c || isdigit(c))
+    {
+      const char	*s = (const char*)ctxt->buffer + ctxt->index - 1;
+      char		*e = 0;
+      NSNumber		*n = nil;
+      double		d;
+      long long		l;
+      unsigned		pos = ctxt->index;
+      BOOL		tryFloat = NO;
+
+      if ('-' == 'c') pos++;
+      while (pos < ctxt->length && isdigit(ctxt->buffer[pos]))
+	{
+	  pos++;
+	}
+      if (pos < ctxt->length && '.' == ctxt->buffer[pos])
+	{
+	  tryFloat = YES;
+	  pos++;
+	  while (pos < ctxt->length && isdigit(ctxt->buffer[pos]))
+	    {
+	      pos++;
+	    }
+	}
+      if (pos < ctxt->length
+	&& ('e' == ctxt->buffer[pos] || 'E' == ctxt->buffer[pos]))
+	{
+	  tryFloat = YES;
+	  pos++;
+	  if (pos < ctxt->length
+	    && ('+' == ctxt->buffer[pos] || '-' == ctxt->buffer[pos]))
+	    {
+	      pos++;
+	    }
+	  while (pos < ctxt->length && isdigit(ctxt->buffer[pos]))
+	    {
+	      pos++;
+	    }
+	}
+
+      if (YES == tryFloat)
+	{
+	  d = strtod(s, &e);
+	  if (e == s)
+	    {
+	      ctxt->error = "unparsable numeric value";
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	  n = [NSNumber numberWithDouble: d];
+	}
+      else
+	{
+	  l = strtoll(s, &e, 10);
+	  if (e == s)
+	    {
+	      ctxt->error = "unparsable integer value";
+	      ctxt->index = ctxt->length;
+	      return nil;
+	    }
+	  n = [NSNumber numberWithLongLong: l];
+	}
+      if (nil == n)
+	{
+	  ctxt->error = "failed to parse numeric value";
+	  ctxt->index = ctxt->length;
+	  return nil;
+	}
+
+      /* Step past the numeric value.
+       */
+      while (ctxt->index < pos)
+	{
+	  get(ctxt);
+	}
+      return n;
+    }
+  else if ('t' == c)
+    {
+      if (get(ctxt) == 'r' && get(ctxt) == 'u' && get(ctxt) == 'e')
+	{
+	  return [NSNumber numberWithBool: YES];
+	}
+      ctxt->error = "bad character (expecting 'true')";
+      ctxt->index = ctxt->length;
+      return nil;
+    }
+  else if ('f' == c)
+    {
+      if (get(ctxt) == 'a' && get(ctxt) == 'l' && get(ctxt) == 's'
+	&& get(ctxt) == 'e')
+	{
+	  return [NSNumber numberWithBool: NO];
+	}
+      ctxt->error = "bad character (expecting 'false')";
+      ctxt->index = ctxt->length;
+      return nil;
+    }
+  else if ('n' == c)
+    {
+      if (get(ctxt) == 'u' && get(ctxt) == 'l' && get(ctxt) == 'l')
+	{
+	  return [NSNull null];
+	}
+      ctxt->error = "bad character (expecting 'null')";
+      ctxt->index = ctxt->length;
+      return nil;
+    }
+  else
+    {
+      ctxt->index--;	// Push back character
+      return nil;
+    }
+}
 
 @implementation	GWSJSONCoder
 
@@ -114,9 +474,21 @@ static NSCharacterSet   *ws;
   pool = [NSAutoreleasePool new];
   NS_DURING
     {
-      id	o = nil;
+      context	x;
+      id	o;
 
-// FIXME ... parse JSON text
+      x.buffer = (const unsigned char*)[data bytes];
+      x.length = [data length];
+      x.line = 1;
+      x.column = 1;
+      x.index = 0;
+
+      o = parse(&x);
+      if (skipSpace(&x) >= 0)
+	{
+	  x.error = "unexpected data at end of text";
+	}
+
       params = [NSMutableDictionary dictionaryWithCapacity: 1];
       if (o == nil)
 	{
@@ -168,7 +540,8 @@ static NSCharacterSet   *ws;
     {
       unichar	c = from[i];
 
-      if (c == '"' || c == '\\' || c == '\n' || c == '\r' || c == '\t')
+      if (c == '"' || c == '\\'
+	|| c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
 	{
 	  output += 2;
 	}
@@ -188,12 +561,15 @@ static NSCharacterSet   *ws;
     {
       unichar	c = from[i];
 
-      if (c == '"' || c == '\\' || c == '\n' || c == '\r' || c == '\t')
+      if (c == '"' || c == '\\'
+	|| c == '\b' || c == '\f' || c == '\n' || c == '\r' || c == '\t')
 	{
 	  to[j++] = '\\';
           switch (c)
 	    {
 	      case '\\': to[j++] = '\\'; break;
+	      case '\b': to[j++] = 'b'; break;
+	      case '\f': to[j++] = 'f'; break;
 	      case '\n': to[j++] = 'n'; break;
 	      case '\r': to[j++] = 'r'; break;
 	      case '\t': to[j++] = 't'; break;
