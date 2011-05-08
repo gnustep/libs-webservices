@@ -442,6 +442,35 @@ extern "C" {
 @interface GWSJSONCoder : GWSCoder
 {
 }
+/**
+ * <p>The JSON text format does not include the notion of a remote procedure
+ * call and consists of a single array or a single JSON object.<br />
+ * To work with this rather crude behavior, the GWSJSONCoder class does not
+ * use any of the standard keys in the parameter dictionary and when building
+ * RPC requests and responses makes use of the arguments as follows:<br />
+ * If the method argument is non-null, it is interpreted as the name of
+ * the object in the parameters dictionary which is to be sent as the
+ * JSON text.  NB. if this mechanism is used you can send an value other
+ * than an array or object ... wich is not strictly legal but may be required
+ * by the remote system.<br />
+ * Otherwise, if the order argument is non-null, it is interpreted as
+ * containing the names of values in the parameters dictionary which are
+ * to be sent as an array in the JSON text, any any values missing from the
+ * dictionary are sent as null objects in the array.<br />
+ * Otherwise, the contents of the parameters dictionary are sent as a
+ * JSON object.
+ * </p>
+ */
+- (NSData*) buildRequest: (NSString*)method 
+              parameters: (NSDictionary*)parameters
+                   order: (NSArray*)order;
+
+/** This method simply calls the =buildRequest:parameters:object: method.
+ */
+- (NSData*) buildResponse: (NSString*)method 
+               parameters: (NSDictionary*)parameters
+                    order: (NSArray*)order;
+
 /** Take the supplied date and encode it as a string.<br />
  * This uses the timezone currently set in the receiver to determine
  * the time of day encoded.<br />

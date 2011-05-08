@@ -47,52 +47,40 @@ static NSCharacterSet   *ws;
                    order: (NSArray*)order
 {
   NSMutableString       *ms;
-  unsigned	        c;
-  id			o;
+  id			v;
 
   [self reset];
 
   ms = [self mutableString];
   [ms setString: @""];
 
-  o = [parameters objectForKey: GWSOrderKey];
-  if (o != nil)
+  if (nil != method)
     {
-      if (order != nil && [order isEqual: o] == NO)
-	{
-	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
-	}
-      order = o;
+      v = [parameters objectForKey: method];
     }
+  else if (nil != order)
+    {
+      unsigned	c = [order count];
+      unsigned	i;
 
-  if ([order count] == 0)
-    {
-      order = [parameters allKeys];
-    }
-  c = [order count];
-  if (c > 0)
-    {
-      id	v;
+      v = [NSMutableArray arrayWithCapacity: c];
+      for (i = 0; i < c; i++)
+	{
+	  NSString	*k = [order objectAtIndex: i];
+	  id		o = [parameters objectForKey: k];
 
-      if (1 == c)
-	{
-	  v = [parameters objectForKey: [order objectAtIndex: 0]];
-	  if (NO == [v isKindOfClass: [NSDictionary class]]
-	    && NO == [v isKindOfClass: [NSArray class]])
+	  if (nil == o)
 	    {
-	      v = [NSArray arrayWithObject: v]; 
+	      o = [NSNull null];
 	    }
-	  else
-	    {
-	      v = parameters;
-	    }
+	  [v addObject: o];
 	}
-      else
-	{
-	  v = parameters;
-	}
-      [self _appendObject: v];
     }
+  else
+    {
+      v = parameters;
+    }
+  [self _appendObject: v];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -100,54 +88,7 @@ static NSCharacterSet   *ws;
                parameters: (NSDictionary*)parameters
                     order: (NSArray*)order;
 {
-  NSMutableString       *ms;
-  unsigned	        c;
-  id			o;
-
-  [self reset];
-
-  ms = [self mutableString];
-  [ms setString: @""];
-
-  o = [parameters objectForKey: GWSOrderKey];
-  if (o != nil)
-    {
-      if (order != nil && [order isEqual: o] == NO)
-	{
-	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
-	}
-      order = o;
-    }
-
-  if ([order count] == 0)
-    {
-      order = [parameters allKeys];
-    }
-  c = [order count];
-  if (c > 0)
-    {
-      id	v;
-
-      if (1 == c)
-	{
-	  v = [parameters objectForKey: [order objectAtIndex: 0]];
-	  if (NO == [v isKindOfClass: [NSDictionary class]]
-	    && NO == [v isKindOfClass: [NSArray class]])
-	    {
-	      v = [NSArray arrayWithObject: v]; 
-	    }
-	  else
-	    {
-	      v = parameters;
-	    }
-	}
-      else
-	{
-	  v = parameters;
-	}
-      [self _appendObject: v];
-    }
-  return [ms dataUsingEncoding: NSUTF8StringEncoding];
+  return [self buildRequest: method parameters: parameters order: order];
 }
 
 - (NSString*) encodeDateTimeFrom: (NSDate*)source
@@ -166,7 +107,6 @@ static NSCharacterSet   *ws;
   NSMutableDictionary   *result;
   NSMutableDictionary   *params;
   NSMutableArray        *order;
-  NSString              *name;
 
   result = [NSMutableDictionary dictionaryWithCapacity: 3];
 
@@ -174,6 +114,23 @@ static NSCharacterSet   *ws;
   pool = [NSAutoreleasePool new];
   NS_DURING
     {
+      id	o = nil;
+
+// FIXME ... parse JSON text
+      params = [NSMutableDictionary dictionaryWithCapacity: 1];
+      if (o == nil)
+	{
+	  [params setObject: [NSNull null] forKey: @"Result"];
+	}
+      else
+	{
+	  [params setObject: o forKey: @"Result"];
+	}
+      [result setObject: params forKey: GWSParametersKey];
+
+      order = [NSMutableArray arrayWithCapacity: 1];
+      [order addObject: @"Result"];
+      [result setObject: order forKey: GWSOrderKey];
     }
   NS_HANDLER
     {
