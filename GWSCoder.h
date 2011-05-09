@@ -32,7 +32,9 @@
 extern "C" {
 #endif
 
+@class  NSArray;
 @class  NSData;
+@class  NSDictionary;
 @class  NSMutableString;
 @class  NSString;
 @class  NSTimeZone;
