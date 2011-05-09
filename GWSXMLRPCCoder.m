@@ -82,13 +82,18 @@ static NSCharacterSet   *ws;
       id		o;
 
       o = [parameters objectForKey: GWSOrderKey];
-      if (o != nil)
+      if (nil != o)
 	{
 	  if (order != nil && [order isEqual: o] == NO)
 	    {
 	      NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
 	    }
 	  order = o;
+	}
+      o = [parameters objectForKey: GWSParametersKey];
+      if (nil != o)
+	{
+	  parameters = o;
 	}
 
       if ([order count] == 0)
@@ -233,6 +238,11 @@ static NSCharacterSet   *ws;
 	      NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey");
 	    }
 	  order = o;
+	}
+      o = [parameters objectForKey: GWSParametersKey];
+      if (nil != o)
+	{
+	  parameters = o;
 	}
 
       if ([order count] == 0)

@@ -120,7 +120,6 @@ main()
   else
     {
       GWSJSONCoder	*coder;
-      NSDictionary	*parameters;
       id		object;
       NSData		*result;
 
@@ -132,11 +131,10 @@ main()
           [pool release];
 	  return 1;
 	}
-      parameters = [NSDictionary dictionaryWithObject: object forKey: @"text"];
 
       coder = [GWSJSONCoder new];
-      result = [coder buildRequest: @"text" 
-		        parameters: parameters
+      result = [coder buildRequest: nil
+		        parameters: object
 			     order: nil];
       file = [defs objectForKey: @"Record"];
       if (file != nil)

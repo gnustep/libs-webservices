@@ -227,8 +227,8 @@ extern "C" {
 
 /** <override-subclass />
  * Given a method name and a set of parameters, this method constructs
- * the XML document for the corresponding message or RPC call and
- * returns the document as an NSData object.<br />
+ * the document for the corresponding message or RPC call and returns it
+ * as an NSData object.<br />
  * The parameters dictionary may be empty or nil if there are no parameters
  * to be passed.<br />
  * The order array may be empty or nil if the order of the parameters
@@ -238,6 +238,11 @@ extern "C" {
  * which must be sent in a specific order, the dictionary containing those
  * fields may contain a key 'GWSOrderKey' whose value is an array containing
  * the names of those fields in the order of their encoding.<br />
+ * An array keyed on 'GWSOrderKey' in top level parameters dictionary
+ * overrides the order argument.<br />
+ * A dictionary keyed on 'GWSParametersKey' in top level parameters dictionary
+ * overrides the parameters argument (ie the content of the lower level
+ * dictionary is treated as the container of the actual parameters).<br />
  * The method returns nil if passed an invalid method name.<br />
  * This method is used internally when sending an RPC method call to
  * a remote system, but you can also call it yourself.
@@ -445,20 +450,15 @@ extern "C" {
 /**
  * <p>The JSON text format does not include the notion of a remote procedure
  * call and consists of a single array or a single JSON object.<br />
- * To work with this rather crude behavior, the GWSJSONCoder class does not
- * use any of the standard keys in the parameter dictionary and when building
- * RPC requests and responses makes use of the arguments as follows:<br />
- * If the method argument is non-null, it is interpreted as the name of
- * the object in the parameters dictionary which is to be sent as the
- * JSON text.  NB. if this mechanism is used you can send an value other
- * than an array or object ... wich is not strictly legal but may be required
- * by the remote system.<br />
- * Otherwise, if the order argument is non-null, it is interpreted as
+ * To work with this rather crude behavior, the GWSJSONCoder class ignores
+ * the method argument and makes use of other arguments as follows:<br />
+ * If the order argument is non-null, it is interpreted as
  * containing the names of values in the parameters dictionary which are
  * to be sent as an array in the JSON text, any any values missing from the
  * dictionary are sent as null objects in the array.<br />
  * Otherwise, the contents of the parameters dictionary are sent as a
- * JSON object.
+ * JSON object.  The special keys GWSOrderKey and GWSParametersKey are used
+ * as normal.
  * </p>
  */
 - (NSData*) buildRequest: (NSString*)method 

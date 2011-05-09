@@ -478,32 +478,42 @@ parse(context *ctxt)
 
 @implementation	GWSJSONCoder
 
-static NSCharacterSet   *ws;
-
-+ (void) initialize
-{
-  ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
-}
-
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
 {
   NSMutableString       *ms;
+  id			o;
   id			v;
+  unsigned	        c;
 
   [self reset];
 
   ms = [self mutableString];
   [ms setString: @""];
 
-  if (nil != method)
+  o = [parameters objectForKey: GWSOrderKey];
+  if (nil != o)
     {
-      v = [parameters objectForKey: method];
+      if (order != nil && [order isEqual: o] == NO)
+	{
+	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
+	}
+      order = o;
     }
-  else if (nil != order)
+  o = [parameters objectForKey: GWSParametersKey];
+  if (nil != o)
     {
-      unsigned	c = [order count];
+      parameters = o;
+    }
+
+  if ([order count] == 0)
+    {
+      order = [parameters allKeys];
+    }
+  c = [order count];
+  if (c > 1)
+    {
       unsigned	i;
 
       v = [NSMutableArray arrayWithCapacity: c];
@@ -518,6 +528,10 @@ static NSCharacterSet   *ws;
 	    }
 	  [v addObject: o];
 	}
+    }
+  else if (c > 0)
+    {
+      v = [parameters objectForKey: [order lastObject]];
     }
   else
     {
@@ -607,7 +621,7 @@ static NSCharacterSet   *ws;
 {
   NSMutableString       *ms = [self mutableString];
 
-  if (YES == [o isKindOfClass: [NSNull class]])
+  if (nil == o || YES == [o isKindOfClass: [NSNull class]])
     {
       [ms appendString: @"null"];
     }
@@ -661,9 +675,7 @@ static NSCharacterSet   *ws;
       unsigned 		i;
       unsigned		c = [o count];
       
-      [self nl];
       [ms appendString: @"["];
-      [self nl];
       [self indent];
       for (i = 0; i < c; i++)
         {
@@ -688,16 +700,17 @@ static NSCharacterSet   *ws;
         {
           kEnum = [o keyEnumerator];
         }
-      [self nl];
       [ms appendString: @"{"];
       [self indent];
       while ((key = [kEnum nextObject]))
         {
-          [ms appendString: [self escapeXMLFrom: [key description]]];
+          [self nl];
+          [ms appendString: JSONQuote([key description])];
           [ms appendString: @":"];
+	  [self indent];
           [self nl];
           [self _appendObject: [o objectForKey: key]];
-          [self nl];
+	  [self unindent];
         }
       [self unindent];
       [self nl];

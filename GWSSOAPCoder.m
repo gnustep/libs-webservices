@@ -194,6 +194,12 @@ newHeader(NSString *prefix, id o)
 	}
       order = o;
     }
+  o = [parameters objectForKey: GWSParametersKey];
+  if (nil != o)
+    {
+      parameters = o;
+    }
+
   if ([order count] == 0)
     {
       NSEnumerator      *kEnum = [parameters keyEnumerator];
