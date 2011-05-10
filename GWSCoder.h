@@ -26,17 +26,16 @@
 #ifndef	INCLUDED_GWSCODER_H
 #define	INCLUDED_GWSCODER_H
 
+#import <Foundation/NSArray.h>
+#import <Foundation/NSData.h>
+#import <Foundation/NSDictionary.h>
+#import <Foundation/NSString.h>
 #import <Foundation/NSObject.h>
 
 #if     defined(__cplusplus)
 extern "C" {
 #endif
 
-@class  NSArray;
-@class  NSData;
-@class  NSDictionary;
-@class  NSMutableString;
-@class  NSString;
 @class  NSTimeZone;
 @class  GWSBinding;
 @class  GWSElement;
