@@ -1,3 +1,7 @@
+2011-05-11 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: Bump subminor version to 0.4.1 for test JSON release.
+
 2011-05-08 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: Add JSON support
