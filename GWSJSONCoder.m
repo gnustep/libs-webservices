@@ -177,7 +177,7 @@ parse(context *ctxt)
 	  if ('\\' == c)
 	    {
 	      escapes = YES;
-	      c = get(ctxt);
+	      get(ctxt);
 	    }
 	  else if ('"' == c)
 	    {

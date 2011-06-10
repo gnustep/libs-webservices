@@ -196,13 +196,12 @@ available(NSString *host)
 {
   NSAutoreleasePool	*pool = [NSAutoreleasePool new];
   NSDate		*forever = [NSDate distantFuture];
-  NSTimer		*t;
 
-  t = [NSTimer scheduledTimerWithTimeInterval: [forever timeIntervalSinceNow]
-				       target: self
-				     selector: @selector(_never:)
-				     userInfo: nil
-				      repeats: NO];
+  [NSTimer scheduledTimerWithTimeInterval: [forever timeIntervalSinceNow]
+				   target: self
+				 selector: @selector(_never:)
+				 userInfo: nil
+				  repeats: NO];
   [[NSRunLoop currentRunLoop] run];
   [pool release];
 }
@@ -310,7 +309,6 @@ available(NSString *host)
 		    {
 		      break;	// matched
 		    }
-		  elem = nil;
 		}
 	    }
 	}

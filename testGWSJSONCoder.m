@@ -132,7 +132,7 @@ main()
 	  return 1;
 	}
 
-      coder = [GWSJSONCoder new];
+      coder = [[GWSJSONCoder new] autorelease];
       result = [coder buildRequest: nil
 		        parameters: object
 			     order: nil];

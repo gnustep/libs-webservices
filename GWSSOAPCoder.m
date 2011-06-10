@@ -1087,13 +1087,13 @@ newHeader(NSString *prefix, id o)
       for (i = 0; i < count; i++)
 	{
 	  NSString      *k = [order objectAtIndex: i];
-	  id            v = [o objectForKey: k];
 
 	  if (NO == [k hasPrefix: @"GWSCoder"]
 	    && NO == [k hasPrefix: @"GWSSOAP"])
 	    {
-	      v = [o objectForKey: k];
-	      if (v == nil)
+	      id	v = [o objectForKey: k];
+
+	      if (nil == v)
 		{
 		  [NSException raise: NSInvalidArgumentException
 		    format: @"Parameter '%@' (order %u) missing", k, i];
