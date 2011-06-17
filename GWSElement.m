@@ -674,7 +674,7 @@ static Class		GWSElementClass = Nil;
       GWSElement	*from = _first;
       GWSElement	*first = [from mutableCopyWithZone: aZone];
       
-      first->parent = copy;
+      first->_parent = copy;
       while (count-- > 0)
 	{
 	  GWSElement        *c;
