@@ -674,6 +674,7 @@ static Class		GWSElementClass = Nil;
       GWSElement	*from = _first;
       GWSElement	*first = [from mutableCopyWithZone: aZone];
       
+      first->parent = copy;
       while (count-- > 0)
 	{
 	  GWSElement        *c;
@@ -683,7 +684,7 @@ static Class		GWSElementClass = Nil;
 	  c->_parent = copy;
 	  c->_next = first;
 	  c->_prev = first->_prev;
-	  c->_next->_prev = c;
+	  first->_prev = c;
 	  c->_prev->_next = c;
 	}
       copy->_first = first;
@@ -870,9 +871,9 @@ static Class		GWSElementClass = Nil;
 	    {
 	      _parent->_first = _next;
 	    }
+          _next = _prev = self;
 	}
       _parent = nil;
-      _next = _prev = self;
       [self release];
     }
 }
