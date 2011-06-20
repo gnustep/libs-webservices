@@ -127,7 +127,7 @@ static Class		GWSElementClass = Nil;
 	   */
 	  if ([k isKindOfClass: [NSDictionary class]] == YES)
 	    {
-	      attributes = (NSDictionary*)k;
+	      attributes = [(NSDictionary*)k copy];
 	      break;
 	    }
 	  a = [NSMutableDictionary new];

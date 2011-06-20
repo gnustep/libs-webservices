@@ -1,9 +1,14 @@
-2011-05-11 Richard Frith-Macdonald  <rfm@gnu.org>
+2011-06-20 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: Bump subminor version to 0.5.2
+	* GWSElement.m: Fix rrror in mun/released bug.
+
+2011-06-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: Bump subminor version to 0.5.1
-	* GWSE;ement.m: Fix error in mutable copy.
+	* GWSElement.m: Fix error in mutable copy.
 
-2011-05-11 Richard Frith-Macdonald  <rfm@gnu.org>
+2011-06-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: Bump subminor version to 0.5.0 due to errors in the
 	0.4.0 release (incorrectly tagged)
