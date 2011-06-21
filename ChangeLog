@@ -1,3 +1,10 @@
+2011-06-21 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	When reserving queue slots for a host, we also reserve at least one
+	pool slot so that we know the queue will make progress.
+
 2011-06-20 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: Bump subminor version to 0.5.2

@@ -142,7 +142,8 @@ extern "C" {
  */
 + (NSString*) description;
 
-/** Sets maximum active requests to a single host.
+/** Sets maximum active requests to a single host.  This is silently limited
+ * to be no more than the value set by the +setPool: method.
  */
 + (void) setPerHostPool: (unsigned)max;
 
@@ -152,7 +153,9 @@ extern "C" {
  */
 + (void) setPerHostQMax: (unsigned)max;
 
-/** Sets the maximum number of simultaneous active async requests.
+/** Sets the maximum number of simultaneous active async requests.<br />
+ * This is silently limited to the number of reserved hosts plus one on
+ * any attempt to set a lower value.
  */
 + (void) setPool: (unsigned)max;
 
@@ -165,8 +168,11 @@ extern "C" {
 /** Sets a minimum queue size for a specific host ... if the queue for
  * this host is not full, an RPC can be queued even if the normal queue
  * limits have been reached.<br />
- * This overrides the values defined by the +setPerHostQMax: and +setQMax:
- * methods.
+ * Setting a non-zero value for a host also reserves a single space in
+ * the connection pool for this host, so it is always possible for at
+ * least one request to be in progress to the host.<br />
+ * This setting overrides the values defined by the +setPerHostQMax: and
+ * +setQMax: methods.
  */
 + (void) setReserve: (unsigned)reserve forHost: (NSString*)host;
 

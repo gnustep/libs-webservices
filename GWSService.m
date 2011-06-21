@@ -30,6 +30,7 @@
 static NSRecursiveLock	*queueLock = nil;
 static unsigned perHostPool = 20;
 static unsigned perHostQMax = 200;
+static unsigned	shared = 200;
 static unsigned	pool = 200;
 static unsigned	qMax = 2000;
 static unsigned	activeCount = 0;
@@ -90,9 +91,28 @@ available(NSString *host)
     {
       return NO;
     }
-  if (host != nil && [[active objectForKey: host] count] < perHostPool)
+  if (nil != host)
     {
-      return YES;
+      unsigned	inUse = [[active objectForKey: host] count];
+
+      if (activeCount < shared)
+	{
+	  /* There are shared connections available ... we can have one
+	   * as long as the number of connections for this host has not
+	   * been reached.
+	   */
+	  if (inUse < perHostPool)
+	    {
+	      return YES;
+	    }
+	}
+      else if (0 == inUse && [[perHostReserve objectForKey: host] intValue] > 0)
+	{
+	  /* No shared connections, but we can use the one reserved for
+	   * this host because there are none in use.
+	   */
+	  return YES;
+	}
     }
   return NO;
 }
@@ -1102,9 +1122,9 @@ available(NSString *host)
 + (void) setPool: (unsigned)max
 {
   [queueLock lock];
-  if (max < 1)
+  if (max < [perHostReserve count] + 1)
     {
-      max = 1;
+      max = [perHostReserve count] + 1;
     }
   if (max != pool)
     {
@@ -1114,6 +1134,7 @@ available(NSString *host)
 	}
       pool = max;
     }
+  shared = pool - [perHostReserve count];
   [workThreads setOperations: pool * 2];
   [queueLock unlock];
 }
@@ -1126,15 +1147,26 @@ available(NSString *host)
 + (void) setReserve: (unsigned)reserve forHost: (NSString*)host
 {
   [queueLock lock];
-  
-// is there a better way to maintain backward compatibility?
+  if (0 == reserve)
+    {
+      [perHostReserve removeObjectForKey: host];
+    }
+  else
+    {
+      // is there a better way to maintain backward compatibility?
 #if !defined(GNUSTEP) && (MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4)
-  [perHostReserve setObject: [NSNumber numberWithInt: reserve]
-		     forKey: host];
+      [perHostReserve setObject: [NSNumber numberWithInt: reserve]
+			 forKey: host];
 #else
-  [perHostReserve setObject: [NSNumber numberWithInteger: reserve]
-		     forKey: host];
+      [perHostReserve setObject: [NSNumber numberWithInteger: reserve]
+			 forKey: host];
 #endif
+    }
+  if (pool <= [perHostReserve count])
+    {
+      pool = [perHostReserve count] + 1;
+    }
+  shared = pool - [perHostReserve count];
   [queueLock unlock];
 }
 
