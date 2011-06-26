@@ -1,3 +1,11 @@
+2011-06-26 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: Bump subminor version to 0.5.3
+
+2011-06-26 Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
+
+	* WSSUsernameToken.m: Fix for macro handling of old compilers.
+
 2011-06-21 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

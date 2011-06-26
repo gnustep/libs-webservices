@@ -32,10 +32,10 @@ static NSTimeZone	*gmt = nil;
 static GWSCoder		*coder = nil;
 
 #ifdef __MINGW__
-#define RANDOM(x)   rand(x)
+#define RANDOM()   rand()
 #define SRANDOM(s)  srand(s)
 #else
-#define RANDOM(x)   random(x)
+#define RANDOM()   random()
 #define SRANDOM(s)  srandom(s)
 #endif
 
