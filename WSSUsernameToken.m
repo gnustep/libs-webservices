@@ -61,6 +61,31 @@ static GWSCoder		*coder = nil;
 	  *date = d;
 	}
     }
+  else if (NO == [d isKindOfClass: [NSCalendarDate class]])
+    {
+      const char	*s = [[d description] UTF8String];
+      unsigned int	year, month, day, hour, minute, second;
+
+      if (strlen(s) != 20 || s[4] != '-' || s[7] != '-'
+	|| s[10] != 'T' || s[13] != ':' || s[16] != ':'
+	|| s[19] != 'Z' || sscanf(s, "%u-%u-%uT%u:%u:%uZ",
+	&year, &month, &day, &hour, &minute, &second) != 6)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"Bad timestamp (%@) argument", d];
+	}
+      d = [[[NSCalendarDate alloc] initWithYear: year
+					  month: month
+					    day: day
+					   hour: hour
+					 minute: minute
+					 second: second
+				       timeZone: gmt] autorelease];
+      if (0 != date)
+	{
+	  *date = d;
+	}
+    }
   [d setTimeZone: gmt];
   [d setCalendarFormat: @"%Y-%m-%dT%H:%M:%SZ"];
 

@@ -72,7 +72,9 @@ extern "C" {
  * If the supplied date is nil then the current timestamp is used and
  * returned, otherwise the timestamp has its timezone and format adjusted
  * as necessary and is used for the digest.<br />
- * If the supplied nonce is nil then a new nonce is generated and returned.
+ * If the supplied nonce is nil then a new one is generated and returned.<br />
+ * If the supplied date is actually a string, it is parsed to form a date
+ * and replaced by the resulting calendar date object.
  */
 + (NSString*) digestHashForPassword: (NSString*)password
 		       andTimestamp: (NSCalendarDate**)date
