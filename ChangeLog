@@ -1,5 +1,13 @@
 2011-06-26 Richard Frith-Macdonald  <rfm@gnu.org>
 
+	* GNUmakefile: Bump subminor version to 0.5.4
+	* WSSUsernameToken.h:
+	* WSSUsernameToken.m:
+	Add +digestHashForPassword:andTimestamp:withNonce: method for
+	generating/checking digest.
+
+2011-06-26 Richard Frith-Macdonald  <rfm@gnu.org>
+
 	* GNUmakefile: Bump subminor version to 0.5.3
 
 2011-06-26 Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>

@@ -33,7 +33,7 @@
 extern "C" {
 #endif
 
-@class  NSDate;
+@class  NSCalendarDate;
 @class  NSString;
 @class  GWSElement;
 
@@ -62,10 +62,21 @@ extern "C" {
 @private
   NSString              *_name;
   NSString		*_password;
-  NSDate		*_created;
-  NSData		*_nonce;
+  NSCalendarDate	*_created;
+  NSString		*_nonce;
   unsigned		_ttl;
 }
+
+/** Takes a plaintext password, timestamp, and a base64 encoded nonce,
+ * and generates and returns a base64 encoded hash digest.<br />
+ * If the supplied date is nil then the current timestamp is used and
+ * returned, otherwise the timestamp has its timezone and format adjusted
+ * as necessary and is used for the digest.<br />
+ * If the supplied nonce is nil then a new nonce is generated and returned.
+ */
++ (NSString*) digestHashForPassword: (NSString*)password
+		       andTimestamp: (NSCalendarDate**)date
+			  withNonce: (NSString**)nonce;
 
 /** Adds a representation of the receiver to the specified SOAP header
  * and returns the modified header.  If the header is nil, this simply

@@ -41,6 +41,66 @@ static GWSCoder		*coder = nil;
 
 @implementation	WSSUsernameToken
 
++ (NSString*) digestHashForPassword: (NSString*)password
+		       andTimestamp: (NSCalendarDate**)date
+			  withNonce: (NSString**)nonce
+{
+  NSCalendarDate	*d = (0 == date) ? nil : (id)*date;
+  NSString		*n = (0 == nonce) ? nil : (id)*nonce;
+  NSData		*nd;
+  NSData		*pass;
+  NSData		*when;
+  NSData		*hash;
+  NSMutableData		*hashable;
+
+  if (nil == d)
+    {
+      d = [NSCalendarDate date];
+      if (0 != date)
+	{
+	  *date = d;
+	}
+    }
+  [d setTimeZone: gmt];
+  [d setCalendarFormat: @"%Y-%m-%dT%H:%M:%SZ"];
+
+  if (nil != n)
+    {
+      nd = [coder decodeBase64From: n];
+      if ([nd length] != 16)
+	{
+	  [NSException raise: NSInvalidArgumentException
+		      format: @"Nonce does not decode to 16 bytes of data"];
+	}
+    }
+  else
+    {
+      uint32_t	buf[4];
+
+      buf[0] = (uint32_t)RANDOM();
+      buf[1] = (uint32_t)RANDOM();
+      buf[2] = (uint32_t)RANDOM();
+      buf[3] = (uint32_t)RANDOM();
+      nd = [NSData dataWithBytes: buf length: 16];
+      n = [coder encodeBase64From: nd];
+      if (0 != nonce)
+	{
+	  *nonce = n;
+	}
+    }
+
+  pass = [password dataUsingEncoding: NSUTF8StringEncoding];
+  when = [[d description] dataUsingEncoding: NSUTF8StringEncoding];
+  hashable = [[NSMutableData alloc] initWithCapacity:
+    [nd length] + [when length] + [pass length]];
+  [hashable appendData: nd];
+  [hashable appendData: when];
+  [hashable appendData: pass];
+  hash = [hashable SHA1];
+  [hashable release];
+  return [coder encodeBase64From: hash];
+}
+
 + (void) initialize
 {
   SRANDOM((unsigned)[[NSDate date] timeIntervalSinceReferenceDate]);
@@ -200,32 +260,17 @@ static GWSCoder		*coder = nil;
   if (_ttl > 0)
     {
       NSMutableDictionary	*attr;
-      NSMutableData		*hashable;
-      NSCalendarDate		*created;
-      NSData			*nonce;
-      NSData			*hash;
-      NSData			*pass;
-      NSString			*date;
-      uint32_t			buf[4];
-
-      created = [NSCalendarDate new];
-      [created setTimeZone: gmt];
-      [created setCalendarFormat: @"%Y-%m-%dT%H:%M:%SZ"];
-      date = [created description];
-      [created release];
-      buf[0] = (uint32_t)RANDOM();
-      buf[1] = (uint32_t)RANDOM();
-      buf[2] = (uint32_t)RANDOM();
-      buf[3] = (uint32_t)RANDOM();
-      nonce = [[NSData alloc] initWithBytes: buf length: 16];
-      pass = [_password dataUsingEncoding: NSUTF8StringEncoding];
-      hashable = [[NSMutableData alloc] initWithCapacity:
-	[nonce length] + [pass length] + 20];
-      [hashable appendData: nonce];
-      [hashable appendData: [date dataUsingEncoding: NSUTF8StringEncoding]];
-      [hashable appendData: pass];
-      hash = [hashable SHA1];
-      [hashable release];
+      NSString			*hash;
+      
+      [_created release];
+      _created = nil;
+      [_nonce release];
+      _nonce = nil;
+      hash = [[self class] digestHashForPassword: _password
+				    andTimestamp: &_created
+				       withNonce: &_nonce];
+      [_created retain];
+      [_nonce retain];
 
       attr = [[NSMutableDictionary alloc] initWithCapacity: 1];
       [attr setObject: @"#PasswordDigest" forKey: @"Type"];
@@ -234,7 +279,7 @@ static GWSCoder		*coder = nil;
 				    qualified: pName
 				   attributes: attr];
       [attr release];
-      [elem addContent: [coder encodeBase64From: hash]];
+      [elem addContent: hash];
       [token addChild: elem];
       [elem release];
 
@@ -242,8 +287,7 @@ static GWSCoder		*coder = nil;
 				    namespace: ns
 				    qualified: nName
 				   attributes: nil];
-      [elem addContent: [coder encodeBase64From: nonce]];
-      [nonce release];
+      [elem addContent: _nonce];
       [token addChild: elem];
       [elem release];
 
@@ -251,7 +295,7 @@ static GWSCoder		*coder = nil;
 				    namespace: uns
 				    qualified: cName
 				   attributes: nil];
-      [elem addContent: date];
+      [elem addContent: [_created description]];
       [token addChild: elem];
       [elem release];
     }
