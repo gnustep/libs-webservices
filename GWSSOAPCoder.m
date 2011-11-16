@@ -568,6 +568,11 @@ newHeader(NSString *prefix, id o)
 	}
     }
 
+  if ([[self delegate] respondsToSelector: @selector(coder:didEncode:)])
+    {
+      envelope = [[self delegate] coder: self didEncode: envelope];
+    }
+
   ms = [self mutableString];
   [ms setString: @"<?xml version=\"1.0\" encoding=\"UTF-8\"?>"];
   [envelope encodeWith: self];
@@ -1232,6 +1237,11 @@ newHeader(NSString *prefix, id o)
 
 
 @implementation NSObject (GWSSOAPCoder)
+
+- (GWSElement*) coder: (GWSSOAPCoder*)coder didEncode: (GWSElement*)element
+{
+  return element;
+}
 
 - (GWSElement*) coder: (GWSSOAPCoder*)coder willDecode: (GWSElement*)element
 {

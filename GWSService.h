@@ -451,6 +451,14 @@ extern "C" {
  */
 - (void) completedRPC: (GWSService*)sender;
 
+/** This method is used to inform the delegate of the encoded XML request
+ * (a [GWSElement] instance) which will be sent to the remote system.<br />
+ * The delegate may modify or replace this and must return the replacement
+ * value or the modified element tree.
+ */
+- (GWSElement*) webService: (GWSService*)service
+		 didEncode: (GWSElement*)element;
+
 /** <override-dummy />
  * Called by the sender when it is about to send an encoded request to a
  * remote server.  The delegate may return a different data item to be

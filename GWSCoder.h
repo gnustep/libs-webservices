@@ -583,6 +583,13 @@ extern "C" {
  */
 @interface      NSObject (GWSSOAPCoder)
 
+/** This method is used to inform the delegate of the encoded XML request
+ * (a [GWSElement] instance) which will be serialised to an NSData.<br />
+ * The delegate may modify or replace this and must return the replacement
+ * value or the modified element tree.
+ */
+- (GWSElement*) coder: (GWSSOAPCoder*)coder didEncode: (GWSElement*)element;
+
 /** This method is used to inform the delegate of the
  * GWSElement instance being decoded as the SOAP Envelope, Header, Body,
  * Fault or Method.<br />

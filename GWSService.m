@@ -1215,6 +1215,15 @@ available(NSString *host)
   return _coder;
 }
 
+- (GWSElement*) coder: (GWSSOAPCoder*)coder didEncode: (GWSElement*)element
+{
+  if ([_delegate respondsToSelector: @selector(webService:didEncode:)] == YES)
+    {
+      element = [_delegate webService: self didEncode: element];
+    }
+  return element;
+}
+
 - (GWSElement*) coder: (GWSSOAPCoder*)coder willDecode: (GWSElement*)element
 {
   if ([_delegate respondsToSelector: @selector(webService:willDecode:)] == YES)
@@ -1778,6 +1787,11 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data
 {
   return data;
+}
+- (GWSElement*) webService: (GWSService*)service
+		 didEncode: (GWSElement*)element
+{
+  return element;
 }
 - (GWSElement*) webService: (GWSService*)service
 		willDecode: (GWSElement*)element
