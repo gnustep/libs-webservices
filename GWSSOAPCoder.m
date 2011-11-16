@@ -1044,6 +1044,14 @@ newHeader(NSString *prefix, id o)
     {
       q = [NSString stringWithFormat: @"%@:%@", nsName, name];
     }
+  if (nil == q)
+    {
+      q = name;
+    }
+  if (YES == [q isEqualToString: name] && [q rangeOfString: @":"].length > 0)
+    {
+      name = [q substringFromIndex: NSMaxRange([q rangeOfString: @":"])];
+    }
   e = [[GWSElement alloc] initWithName: name
 			     namespace: nil
 			     qualified: q

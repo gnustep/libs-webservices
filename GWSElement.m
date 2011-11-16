@@ -466,6 +466,32 @@ static Class		GWSElementClass = Nil;
           qualified: (NSString*)qualified
          attributes: (NSDictionary*)attributes
 {
+  NSString	*prefix = @"";
+
+  NSAssert([name length] > 0, NSInvalidArgumentException);
+  NSAssert(0 == [name rangeOfString: @":"].length,
+    NSInvalidArgumentException);
+
+  if (nil != qualified)
+    {
+      NSRange	r = [qualified rangeOfString: @":"];
+
+      if (0 == r.length)
+	{
+	  NSAssert([qualified isEqualToString: name],
+	    NSInvalidArgumentException);
+	}
+      else
+	{
+	  NSString	*n;
+
+	  prefix = [qualified substringToIndex: r.location];
+	  n = [qualified substringFromIndex: NSMaxRange(r)];
+	  NSAssert([n isEqualToString: name],
+	    NSInvalidArgumentException);
+	}
+    }
+
   if ((self = [super init]) != nil)
     {
       NSZone    *z = [self zone];
@@ -473,25 +499,15 @@ static Class		GWSElementClass = Nil;
       _next = _prev = self;
       _name = [name copyWithZone: z];
       _namespace = [namespace copyWithZone: z];
-      if (qualified == nil)
+      if (nil == qualified)
 	{
 	  _qualified = [_name retain];
-	  _prefix = @"";
+	  _prefix = prefix;
 	}
       else
 	{
-	  NSRange	r = [qualified rangeOfString: @":"];
-
 	  _qualified = [qualified copyWithZone: z];
-	  if (r.length == 0)
-	    {
-	      _prefix = @"";
-	    }
-	  else
-	    {
-	      _prefix
-		= [[qualified substringToIndex: r.location] copyWithZone: z];
-	    }
+	  _prefix = [prefix copyWithZone: z];
 	}
       if ([attributes count] > 0)
         {
@@ -928,7 +944,9 @@ static Class		GWSElementClass = Nil;
 
 - (void) setName: (NSString*)name
 {
-  NSAssert([_name length] > 0, NSInvalidArgumentException);
+  NSAssert([name length] > 0, NSInvalidArgumentException);
+  NSAssert(0 == [name rangeOfString: @":"].length,
+    NSInvalidArgumentException);
   name = [name copy];
   [_name release];
   _name = name;
@@ -951,6 +969,8 @@ static Class		GWSElementClass = Nil;
     {
       prefix = @"";
     }
+  NSAssert(0 == [prefix rangeOfString: @":"].length,
+    NSInvalidArgumentException);
   if ([uri length] == 0)
     {
       if (_namespaces != nil)
@@ -980,56 +1000,59 @@ static Class		GWSElementClass = Nil;
 - (void) setPrefix: (NSString*)prefix
 {
   NSString	*ns;
+  NSRange	r;
+  BOOL		empty;
 
-  if (prefix == nil)
+  if (nil == prefix)
     {
       prefix = @"";
     }
+  NSAssert(0 == [prefix rangeOfString: @":"].length,
+    NSInvalidArgumentException);
+  empty = (0 == [prefix length]) ? YES : NO;
+
   ns = [self namespaceForPrefix: prefix];
-  if (ns == nil)
+  if (nil == ns && NO == empty)
     {
       [NSException raise: NSInvalidArgumentException
 		  format: @"No namespace found for prefix '%@'", prefix];
     }
+
+  r = [_qualified rangeOfString: @":"];
+  if (YES == empty)
+    {
+      if (r.length > 0)
+	{
+	  NSString	*tmp = [_qualified substringFromIndex: NSMaxRange(r)];
+
+	  [_qualified release];
+	  _qualified = [tmp retain];
+	  [ns retain];
+	  [_namespace release];
+	  _namespace = ns;
+	}
+    }
   else
     {
-      NSRange	r = [_qualified rangeOfString: @":"];
-
-      if ([prefix length] == 0)
+      if (r.length != [prefix length]
+	|| [prefix isEqual: [self prefix]] == NO)
 	{
+	  NSString	*tmp;
+
 	  if (r.length > 0)
 	    {
-	      NSString	*tmp = [_qualified substringFromIndex: NSMaxRange(r)];
-
-	      [_qualified release];
-	      _qualified = [tmp retain];
-	      [ns retain];
-	      [_namespace release];
-	      _namespace = ns;
+	      tmp = [_qualified substringFromIndex: NSMaxRange(r)];
 	    }
-	}
-      else
-	{
-	  if (r.length != [prefix length]
-	    || [prefix isEqual: [self prefix]] == NO)
+	  else
 	    {
-	      NSString	*tmp;
-
-	      if (r.length > 0)
-		{
-		  tmp = [_qualified substringFromIndex: NSMaxRange(r)];
-		}
-	      else
-		{
-		  tmp = _qualified;
-		}
-	      tmp = [prefix stringByAppendingFormat: @":%@", tmp];
-	      [_qualified release];
-	      _qualified = [tmp retain];
-	      [ns retain];
-	      [_namespace release];
-	      _namespace = ns;
+	      tmp = _qualified;
 	    }
+	  tmp = [prefix stringByAppendingFormat: @":%@", tmp];
+	  [_qualified release];
+	  _qualified = [tmp retain];
+	  [ns retain];
+	  [_namespace release];
+	  _namespace = ns;
 	}
     }
   [_prefix release];
