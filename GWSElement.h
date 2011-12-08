@@ -36,6 +36,7 @@
 extern "C" {
 #endif
 
+@class  GWSCoder;
 @class  NSDictionary;
 @class  NSMutableArray;
 @class  NSMutableDictionary;

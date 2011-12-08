@@ -499,9 +499,15 @@ newHeader(NSString *prefix, id o)
     {
       if (_style == GWSSOAPBodyEncodingStyleRPC)
 	{
-	  if (nsName == nil)
+	  if (nil == nsName)
 	    {
 	      qualified = method;
+	      if (YES == [qualified isEqualToString: method]
+		&& [qualified rangeOfString: @":"].length > 0)
+		{
+		  method = [qualified substringFromIndex:
+		    NSMaxRange([qualified rangeOfString: @":"])];
+		}
 	    }
 	  else
 	    {
