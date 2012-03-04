@@ -1,3 +1,10 @@
+2012-03-04 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Ignore (and log) setting an invalid URL, rather than
+	raising an exception.  Some people write bad WSDL containing illegal
+	values for the soap:address location URL because they know that the
+	application will most likely have to override it anyway.
+
 2011-06-26 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: Bump subminor version to 0.5.4

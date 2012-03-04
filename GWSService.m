@@ -1569,8 +1569,9 @@ available(NSString *host)
       if (u == nil || [u host] == nil
 	|| ([s isEqual: @"http"] == NO && [s isEqual: @"https"] == NO))
 	{
-	  [NSException raise: NSInvalidArgumentException
-		      format: @"Bad URL (%@) supplied", url];
+	  NSLog(@"[%@-%@] Bad URL (%@) ignored",
+	    NSStringFromClass([self class]), NSStringFromSelector(_cmd), url);
+	  return nil;
 	}
       url = u;
     }
