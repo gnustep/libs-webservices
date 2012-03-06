@@ -1,3 +1,8 @@
+2012-03-06 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Don't attempt dot syntax for port/operation lookup
+	if the method name corresponds to a unique operation name.
+
 2012-03-04 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Ignore (and log) setting an invalid URL, rather than

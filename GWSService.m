@@ -281,7 +281,7 @@ available(NSString *host)
       return YES;
     }
 
-  if (_document == nil)
+  if (nil == _document)
     {
       _operation = [method retain];
     }
@@ -293,28 +293,18 @@ available(NSString *host)
       GWSElement	*elem;
       GWSPortType	*portType;
       GWSBinding	*binding;
+      GWSPort		*found;
 
       /* As this is not a standalone service, we must set up information from
        * the parsed WSDL document.
        */
-      r = [method rangeOfString: @"."];
-      if (r.length == 1)
-	{
-	  portName = [method substringToIndex: r.location];
-	  _operation = [method substringFromIndex: NSMaxRange(r)];
-	}
-      else
-	{
-	  portName = nil;
-	  _operation = method;
-	}
-      [_operation retain];
 
-      /* Look through the ports declared in this service for one matching
-       * the port name and operation name.  Get details by looking up
+      /* Look through the ports declared in this service for one with an
+       * operation uniquely matching the method.  Get details by looking up
        * bindings, since we can't actually use a port/operation if there
        * is no binding for it.
        */
+      found = nil;
       enumerator = [_ports objectEnumerator];
       while ((_port = [enumerator nextObject]) != nil)
 	{
@@ -322,23 +312,66 @@ available(NSString *host)
 	  portType = [binding type];
 	  if (portType != nil)
 	    {
-	      elem = [[portType operations] objectForKey: _operation];
+	      elem = [[portType operations] objectForKey: method];
 	      if (elem != nil)
 		{
-		  if (portName == nil || [portName isEqual: [portType name]])
+		  if (nil == portName)
+		    {
+		      portName = [portType name];	// matched
+		      found = _port;
+		    }
+		  else
+		    {
+		      found = nil;			// not unique
+		      _port = nil;
+		      break;
+		    }
+		}
+	    }
+	}
+
+      if (nil != found)
+	{
+	  _operation = [method copy];
+	  _port = [found retain];
+	}
+      else if (1 == (r = [method rangeOfString: @"."]).length)
+	{
+	  /* No unique operation ... but our method name uses dot
+	   * syntax to specify port and operation.
+	   */
+	  portName = [method substringToIndex: r.location];
+	  _operation = [method substringFromIndex: NSMaxRange(r)];
+	  [_operation retain];
+
+	  /* Look through the ports declared in this service for one matching
+	   * the port name and operation name.  Get details by looking up
+	   * bindings, since we can't actually use a port/operation if there
+	   * is no binding for it.
+	   */
+	  enumerator = [_ports objectEnumerator];
+	  while ((_port = [enumerator nextObject]) != nil)
+	    {
+	      binding = [_port binding];
+	      portType = [binding type];
+	      if (portType != nil)
+		{
+		  elem = [[portType operations] objectForKey: _operation];
+		  if (elem != nil && [portName isEqual: [portType name]])
 		    {
 		      break;	// matched
 		    }
 		}
 	    }
+	  [_port retain];
 	}
-      [_port retain];
 
-      if (_port == nil)
+      if (nil == _port)
 	{
 	  [self _clean];
 	  [self _setProblem: [NSString stringWithFormat:
-	    @"Unable to find port.operation matching '%@'", method]];
+	    @"Unable to find unique operation or port.operation matching '%@'",
+	    method]];
 	  return NO;
 	}
     }
