@@ -1604,7 +1604,7 @@ available(NSString *host)
 	{
 	  NSLog(@"[%@-%@] Bad URL (%@) ignored",
 	    NSStringFromClass([self class]), NSStringFromSelector(_cmd), url);
-	  return nil;
+	  return;
 	}
       url = u;
     }
