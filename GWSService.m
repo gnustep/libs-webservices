@@ -305,6 +305,7 @@ available(NSString *host)
        * is no binding for it.
        */
       found = nil;
+      portName = nil;
       enumerator = [_ports objectEnumerator];
       while ((_port = [enumerator nextObject]) != nil)
 	{
