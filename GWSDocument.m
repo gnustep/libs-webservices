@@ -412,8 +412,6 @@ static NSLock			*extLock = nil;
 
               /* FIXME ... need to parse schema info etc for types.
                */
-              NSLog(@"types parsing not implemented");
-
               _elem = next;
             }
 
