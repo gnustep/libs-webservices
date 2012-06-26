@@ -1,3 +1,8 @@
+2012-06-28 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: make bugfix release 0.5.6
+        * GWSJSONCoder.m: Fix bug encoding dictionary/object.
+
 2012-03-27 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: make bugfix release 0.5.5

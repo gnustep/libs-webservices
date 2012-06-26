@@ -694,6 +694,7 @@ parse(context *ctxt)
     {
       NSEnumerator	*kEnum;
       NSString	        *key;
+      BOOL              first = YES;
 
       kEnum = [[o objectForKey: GWSOrderKey] objectEnumerator];
       if (kEnum == nil)
@@ -704,13 +705,25 @@ parse(context *ctxt)
       [self indent];
       while ((key = [kEnum nextObject]))
         {
+          if (YES == first)
+            {
+              first = NO;
+            }
+          else
+            {
+              [ms appendString: @","];
+              [self unindent];
+            }
           [self nl];
           [ms appendString: JSONQuote([key description])];
           [ms appendString: @":"];
 	  [self indent];
           [self nl];
           [self _appendObject: [o objectForKey: key]];
-	  [self unindent];
+        }
+      if (NO == first)
+        {
+          [self unindent];
         }
       [self unindent];
       [self nl];
