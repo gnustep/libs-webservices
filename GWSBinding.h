@@ -32,6 +32,9 @@
 extern "C" {
 #endif
 
+@class  NSDictionary;
+@class  NSMutableArray;
+@class  NSMutableDictionary;
 @class  NSString;
 @class  GWSDocument;
 @class  GWSElement;
