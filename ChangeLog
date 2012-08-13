@@ -1,3 +1,8 @@
+2012-08-13 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: make bugfix release 0.5.7
+        * GWSCoder.m: Support CDATA parsing.
+
 2012-06-28 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: make bugfix release 0.5.6
