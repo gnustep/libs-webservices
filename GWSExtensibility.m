@@ -395,6 +395,7 @@ promote(NSMutableDictionary *d, NSString *k)
 		    {
 		      [p setObject: order forKey: GWSOrderKey];
 		    }
+#if 0
 		  enumerator = [p keyEnumerator];
 		  while ((n = [enumerator nextObject]) != nil)
 		    {
@@ -407,6 +408,7 @@ promote(NSMutableDictionary *d, NSString *k)
 			    n, messageName, p);
 			}
 		    }
+#endif
 		}
 	    }
 	  else if ([name isEqualToString: @"header"])
