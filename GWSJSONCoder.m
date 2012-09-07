@@ -633,7 +633,7 @@ parse(context *ctxt)
     {
       const char	*t = [o objCType];
 
-      if (strchr("cCsSiIlL", *t) != 0)
+      if (strchr("cCsSiIlLqQ", *t) != 0)
         {
           long long	i = [(NSNumber*)o longLongValue];
 

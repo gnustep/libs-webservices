@@ -1,3 +1,11 @@
+2012-09-07 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: make bugfix release 0.5.9
+	* GWSJSONCoder.m:
+	* GWSXMLRPCCoder.m:
+	* GWSSOAPCoder.m:
+        Handle quadword NSNumber values.
+
 2012-09-02 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: make bugfix release 0.5.8
