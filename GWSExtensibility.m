@@ -389,7 +389,9 @@ promote(NSMutableDictionary *d, NSString *k)
 		}
 	      if (p != nil)
 		{
+#if 0
 		  NSString	*n;
+#endif
 
 		  if ([order count] > 0)
 		    {

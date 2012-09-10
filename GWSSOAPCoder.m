@@ -103,6 +103,8 @@ NSString * const GWSSOAPValueKey
 @implementation	GWSSOAPCoder
 
 static NSCharacterSet	*illegal = nil;
+static id               boolN;
+static id               boolY;
 
 + (void) initialize
 {
@@ -117,6 +119,8 @@ static NSCharacterSet	*illegal = nil;
       [tmp invert];
       illegal = [tmp copy];
       [tmp release];
+      boolN = [[NSNumber numberWithBool: NO] retain];
+      boolY = [[NSNumber numberWithBool: YES] retain];
     }
 }
 
@@ -964,6 +968,22 @@ newHeader(NSString *prefix, id o)
         }
       c = o;
     }
+  else if (o == boolN)
+    {
+      if (NO == _useLiteral && x == nil)
+        {
+          x = @"xsd:boolean";
+        }
+      c = @"false";
+    }
+  else if (o == boolY)
+    {
+      if (NO == _useLiteral && x == nil)
+        {
+          x = @"xsd:boolean";
+        }
+      c = @"true";
+    }
   else if (YES == [o isKindOfClass: [NSNumber class]])
     {
       const char	*t = [o objCType];
@@ -972,22 +992,7 @@ newHeader(NSString *prefix, id o)
         {
           long	i = [(NSNumber*)o longValue];
 
-          if ((i == 0 || i == 1) && (*t == 'c' || *t == 'C'))
-            {
-              if (NO == _useLiteral && x == nil)
-                {
-                  x = @"xsd:boolean";
-                }
-              if (i == 0)
-                {
-                  c = @"false";
-                }
-              else
-                {
-                  c = @"true";
-                }
-            }
-          else if (*t == 'l' || *t == 'L')
+          if (*t == 'l' || *t == 'L')
             {
               if (NO == _useLiteral && x == nil)
                 {

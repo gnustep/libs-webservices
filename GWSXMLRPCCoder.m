@@ -36,10 +36,14 @@
 @implementation	GWSXMLRPCCoder
 
 static NSCharacterSet   *ws;
+static id               boolN;
+static id               boolY;
 
 + (void) initialize
 {
   ws = [[NSCharacterSet whitespaceAndNewlineCharacterSet] retain];
+  boolN = [[NSNumber numberWithBool: NO] retain];
+  boolY = [[NSNumber numberWithBool: YES] retain];
 }
 
 - (NSData*) buildRequest: (NSString*)method 
@@ -363,7 +367,11 @@ static NSCharacterSet   *ws;
 		      format: @"missing %@ value", name];
 	}
       c = [s intValue];
-      return [[NSNumber alloc] initWithBool: c == 0 ? NO : YES];
+      if (0 == c)
+        {
+          return boolN;
+        }
+      return boolY;
     }
 
   if ([name isEqualToString: @"double"])
@@ -691,29 +699,24 @@ static NSCharacterSet   *ws;
           [ms appendString: @"</string>"];
         }
     }
+  else if (o == boolN)
+    {
+      [ms appendString: @"<boolean>0</boolean>"];
+    }
+  else if (o == boolY)
+    {
+      [ms appendString: @"<boolean>1</boolean>"];
+    }
   else if (YES == [o isKindOfClass: [NSNumber class]])
     {
       const char	*t = [o objCType];
+
 
       if (strchr("cCsSiIlLqQ", *t) != 0)
         {
           long	i = [(NSNumber*)o longValue];
 
-          if ((i == 0 || i == 1) && (*t == 'c' || *t == 'C'))
-            {
-              if (i == 0)
-                {
-                  [ms appendString: @"<boolean>0</boolean>"];
-                }
-              else
-                {
-                  [ms appendString: @"<boolean>1</boolean>"];
-                }
-            }
-          else
-            {
-              [ms appendFormat: @"<i4>%ld</i4>", i];
-            }
+          [ms appendFormat: @"<i4>%ld</i4>", i];
         }
       else
         {

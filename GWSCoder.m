@@ -77,6 +77,9 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
 
 @implementation	GWSCoder
 
+static id       boolN;
+static id       boolY;
+
 + (GWSCoder*) coder
 {
   GWSCoder       *coder;
@@ -90,6 +93,12 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
       coder = [self new];
     }
   return [coder autorelease];
+}
+
++ (void) initialize
+{
+  boolN = [[NSNumber numberWithBool: NO] retain];
+  boolY = [[NSNumber numberWithBool: YES] retain];
 }
 
 - (BOOL) compact
@@ -610,11 +619,11 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
       if ([value isEqualToString: @"true"]
 	|| [value isEqualToString: @"1"])
 	{
-	  result = [NSNumber numberWithBool: YES];
+	  result = boolY;
 	}
       else
 	{
-	  result = [NSNumber numberWithBool: NO];
+	  result = boolN;
 	}
     }
   else if ([type isEqualToString: @"xsd:base64Binary"] == YES)

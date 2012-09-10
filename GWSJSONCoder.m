@@ -32,6 +32,9 @@
 
 @end
 
+static id       boolN;
+static id       boolY;
+
 static NSString*
 JSONQuote(NSString *str)
 {
@@ -442,7 +445,7 @@ parse(context *ctxt)
     {
       if (get(ctxt) == 'r' && get(ctxt) == 'u' && get(ctxt) == 'e')
 	{
-	  return [NSNumber numberWithBool: YES];
+	  return boolY;
 	}
       ctxt->error = "bad character (expecting 'true')";
       ctxt->index = ctxt->length;
@@ -453,7 +456,7 @@ parse(context *ctxt)
       if (get(ctxt) == 'a' && get(ctxt) == 'l' && get(ctxt) == 's'
 	&& get(ctxt) == 'e')
 	{
-	  return [NSNumber numberWithBool: NO];
+	  return boolN;
 	}
       ctxt->error = "bad character (expecting 'false')";
       ctxt->index = ctxt->length;
@@ -477,6 +480,12 @@ parse(context *ctxt)
 }
 
 @implementation	GWSJSONCoder
+
++ (void) initialize
+{
+  boolY = [[NSNumber numberWithBool: YES] retain];
+  boolN = [[NSNumber numberWithBool: NO] retain];
+}
 
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
@@ -629,6 +638,14 @@ parse(context *ctxt)
     {
       [ms appendString: JSONQuote(o)];
     }
+  else if (o == boolY)
+    {
+      [ms appendString: @"true"];
+    }
+  else if (o == boolN)
+    {
+      [ms appendString: @"false"];
+    }
   else if (YES == [o isKindOfClass: [NSNumber class]])
     {
       const char	*t = [o objCType];
@@ -637,21 +654,7 @@ parse(context *ctxt)
         {
           long long	i = [(NSNumber*)o longLongValue];
 
-          if ((i == 0 || i == 1) && (*t == 'c' || *t == 'C'))
-            {
-              if (i == 0)
-                {
-                  [ms appendString: @"true"];
-                }
-              else
-                {
-                  [ms appendString: @"false"];
-                }
-            }
-          else
-            {
-              [ms appendFormat: @"%lld", i];
-            }
+          [ms appendFormat: @"%lld", i];
         }
       else
         {
