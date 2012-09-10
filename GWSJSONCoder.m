@@ -34,6 +34,14 @@
 
 static id       boolN;
 static id       boolY;
+static id       null;
+static Class    NSArrayClass;
+static Class    NSDataClass;
+static Class    NSDateClass;
+static Class    NSDictionaryClass;
+static Class    NSNullClass;
+static Class    NSNumberClass;
+static Class    NSStringClass;
 
 static NSString*
 JSONQuote(NSString *str)
@@ -110,7 +118,7 @@ JSONQuote(NSString *str)
 	}
     }
   to[j] = '"';
-  str = [[NSString alloc] initWithCharacters: to length: output];
+  str = [[NSStringClass alloc] initWithCharacters: to length: output];
   NSZoneFree (NSDefaultMallocZone (), to);
   [str autorelease];
   NSZoneFree (NSDefaultMallocZone (), from);
@@ -195,7 +203,7 @@ parse(context *ctxt)
 	}
       if (NO == escapes)
 	{
-	  s = [NSString alloc];
+	  s = [NSStringClass alloc];
 	  s = [s initWithBytes: ctxt->buffer + start
 			length: ctxt->index - start - 1
 		      encoding: NSUTF8StringEncoding];
@@ -243,7 +251,7 @@ parse(context *ctxt)
 		      ctxt->index = ctxt->length;
 		      return nil;
 		    }
-		  rep = [NSString stringWithCharacters: &u length: 1];
+		  rep = [NSStringClass stringWithCharacters: &u length: 1];
 		}
 	      else
 		{
@@ -254,7 +262,7 @@ parse(context *ctxt)
 		  else if ('r' == c) rep = @"\r";
 		  else if ('n' == c) rep = @"\n";
 		  else if ('t' == c) rep = @"\t";
-		  else rep = [NSString stringWithFormat: @"%c", (char)c];
+		  else rep = [NSStringClass stringWithFormat: @"%c", (char)c];
 		}
 	      [m replaceCharactersInRange: r withString: rep];
 	      pos++;
@@ -317,7 +325,7 @@ parse(context *ctxt)
 	      get(ctxt);
 	      return d;	// Empty
 	    }
-	  if (NO == [k isKindOfClass: [NSString class]])
+	  if (NO == [k isKindOfClass: NSStringClass])
 	    {
 	      ctxt->error = "non-string value for key";
 	      ctxt->index = ctxt->length;
@@ -413,7 +421,7 @@ parse(context *ctxt)
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
-	  n = [NSNumber numberWithDouble: d];
+	  n = [NSNumberClass numberWithDouble: d];
 	}
       else
 	{
@@ -424,7 +432,7 @@ parse(context *ctxt)
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
-	  n = [NSNumber numberWithLongLong: l];
+	  n = [NSNumberClass numberWithLongLong: l];
 	}
       if (nil == n)
 	{
@@ -466,7 +474,7 @@ parse(context *ctxt)
     {
       if (get(ctxt) == 'u' && get(ctxt) == 'l' && get(ctxt) == 'l')
 	{
-	  return [NSNull null];
+	  return null;
 	}
       ctxt->error = "bad character (expecting 'null')";
       ctxt->index = ctxt->length;
@@ -483,8 +491,16 @@ parse(context *ctxt)
 
 + (void) initialize
 {
-  boolY = [[NSNumber numberWithBool: YES] retain];
-  boolN = [[NSNumber numberWithBool: NO] retain];
+  NSArrayClass = [NSArray class];
+  NSDataClass = [NSData class];
+  NSDateClass = [NSDate class];
+  NSDictionaryClass = [NSDictionary class];
+  NSNullClass = [NSNull class];
+  NSNumberClass = [NSNumber class];
+  NSStringClass = [NSString class];
+  boolY = [[NSNumberClass numberWithBool: YES] retain];
+  boolN = [[NSNumberClass numberWithBool: NO] retain];
+  null = [[NSNullClass null] retain];
 }
 
 - (NSData*) buildRequest: (NSString*)method 
@@ -533,7 +549,7 @@ parse(context *ctxt)
 
 	  if (nil == o)
 	    {
-	      o = [NSNull null];
+	      o = null;
 	    }
 	  [v addObject: o];
 	}
@@ -598,7 +614,7 @@ parse(context *ctxt)
       params = [NSMutableDictionary dictionaryWithCapacity: 1];
       if (o == nil)
 	{
-	  [params setObject: [NSNull null] forKey: @"Result"];
+	  [params setObject: null forKey: @"Result"];
 	}
       else
 	{
@@ -630,11 +646,11 @@ parse(context *ctxt)
 {
   NSMutableString       *ms = [self mutableString];
 
-  if (nil == o || YES == [o isKindOfClass: [NSNull class]])
+  if (nil == o || null == o || [o isKindOfClass: NSNullClass])
     {
       [ms appendString: @"null"];
     }
-  else if (YES == [o isKindOfClass: [NSString class]])
+  else if (YES == [o isKindOfClass: NSStringClass])
     {
       [ms appendString: JSONQuote(o)];
     }
@@ -646,7 +662,7 @@ parse(context *ctxt)
     {
       [ms appendString: @"false"];
     }
-  else if (YES == [o isKindOfClass: [NSNumber class]])
+  else if (YES == [o isKindOfClass: NSNumberClass])
     {
       const char	*t = [o objCType];
 
@@ -661,19 +677,19 @@ parse(context *ctxt)
           [ms appendFormat: @"%f", [(NSNumber*)o doubleValue]];
         }
     }
-  else if (YES == [o isKindOfClass: [NSData class]])
+  else if (YES == [o isKindOfClass: NSDataClass])
     {
       [ms appendString: @"\""];
       [ms appendString: [self encodeBase64From: o]];
       [ms appendString: @"\""];
     }
-  else if (YES == [o isKindOfClass: [NSDate class]])
+  else if (YES == [o isKindOfClass: NSDateClass])
     {
       [ms appendString: @"\""];
       [ms appendString: [self encodeDateTimeFrom: o]];
       [ms appendString: @"\""];
     }
-  else if (YES == [o isKindOfClass: [NSArray class]])
+  else if (YES == [o isKindOfClass: NSArrayClass])
     {
       unsigned 		i;
       unsigned		c = [o count];
@@ -693,7 +709,7 @@ parse(context *ctxt)
       [self nl];
       [ms appendString: @"]"];
     }
-  else if (YES == [o isKindOfClass: [NSDictionary class]])
+  else if (YES == [o isKindOfClass: NSDictionaryClass])
     {
       NSEnumerator	*kEnum;
       NSString	        *key;
@@ -734,7 +750,7 @@ parse(context *ctxt)
     }
   else
     {
-      [self _appendObject: [o description]];
+      [ms appendString: JSONQuote([o description])];
     }
 }
 
