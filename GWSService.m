@@ -1406,6 +1406,12 @@ available(NSString *host)
              timeout: (int)seconds
 	 prioritised: (BOOL)urgent
 {
+  if (nil != _timeout)
+    {
+      NSLog(@"[%@-%@] request already in progress",
+        NSStringFromClass([self class]), NSStringFromSelector(_cmd));
+      return NO;
+    }
   if (_result != nil)
     {
       [_result release];
@@ -1421,6 +1427,10 @@ available(NSString *host)
   _cancelled = NO;
   _completedIO = NO;
   _stage = RPCIdle;
+  if (seconds < 1)
+    {
+      seconds = 1;
+    }
   _timeout = [[NSDate alloc] initWithTimeIntervalSinceNow: seconds];
 
   /* Make a note of which thread queued the request.
@@ -1458,7 +1468,7 @@ available(NSString *host)
       [_timer invalidate];
       _timer = nil;
       [self _clean];
-      return NO;
+      return NO;        // Too many enqueued requests in process
     }
 
   if (nil == _request)
@@ -1655,12 +1665,17 @@ available(NSString *host)
   [_lock lock];
   if (t == _timer)
     {
-      _timer = nil;
+      [self _setProblem: @"timed out"];
     }
+  else
+    {
+      [_timer invalidate];
+      [self _setProblem: @"cancelled"];
+    }
+  _timer = nil;
   if (NO == _cancelled && NO == _completedIO)
     {
       _cancelled = YES;
-      [self _setProblem: @"timed out"];
       cancelThread = _ioThread;
     }
   [_lock unlock];

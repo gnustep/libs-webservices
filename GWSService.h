@@ -292,10 +292,11 @@ extern "C" {
  * but if one was not set the state of the asynchronous call may be polled
  * by calling the -result method, which will return nil as long as the
  * call has not completed.<br />
- * The call may be cancelled by calling the -timeout: method<br />
+ * The call may be cancelled by calling the -timeout: method.<br />
  * This method returns YES if the call was started,
- * NO if it could not be started (eg because too many other calls are
- * in progress or because of bad arguments).<br />
+ * NO if it could not be started (eg because there is already a call in
+ * progress for the receiver, or too many other calls are in progress
+ * in total, or because of bad arguments).<br />
  * NB. For the asynchronous operation to proceed, the current [NSRunLoop]
  * must be run.<br />
  * Parameters must be supplied as for the
@@ -396,8 +397,8 @@ extern "C" {
 
 /**
  * Handles timeouts, passing information to delegate ... you don't need to
- * call this method, but you <em>may</em> call it in order to cancel an
- * asynchronous request as if it had timed out.
+ * call this method, but you <em>may</em> call it (with nil as its argument)
+ * in order to cancel an asynchronous request as if it had timed out.
  */
 - (void) timeout: (NSTimer*)t;
 
