@@ -410,6 +410,71 @@ static Class		GWSElementClass = Nil;
     }
 }
 
+- (void) _fetch: (NSString**)path
+          count: (NSUInteger)count
+           into: (NSMutableArray*)array
+{
+  NSString      *name;
+  BOOL          wildcard;
+
+  /* Igore any empty elements in the path
+   */
+  while (0 == [(name = *path) length])
+    {
+      if (0 == count--)
+        {
+          return;
+        }
+      path++;
+    }
+  path = path + 1;
+  count = count - 1;
+
+  wildcard = [name isEqualToString: @"*"];
+  while (nil != self)
+    {
+      if (YES == wildcard || YES == [_name isEqualToString: name])
+        {
+          if (count > 0)
+            {
+              [array addObject: self];
+            }
+          else
+            {
+              [_first _fetch: path count: count into: array];
+            }
+        }
+      self = [self sibling];
+    }
+}
+
+- (NSArray*) fetchElements: (NSString*)path
+{
+  NSArray               *a = [path componentsSeparatedByString: @"/"];
+  NSUInteger            count = [a count];
+  NSString              *buf[count];
+  NSMutableArray        *result = [NSMutableArray arrayWithCapacity: 10];
+
+  [a getObjects: buf];
+  if (count > 0 && [buf[0] length] == 0)
+    {
+      /* The first element is empty so we must have started with a '/'
+       * and must therefore work from the document root.
+       */
+      while (_parent != nil)
+        {
+          self = _parent;
+        }
+      [self _fetch: &buf[1] count: count - 1 into: result];
+    }
+  else
+    {
+      [self _fetch: buf count: count into: result];
+    }
+  return result;
+}
+
+
 - (GWSElement*) findElement: (NSString*)name
 {
   if ([_name isEqualToString: name] == YES)

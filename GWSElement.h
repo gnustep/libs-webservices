@@ -175,6 +175,18 @@ extern "C" {
  */
 - (void) encodeWith: (GWSCoder*)coder;
 
+/** A convenience method to search the receiver for those elemements
+ * match the supplied path (ignoring namespace prefixes).<br />
+ * The path contains slash ('/') separated names, and if it begins with
+ * a slash the search starts at the top of the tree rather than at the
+ * receiver.<br />
+ * A name in the path may be specified as an asterisk ('*') in which case it
+ * matches any element at that level in the path.<br />
+ * The order of the elements returned in the array is the same as the order
+ * in which they occur in the tree.
+ */
+- (NSArray*) fetchElements: (NSString*)path;
+
 /** A convenience method to search the receiver for an elemement whose
  * name (ignoring any namespace prefix) matches the method argument.<br />
  * The return value could be the receiver itsself, any of it's direct

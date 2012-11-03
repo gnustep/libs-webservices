@@ -1,3 +1,9 @@
+2012-11-03 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSElement.h:
+	* GWSElement.m:
+        Add convenience method for retrieving an array of nodes at a path.
+
 2012-09-10 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * GWSCoder.m:
