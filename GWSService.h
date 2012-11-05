@@ -452,6 +452,18 @@ extern "C" {
  */
 - (void) completedRPC: (GWSService*)sender;
 
+/** This method informs the delegate that the service is about to configure
+ * itsself to build the request data for a request (by calling the
+ * -buildRequest:parameters:order: method).  If the delegate method returns
+ * an NSData object, the request will not be built and the returned object
+ * will be used instead.  If the delegate method returns nil, the normal 
+ * request build will go ahead.
+ */
+- (NSData*) webService: (GWSService*)service
+          buildRequest: (NSString*)method
+            parameters: (NSDictionary*)parameters
+                 order: (NSArray*)order;
+
 /** This method is used to inform the delegate of the encoded XML request
  * (a [GWSElement] instance) which will be sent to the remote system.<br />
  * The delegate may modify or replace this and must return the replacement
@@ -460,21 +472,15 @@ extern "C" {
 - (GWSElement*) webService: (GWSService*)service
 		 didEncode: (GWSElement*)element;
 
-/** <override-dummy />
- * Called by the sender when it is about to send an encoded request to a
- * remote server.  The delegate may return a different data item to be
- * sent and/or take this opportunity to change the service settings
- * (such as the URL to send to) before the data is actualy sent.
+/** This method informs the delegate that the service is about to parse
+ * response data from the remote system and place the results in a
+ * mutable dictionary.<br />
+ * If the delegate method returns nil, the response data will be processed
+ * as normal, otherwise the delegate is reponsible for the parsing of the
+ * data and production of the results dictionary.
  */
-- (NSData*) webService: (GWSService*)sender willSendRequest: (NSData*)data;
-
-/** <override-dummy />
- * Called by the sender when it is about to handle response data from a
- * remote server.  The delegate may return a different data item to be
- * decoded and/or take this opportunity to change the service settings
- * before the response is handled.
- */
-- (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data;
+- (NSMutableDictionary*) webService: (GWSService*)service
+                     handleResponse: (NSData*)response;
 
 /** This method is used to inform the delegate of the
  * GWSElement instance being decoded as the SOAP Envelope, Header, Body,
@@ -511,6 +517,22 @@ extern "C" {
  */
 - (GWSElement*) webService: (GWSService*)service
 		willEncode: (GWSElement*)element;
+
+/** <override-dummy />
+ * Called by the sender when it is about to handle response data from a
+ * remote server.  The delegate may return a different data item to be
+ * decoded and/or take this opportunity to change the service settings
+ * before the response is handled.
+ */
+- (NSData*) webService: (GWSService*)sender willHandleResponse: (NSData*)data;
+
+/** <override-dummy />
+ * Called by the sender when it is about to send an encoded request to a
+ * remote server.  The delegate may return a different data item to be
+ * sent and/or take this opportunity to change the service settings
+ * (such as the URL to send to) before the data is actualy sent.
+ */
+- (NSData*) webService: (GWSService*)sender willSendRequest: (NSData*)data;
 
 @end
 

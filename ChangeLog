@@ -1,3 +1,9 @@
+2012-11-05 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * GWSService.h:
+        * GWSService.m:
+        New delegate methods to replace binding requests and handling responses.
+
 2012-11-03 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSElement.h:
