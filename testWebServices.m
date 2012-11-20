@@ -192,7 +192,7 @@ main()
 
 
   inner = [NSAutoreleasePool new];
-  coder = [GWSSOAPCoder new];
+  coder = [[GWSSOAPCoder new] autorelease];
   [coder setDebug: YES];
 
   /* Test encoding and decoding of a very simple SOAP request.
@@ -312,6 +312,8 @@ main()
   service = [GWSService new]; 
   [service setDebug: YES];
   [service setURL: @"http://localhost/"];
+  coder = [[GWSSOAPCoder new] autorelease];
+  [coder setDebug: YES];
   [service setCoder: coder];
   del = [SimpleDelegate new];
   token = [[WSSUsernameToken alloc] initWithName: @"me" password: @"private"];

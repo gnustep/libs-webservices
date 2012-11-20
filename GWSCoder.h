@@ -448,6 +448,11 @@ extern "C" {
 @interface GWSJSONCoder : GWSCoder
 {
 }
+
+/** This method appends an object to the mutable sting in use buy the coder.
+ */
+- (void) appendObject: (id)o;
+
 /**
  * <p>The JSON text format does not include the notion of a remote procedure
  * call and consists of a single array or a single JSON object.<br />

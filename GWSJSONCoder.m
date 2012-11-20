@@ -26,12 +26,6 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
-@interface      GWSJSONCoder (Private)
-
-- (void) _appendObject: (id)o;
-
-@end
-
 static id       boolN;
 static id       boolY;
 static id       null;
@@ -503,6 +497,118 @@ parse(context *ctxt)
   null = [[NSNullClass null] retain];
 }
 
+- (void) appendObject: (id)o
+{
+  NSMutableString       *ms = [self mutableString];
+
+  if (nil == o || null == o || [o isKindOfClass: NSNullClass])
+    {
+      [ms appendString: @"null"];
+    }
+  else if (YES == [o isKindOfClass: NSStringClass])
+    {
+      [ms appendString: JSONQuote(o)];
+    }
+  else if (o == boolY)
+    {
+      [ms appendString: @"true"];
+    }
+  else if (o == boolN)
+    {
+      [ms appendString: @"false"];
+    }
+  else if (YES == [o isKindOfClass: NSNumberClass])
+    {
+      const char	*t = [o objCType];
+
+      if (strchr("cCsSiIlLqQ", *t) != 0)
+        {
+          long long	i = [(NSNumber*)o longLongValue];
+
+          [ms appendFormat: @"%lld", i];
+        }
+      else
+        {
+          [ms appendFormat: @"%f", [(NSNumber*)o doubleValue]];
+        }
+    }
+  else if (YES == [o isKindOfClass: NSDataClass])
+    {
+      [ms appendString: @"\""];
+      [ms appendString: [self encodeBase64From: o]];
+      [ms appendString: @"\""];
+    }
+  else if (YES == [o isKindOfClass: NSDateClass])
+    {
+      [ms appendString: @"\""];
+      [ms appendString: [self encodeDateTimeFrom: o]];
+      [ms appendString: @"\""];
+    }
+  else if (YES == [o isKindOfClass: NSArrayClass])
+    {
+      unsigned 		i;
+      unsigned		c = [o count];
+      
+      [ms appendString: @"["];
+      [self indent];
+      for (i = 0; i < c; i++)
+        {
+	  if (i > 0)
+	    {
+	      [ms appendString: @","];
+	    }
+          [self nl];
+          [self appendObject: [o objectAtIndex: i]];
+        }
+      [self unindent];
+      [self nl];
+      [ms appendString: @"]"];
+    }
+  else if (YES == [o isKindOfClass: NSDictionaryClass])
+    {
+      NSEnumerator	*kEnum;
+      NSString	        *key;
+      BOOL              first = YES;
+
+      kEnum = [[o objectForKey: GWSOrderKey] objectEnumerator];
+      if (kEnum == nil)
+        {
+          kEnum = [o keyEnumerator];
+        }
+      [ms appendString: @"{"];
+      [self indent];
+      while ((key = [kEnum nextObject]))
+        {
+          if (YES == first)
+            {
+              first = NO;
+            }
+          else
+            {
+              [ms appendString: @","];
+              [self unindent];
+            }
+          [self nl];
+          [ms appendString: JSONQuote([key description])];
+          [ms appendString: @":"];
+	  [self indent];
+          [self nl];
+          [self appendObject: [o objectForKey: key]];
+        }
+      if (NO == first)
+        {
+          [self unindent];
+        }
+      [self unindent];
+      [self nl];
+      [ms appendString: @"}"];
+    }
+  else
+    {
+      [ms appendString: JSONQuote([o description])];
+    }
+}
+
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order
@@ -562,7 +668,7 @@ parse(context *ctxt)
     {
       v = parameters;
     }
-  [self _appendObject: v];
+  [self appendObject: v];
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -640,9 +746,7 @@ parse(context *ctxt)
 
 @end
 
-@implementation GWSJSONCoder (Private)
-
-- (void) _appendObject: (id)o
+- (void) appendObject: (id)o
 {
   NSMutableString       *ms = [self mutableString];
 
@@ -703,7 +807,7 @@ parse(context *ctxt)
 	      [ms appendString: @","];
 	    }
           [self nl];
-          [self _appendObject: [o objectAtIndex: i]];
+          [self appendObject: [o objectAtIndex: i]];
         }
       [self unindent];
       [self nl];
@@ -738,7 +842,7 @@ parse(context *ctxt)
           [ms appendString: @":"];
 	  [self indent];
           [self nl];
-          [self _appendObject: [o objectForKey: key]];
+          [self appendObject: [o objectForKey: key]];
         }
       if (NO == first)
         {
@@ -753,8 +857,6 @@ parse(context *ctxt)
       [ms appendString: JSONQuote([o description])];
     }
 }
-
-@end
 
 
 @implementation	NSArray (JSON)
