@@ -246,6 +246,7 @@ parse(context *ctxt)
 		      return nil;
 		    }
 		  rep = [NSStringClass stringWithCharacters: &u length: 1];
+                  r.length += 5;
 		}
 	      else
 		{
@@ -257,6 +258,7 @@ parse(context *ctxt)
 		  else if ('n' == c) rep = @"\n";
 		  else if ('t' == c) rep = @"\t";
 		  else rep = [NSStringClass stringWithFormat: @"%c", (char)c];
+                  r.length += 1;
 		}
 	      [m replaceCharactersInRange: r withString: rep];
 	      pos++;
