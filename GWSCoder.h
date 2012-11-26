@@ -211,11 +211,13 @@ extern "C" {
 /** Constructs an XML document for an RPC fault response with the
  * specified parameters.  The resulting document is returned
  * as an NSData object.<br />
- * For XMLRCP the two parameters should be faultCode (an integer)
- * and faultString.<br />
- * The order array may be empty or nil if the order of the parameters
- * is not important, otherwise it must contain the names of the parameters
- * in the order in which they are to be encoded.<br />
+ * For XMLRCP the parameters should be 'faultCode' (an integer),
+ * and 'faultString'.<br />
+ * For JSONRCP the parameters should be 'code' (an integer),
+ * 'message' (a string), and optionally, 'data' (any type of item).<br />
+ * As a convenience, the parameters 'faultCode' is mapped to 'code' and
+ * 'faultMessage' is mapped to 'message' in a JSON fault.<br />
+ * The order array is ignored, as is the GWSOrderKey value.<br />
  * This method simply calls -setFault: to say that a fault is being
  * built, then calls -buildRequest:parameters:order: with a nil request
  * name, and calls -setFault: again before returning the result.  If you
@@ -444,34 +446,47 @@ extern "C" {
  * to represent a JSON <em>object</em> the keys of the dictionary
  * will be converted to strings where necessary.
  * </p>
+ * <p>The JSON coder supports JSON-RPC versions 1.0 and 2.0 as well as
+ * supporting simple encoding/decoding of JSON documents without JSON-RPC
+ * (where the RPC version is set to nil).
+ * </p>
  */
 @interface GWSJSONCoder : GWSCoder
 {
+  NSString      *_version;      /** Not retained ... default version */
+  id            _jsonID;        /** Default request/response ID */
 }
 
-/** This method appends an object to the mutable sting in use buy the coder.
+/** This method appends an object to the mutable string in use by the coder.
  */
 - (void) appendObject: (id)o;
 
 /**
- * <p>The JSON text format does not include the notion of a remote procedure
- * call and consists of a single array or a single JSON object.<br />
- * To work with this rather crude behavior, the GWSJSONCoder class ignores
- * the method argument and makes use of other arguments as follows:<br />
- * If the order argument is non-null, it is interpreted as
- * containing the names of values in the parameters dictionary which are
- * to be sent as an array in the JSON text, any any values missing from the
- * dictionary are sent as null objects in the array.<br />
- * Otherwise, the contents of the parameters dictionary are sent as a
- * JSON object.  The special keys GWSOrderKey and GWSParametersKey are used
- * as normal.
+ * <p>The JSON-RPC format encoding depends on the GWSRPCVersionKey or
+ * (if that key is missing from the parameters dictionary) the version
+ * set for the coder using the -setVersion: method.<br />
+ * If the version is nil (ie not set using GWSRPCVersionKey or using
+ * -setVersion: then JSON-RPC is not used and data is encoded as a
+ * simple JSON document.<br />
+ * Each RPC must have an ID, which is set using the GWSRPCIDKey or
+ * (if that is missing) using the -setRPCID: method (if neither supply
+ * an id, and an RPC version is set, a null is used).<br />
+ * The -setVersion: and -setRPCID: methods are automatically called when
+ * a request is parsed, so that the default version and id of any response
+ * built after the request was parsed will match those of the incoming
+ * request.<br />
+ * If JSON-RPC is not used, a single parameter is encoded directly as a
+ * JSON object, while multiple parameters are encoded as a struct.<br />
+ * If an encoding order is specified (or if the RPC version is 1.0) then
+ * parameters are passed by position, otherwise they are passed by name.
  * </p>
  */
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order;
 
-/** This method simply calls the =buildRequest:parameters:object: method.
+/** This method simply calls the -buildRequest:parameters:object: method
+ * encoding the supplied parameters as the result of the RPC.
  */
 - (NSData*) buildResponse: (NSString*)method 
                parameters: (NSDictionary*)parameters
@@ -484,6 +499,34 @@ extern "C" {
  */
 - (NSString*) encodeDateTimeFrom: (NSDate*)source;
 
+/** Returns the RPC ID set for this coder.  See -setRPCID: for details.
+ */
+- (id) RPCID;
+
+/** Sets the RPC ID ... may be any string, number or NSNull,
+ * though you should not use NSNull or a non-integer number.<br />
+ * This value will be used as the JSON 'id' when the coder builds
+ * a request or response, but only if the request/response does not
+ * contain an GWSRPCIDKey (ie the value supplied in the parameters
+ * to the method call overrides any value set in the coder).<br />
+ * If no RPC version is set, this value is unused.
+ */
+- (void) setRPCID: (id)o;
+
+/** Sets the json-rpc version.<br />
+ * May be "2.0" or "1.0" (any other non-nil value is currently considered
+ * to be version 1.0) or nil if JSON-RPC is not to be used.<br />
+ * This value will be used as the JSON RPC version when the coder builds
+ * a request or response, but only if the request/response does not
+ * contain an GWSRPCVersionKey (ie the value supplied in the parameters
+ * to the method call overrides any value set in the coder).
+ */
+- (void) setVersion: (NSString*)v;
+
+/** Returns the json-rpc version (currently "2.0" or "1.0" or nil).<br />
+ * See -setVersion: for details.
+ */
+- (NSString*) version;
 @end
 
 @interface	NSArray (JSON)

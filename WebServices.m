@@ -33,6 +33,8 @@ NSString * const GWSOrderKey = @"GWSCoderOrder";
 NSString * const GWSParametersKey = @"GWSCoderParameters";
 NSString * const GWSRequestDataKey = @"GWSCoderRequestData";
 NSString * const GWSResponseDataKey = @"GWSCoderResponseData";
+NSString * const GWSRPCIDKey = @"GWSCoderRPCID";
+NSString * const GWSRPCVersionKey = @"GWSCoderRPCVersion";
 
 @implementation GWSType
 

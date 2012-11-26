@@ -26,6 +26,9 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
+static NSString * const ver1 = @"1.0";
+static NSString * const ver2 = @"2.0";
+
 static id       boolN;
 static id       boolY;
 static id       null;
@@ -611,27 +614,29 @@ parse(context *ctxt)
     }
 }
 
-- (NSData*) buildRequest: (NSString*)method 
-              parameters: (NSDictionary*)parameters
-                   order: (NSArray*)order
+/* Build JSON-RPC request or just build a JSON object as a document.
+ * Return YES if it's a JSON-RPC, NO otherwise.
+ */
+- (BOOL) _build: (id*)container
+     parameters: (NSDictionary*)parameters
+          order: (NSArray*)order
 {
-  NSMutableString       *ms;
-  id			o;
-  id			v;
-  unsigned	        c;
+  NSUInteger	        c;
+  NSUInteger	        i;
+  id		        o;
+  id                    p;
+  NSString              *version;
+  BOOL                  positional = YES;
 
-  [self reset];
-
-  ms = [self mutableString];
-  [ms setString: @""];
+  *container = [NSMutableDictionary dictionaryWithCapacity: 4];
 
   o = [parameters objectForKey: GWSOrderKey];
   if (nil != o)
     {
       if (order != nil && [order isEqual: o] == NO)
-	{
-	  NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
-	}
+        {
+          NSLog(@"Parameter order specified both in the 'order' argument and using GWSOrderKey.  Using the value from GWSOrderkey.");
+        }
       order = o;
     }
   o = [parameters objectForKey: GWSParametersKey];
@@ -640,37 +645,169 @@ parse(context *ctxt)
       parameters = o;
     }
 
-  if ([order count] == 0)
+  /* Get the JSON-RPC version ... nil means we just want a plain object.
+   */
+  version = [parameters objectForKey: GWSRPCVersionKey];
+  if (nil == version)
     {
-      order = [parameters allKeys];
+      version = [self version];
     }
-  c = [order count];
-  if (c > 1)
+
+  /* If we have an RPC version, we must have an RPC request/response ID too.
+   */
+  if (nil != version)
     {
-      unsigned	i;
+      id        rid;
 
-      v = [NSMutableArray arrayWithCapacity: c];
-      for (i = 0; i < c; i++)
-	{
-	  NSString	*k = [order objectAtIndex: i];
-	  id		o = [parameters objectForKey: k];
-
-	  if (nil == o)
-	    {
-	      o = null;
-	    }
-	  [v addObject: o];
-	}
+      rid = [parameters objectForKey: GWSRPCIDKey];
+      if (nil == rid)
+        {
+          rid = [self RPCID];
+          if (nil == rid)
+            {
+              rid = null;
+            }
+        }
+      [*container setObject: rid forKey: @"id"];
     }
-  else if (c > 0)
+
+  if (ver2 == version)
     {
-      v = [parameters objectForKey: [order lastObject]];
+      [*container setObject: ver2 forKey: @"jsonrpc"];
+      /* If this request has no order specified and is version 2
+       * then we encode parameters by name.
+       */
+      if (nil == order)
+        {
+          positional = NO;
+        }
+    }
+
+  if (nil != version && YES == [self fault])
+    {
+      NSMutableDictionary       *e;
+
+      e = [[NSMutableDictionary alloc] initWithCapacity: 3];
+      [*container setObject: e forKey: @"error"];
+      [e release];
+
+      o = [parameters objectForKey: @"code"];
+      if (nil == o)
+        {
+          o = [parameters objectForKey: @"faultCode"];
+        }
+      if (nil == o || NO == [o respondsToSelector: @selector(intValue)])
+        {
+          [NSException raise: NSGenericException
+                      format: @"Bad/missing error code"];
+        }
+      [e setObject: [NSNumber numberWithInt: [o intValue]] forKey: @"code"];
+
+      o = [parameters objectForKey: @"message"];
+      if (nil == o)
+        {
+          o = [parameters objectForKey: @"faultString"];
+        }
+      if (NO == [o isKindOfClass: NSStringClass])
+        {
+          [NSException raise: NSGenericException
+                      format: @"Bad/missing error message"];
+        }
+      [e setObject: o forKey: @"code"];
+
+      o = [parameters objectForKey: @"data"];
+      if (nil != o)
+        {
+          [e setObject: o forKey: @"data"];
+        }
     }
   else
     {
-      v = parameters;
+      if ([order count] == 0)
+        {
+          order = [parameters allKeys];
+        }
+      c = [order count];
+      if (c > 0)
+        {
+          if (YES == positional)
+            {
+              p = [NSMutableArray new];
+            }
+          else
+            {
+              p = [NSMutableDictionary new];
+            }
+          [*container setObject: p forKey: @"params"];
+          [p release];
+
+          for (i = 0; i < c; i++)
+            {
+              NSString      *k = [order objectAtIndex: i];
+
+              if (NO == [k hasPrefix: @"GWSCoder"])
+                {
+                  id    v = [parameters objectForKey: k];
+
+                  if (v != nil)
+                    {
+                      if (YES == positional)
+                        {
+                          [p addObject: v];
+                        }
+                      else
+                        {
+                          [p setObject: v forKey: k];
+                        }
+                    }
+                }
+            }
+          if (nil == version)
+            {
+              /* This is not a JSON-RPC ... make it a plain document.
+               */
+              if ([p count] == 1)
+                {
+                  /* There was a single argument ...
+                   * we must use it as the whole JSON document.
+                   */
+                  p = [p lastObject];
+                }
+              *container = p;
+            }
+        }
     }
-  [self appendObject: v];
+  if (nil == version)
+    {
+      return NO;        // Not a JSON-RPC
+    }
+  return YES;           // Built JSON-RPC
+}
+
+- (NSData*) buildRequest: (NSString*)method 
+              parameters: (NSDictionary*)parameters
+                   order: (NSArray*)order
+{
+  NSMutableString       *ms;
+  id                    container;
+
+  [self reset];
+
+  if (NO == [self fault] && [method length] == 0)
+    {
+      return nil;
+    }
+
+  ms = [self mutableString];
+  [ms setString: @""];
+
+  if (YES == [self _build: &container parameters: parameters order: order]
+    && NO == [self fault])
+    {
+      [container setObject: method forKey: @"method"];
+    }
+  [self appendObject: container];
+
   return [ms dataUsingEncoding: NSUTF8StringEncoding];
 }
 
@@ -678,7 +815,31 @@ parse(context *ctxt)
                parameters: (NSDictionary*)parameters
                     order: (NSArray*)order;
 {
-  return [self buildRequest: method parameters: parameters order: order];
+  NSMutableString       *ms;
+  id                    container;
+
+  [self reset];
+  ms = [self mutableString];
+  [ms setString: @""];
+
+  if (YES == [self _build: &container parameters: parameters order: order])
+    {
+      if (YES == [container isKindOfClass: NSDictionaryClass])
+        {
+          [container setObject: [container objectForKey: @"params"]
+                        forKey: @"result"];
+          [container removeObjectForKey: @"params"];
+        }
+    }
+  [self appendObject: container];
+
+  return [ms dataUsingEncoding: NSUTF8StringEncoding];
+}
+
+- (void) dealloc
+{
+  [_jsonID release];
+  [super dealloc];
 }
 
 - (NSString*) encodeDateTimeFrom: (NSDate*)source
@@ -695,8 +856,6 @@ parse(context *ctxt)
 {
   NSAutoreleasePool     *pool;
   NSMutableDictionary   *result;
-  NSMutableDictionary   *params;
-  NSMutableArray        *order;
 
   result = [NSMutableDictionary dictionaryWithCapacity: 3];
 
@@ -706,6 +865,7 @@ parse(context *ctxt)
     {
       context	x;
       id	o;
+      id        v;
 
       x.buffer = (const unsigned char*)[data bytes];
       x.length = [data length];
@@ -719,20 +879,134 @@ parse(context *ctxt)
 	  x.error = "unexpected data at end of text";
 	}
 
-      params = [NSMutableDictionary dictionaryWithCapacity: 1];
-      if (o == nil)
-	{
-	  [params setObject: null forKey: @"Result"];
-	}
+      if (NO == [o isKindOfClass: NSDictionaryClass])
+        {
+          if (nil != [self version])
+            {
+              [NSException raise: NSGenericException
+                          format: @"Not a JSON-RPC document"];
+            }
+        }
       else
-	{
-	  [params setObject: o forKey: @"Result"];
-	}
-      [result setObject: params forKey: GWSParametersKey];
+        {
+          v = [o objectForKey: @"jsonrpc"];
+          if (nil != v)
+            {
+              [self setVersion: v];
+            }
+          if (nil != (v = [self version]))
+            {
+              [result setObject: v forKey: GWSRPCVersionKey];
+            }
+          if (nil != v)
+            {
+              v = [o objectForKey: @"id"];
+              if (nil == v)
+                {
+                  [NSException raise: NSGenericException
+                    format: @"Not a JSON-RPC document (no 'id' field)"];
+                }
+              [self setRPCID: v];
+              [result setObject: [self RPCID] forKey: GWSRPCIDKey];
+            }
+        }
 
-      order = [NSMutableArray arrayWithCapacity: 1];
-      [order addObject: @"Result"];
-      [result setObject: order forKey: GWSOrderKey];
+      if (nil == [self version])
+        {
+          /* Not JSON-RPC ... return entire JSON document
+           */
+          if (nil == o)
+            {
+              o = null;
+            }
+          o = [NSDictionary dictionaryWithObject: o forKey: @"Result"];
+          [result setObject: o forKey: GWSParametersKey];
+          o = [NSArray arrayWithObject: @"Result"];
+          [result setObject: o forKey: GWSOrderKey];
+        }
+      else if ([(v = [o objectForKey: @"method"]) isKindOfClass: NSStringClass])
+        {
+          [result setObject: v forKey: GWSMethodKey];
+          v = [o objectForKey: @"params"];
+          if (nil != v)
+            {
+              if (YES == [v isKindOfClass: NSDictionaryClass])
+                {
+                  [result setObject: v forKey: GWSParametersKey];
+                  [result setObject: [v allKeys] forKey: GWSOrderKey];
+                }
+              else if (YES == [v isKindOfClass: NSArrayClass])
+                {
+                  NSMutableArray        *order;
+                  NSMutableDictionary   *params;
+                  NSUInteger            c;
+                  NSUInteger            i;
+
+                  c = [v count];
+                  order = [NSMutableArray arrayWithCapacity: c];
+                  params = [NSMutableDictionary dictionaryWithCapacity: c];
+                  for (i = 0; i < c; i++)
+                    {
+                      NSString  *k;
+
+                      k = [NSString stringWithFormat: @"Arg%u", (unsigned)i];
+                      [order addObject: k];
+                      [params setObject: [v objectAtIndex: i] forKey: k];
+                    }
+                  [result setObject: params forKey: GWSParametersKey];
+                  [result setObject: order forKey: GWSOrderKey];
+                }
+              else
+                {
+                  [NSException raise: NSGenericException
+                    format: @"Not a JSON-RPC document (params has wrong type)"];
+                }
+            }
+        }
+      else if ((v = [o objectForKey: @"result"]) != nil)
+        {
+          if (YES == [v isKindOfClass: NSDictionaryClass])
+            {
+              [result setObject: v forKey: GWSParametersKey];
+              [result setObject: [v allKeys] forKey: GWSOrderKey];
+            }
+          else
+            {
+              NSMutableArray        *order;
+              NSMutableDictionary   *params;
+              NSUInteger            c;
+              NSUInteger            i;
+
+              if (NO == [v isKindOfClass: NSArrayClass])
+                {
+                  v  = [NSArray arrayWithObject: v];
+                }
+
+              c = [v count];
+              order = [NSMutableArray arrayWithCapacity: c];
+              params = [NSMutableDictionary dictionaryWithCapacity: c];
+              for (i = 0; i < c; i++)
+                {
+                  NSString  *k;
+
+                  k = [NSString stringWithFormat: @"Arg%u", (unsigned)i];
+                  [order addObject: k];
+                  [params setObject: [v objectAtIndex: i] forKey: k];
+                }
+              [result setObject: params forKey: GWSParametersKey];
+              [result setObject: order forKey: GWSOrderKey];
+            }
+        }
+      else if (YES == [(v = [o objectForKey: @"error"])
+        isKindOfClass: NSDictionaryClass])
+        {
+          [result setObject: v forKey: GWSFaultKey];
+        }
+      else
+        {
+          [NSException raise: NSGenericException
+                      format: @"Not a JSON-RPC document (missing info)"];
+        }
     }
   NS_HANDLER
     {
@@ -744,6 +1018,48 @@ parse(context *ctxt)
   [pool release];
 
   return result;
+}
+
+- (id) RPCID
+{
+  return _jsonID;
+}
+
+- (void) setRPCID: (id)o
+{
+  if (nil == o
+    || [NSNull null] == o
+    || YES == [o isKindOfClass: NSStringClass]
+    || YES == [o isKindOfClass: NSNumberClass])
+    {
+      ASSIGN(_jsonID, o);
+    }
+  else
+    {
+      [NSException raise: NSInvalidArgumentException
+                  format: @"Bad type for RPC ID: ('%@')", o];
+    }
+}
+
+- (void) setVersion: (NSString*)v
+{
+  if (YES == [ver2 isEqual: v])
+    {
+      _version = ver2;
+    }
+  else if (nil != v)
+    {
+      _version = ver1;
+    }
+  else
+    {
+      _version = nil;
+    }
+}
+
+- (NSString*) version
+{
+  return _version;
 }
 
 @end

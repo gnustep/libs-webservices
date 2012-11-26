@@ -82,6 +82,14 @@ extern NSString * const GWSRequestDataKey;
  */
 extern NSString * const GWSResponseDataKey;
 
+/** Key for protocol request/response ID information stored in an RPC.
+ */
+extern NSString * const GWSRPCIDKey;
+
+/** Key for protocol version information stored in an RPC request
+ * or response.
+ */
+extern NSString * const GWSRPCVersionKey;
 
 /** Key for the encoding style to be used for the SOAP body.<br />
  * The value of this may be one of

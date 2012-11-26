@@ -1,3 +1,11 @@
+2012-11-25 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * GWSCoder.h:
+        * GWSConstants.h:
+        * GWSJSONCoder.m:
+        * WebServices.m:
+        JSON-RPC support based on code by Wolfgang.
+
 2012-11-20 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * GWSCoder.m:
