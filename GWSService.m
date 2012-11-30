@@ -1729,6 +1729,10 @@ available(NSString *host)
 		 withObject: nil
 	      waitUntilDone: NO];
     }
+  else
+    {
+      [self _completed];
+    }
 }
 
 - (NSTimeZone*) timeZone
