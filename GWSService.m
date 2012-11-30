@@ -1711,10 +1711,18 @@ available(NSString *host)
     }
   else
     {
+      /* We invalidate the timer: otherwise we could get a timeout just after
+       * cancelling ... which would change our problem report from 'cancelled'
+       */
       [_timer invalidate];
       [self _setProblem: @"cancelled"];
     }
-  _timer = nil;
+
+  /* NB. At this point _timer is non-nil ... we need to keep it that way so
+   * that the event loop continues to run until the I/O is cancelled.
+   * A later call to -_clear will set _timer to nil.
+   */
+
   if (NO == _cancelled && NO == _completedIO)
     {
       _cancelled = YES;
