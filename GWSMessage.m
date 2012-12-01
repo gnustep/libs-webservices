@@ -48,16 +48,16 @@
         {
           if ([[elem name] isEqualToString: @"part"] == YES)
             {
+              NSDictionary      *attrs = [elem attributes];
               NSString          *name;
 
-              name = [[elem attributes] objectForKey: @"name"];
+              name = [attrs objectForKey: @"name"];
               if (name == nil)
                 {
                   NSLog(@"Part without a name in WSDL!");
                 }
               else
                 {
-                  NSDictionary  *attrs = [elem attributes];
                   NSString      *type = [attrs objectForKey: @"type"];
                   NSString      *element = [attrs objectForKey: @"element"];
 
@@ -228,7 +228,7 @@
     {
       NSString  *val = [_types objectForKey: key];
 
-      elem = [[GWSElement alloc] initWithName: @"message"
+      elem = [[GWSElement alloc] initWithName: @"part"
                                     namespace: nil
                                     qualified: qual
                                    attributes: nil];
@@ -242,7 +242,7 @@
     {
       NSString  *val = [_elements objectForKey: key];
 
-      elem = [[GWSElement alloc] initWithName: @"message"
+      elem = [[GWSElement alloc] initWithName: @"part"
                                     namespace: nil
                                     qualified: qual
                                    attributes: nil];

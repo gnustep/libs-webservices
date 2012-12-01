@@ -1392,7 +1392,7 @@ available(NSString *host)
 	{
 	  NSDate	*when = [[[_timer fireDate] retain] autorelease];
 
-	  while (_timer != nil)
+	  while (_timeout != nil)
 	    {
 	      [[NSRunLoop currentRunLoop] runMode: NSDefaultRunLoopMode
 				       beforeDate: when];
@@ -1717,11 +1717,7 @@ available(NSString *host)
       [_timer invalidate];
       [self _setProblem: @"cancelled"];
     }
-
-  /* NB. At this point _timer is non-nil ... we need to keep it that way so
-   * that the event loop continues to run until the I/O is cancelled.
-   * A later call to -_clear will set _timer to nil.
-   */
+  _timer = nil;
 
   if (NO == _cancelled && NO == _completedIO)
     {

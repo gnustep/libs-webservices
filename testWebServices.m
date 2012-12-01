@@ -112,6 +112,12 @@ main()
                          timeout: 3];
   NSLog(@"Invoke gives ... %@", result);
 
+  result = [service invokeMethod: @"sendSMS"
+                      parameters: params
+                           order: order
+                         timeout: 3];
+  NSLog(@"Retry gives ... %@", result);
+
   xml = [document data];
   NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
   [document release];
@@ -295,6 +301,8 @@ main()
 
   /* Now build and display the result.
    */
+  coder = [[GWSSOAPCoder new] autorelease];
+  [coder setDebug: YES];
   xml = [coder buildRequest: @"method"
                  parameters: o
                       order: nil];
@@ -335,7 +343,6 @@ main()
   fprintf(stdout, "Result: %s\n", [[result description] UTF8String]);
   [service release];
   [del release];
-  [coder release];
   [inner release];
 
   [pool release];
