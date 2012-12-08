@@ -1686,17 +1686,24 @@ available(NSString *host)
   if (nil != _ioThread)
     {
 #if	defined(GNUSTEP)
-      if ([_connection isKindOfClass: [NSURLConnection class]])
+      if (NO == [_connection isKindOfClass: [NSURLConnection class]])
 	{
-	  [_connection cancel];
-	}
-      else
-	{
+          /* For an NSURLHandle, we can just cancel the operation and
+           * the callback from that will do all the work.
+           */
 	  [handle cancelLoadInBackground];
+          return;
 	}
-#else
-      [_connection cancel];
 #endif
+      [_lock lock];
+      if (nil != _ioThread)
+        {
+          _completedIO = YES;
+          threadRem(&_ioThread);
+          [_connection cancel];
+        }
+      [_lock unlock];
+      [self _completed];
     }
 }
 
@@ -1718,14 +1725,11 @@ available(NSString *host)
       [self _setProblem: @"cancelled"];
     }
   _timer = nil;
-
   if (NO == _cancelled && NO == _completedIO)
     {
       _cancelled = YES;
       cancelThread = _ioThread;
     }
-  [_lock unlock];
-
   if (nil != cancelThread)
     {
       [self performSelector: @selector(_cancel)
@@ -1733,7 +1737,8 @@ available(NSString *host)
 		 withObject: nil
 	      waitUntilDone: NO];
     }
-  else
+  [_lock unlock];
+  if (nil == cancelThread)
     {
       [self _completed];
     }
@@ -1797,7 +1802,10 @@ didCancelAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   threadRem(&_ioThread);
   [_lock unlock];
 
-  [self _setProblem: [error localizedDescription]];
+  if (NO == _cancelled)
+    {
+      [self _setProblem: [error localizedDescription]];
+    }
   [self _completed];
 }
 
@@ -1935,7 +1943,10 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   [_lock unlock];
 
   [handle removeClient: (id<NSURLHandleClient>)self];
-  [self _setProblem: reason];
+  if (NO == _cancelled)
+    {
+      [self _setProblem: reason];
+    }
   [self _completed];
 }
 
@@ -1946,24 +1957,27 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) URLHandleResourceDidCancelLoading: (NSURLHandle*)sender
 {
-  NSString	*str;
-
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);
   [_lock unlock];
 
   [handle removeClient: (id<NSURLHandleClient>)self];
-  str = [handle propertyForKeyIfAvailable: NSHTTPPropertyStatusCodeKey];
-  if (str == nil)
+  if (NO == _cancelled)
     {
-      str = @"timeout";
+      NSString	*str;
+
+      str = [handle propertyForKeyIfAvailable: NSHTTPPropertyStatusCodeKey];
+      if (str == nil)
+        {
+          str = @"timeout";
+        }
+      else
+        {
+          str = [NSString stringWithFormat: @"HTTP status %@", str];
+        }
+      [self _setProblem: str];
     }
-  else
-    {
-      str = [NSString stringWithFormat: @"HTTP status %@", str];
-    }
-  [self _setProblem: str];
   [self _completed];
 }
 

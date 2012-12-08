@@ -82,6 +82,8 @@ main()
   NSMutableDictionary   *nparams;
   NSMutableDictionary   *result;
   id			o;
+  BOOL                  coderDebug = YES;
+  BOOL                  serviceDebug = YES;
 
   pool = [NSAutoreleasePool new];
 
@@ -92,6 +94,17 @@ main()
       nil]
     ];
 
+  o = [defs objectForKey: @"CoderDebug"];
+  if (nil != o)
+    {
+      coderDebug = [defs boolForKey: @"CoderDebug"];
+    }
+
+  o = [defs objectForKey: @"ServiceDebug"];
+  if (nil != o)
+    {
+      serviceDebug = [defs boolForKey: @"ServiceDebug"];
+    }
 
   inner = [NSAutoreleasePool new];
   document = [[GWSDocument alloc] initWithContentsOfFile: @"SMS.wsdl"];
@@ -105,7 +118,7 @@ main()
     nil] forKey: @"dict1"];
   [order addObject: @"dict1"];
   service = [document serviceWithName: @"SMSService" create: NO];
-  [service setDebug: YES];
+  [service setDebug: serviceDebug];
   result = [service invokeMethod: @"sendSMS"
                       parameters: params
                            order: order
@@ -127,7 +140,7 @@ main()
 
   inner = [NSAutoreleasePool new];
   coder = [GWSXMLRPCCoder new];
-  [coder setDebug:YES];
+  [coder setDebug:coderDebug];
 
   /* Test encoding and decoding of an XMLRPC request.
    */
@@ -199,7 +212,7 @@ main()
 
   inner = [NSAutoreleasePool new];
   coder = [[GWSSOAPCoder new] autorelease];
-  [coder setDebug: YES];
+  [coder setDebug: coderDebug];
 
   /* Test encoding and decoding of a very simple SOAP request.
    */
@@ -302,7 +315,7 @@ main()
   /* Now build and display the result.
    */
   coder = [[GWSSOAPCoder new] autorelease];
-  [coder setDebug: YES];
+  [coder setDebug: coderDebug];
   xml = [coder buildRequest: @"method"
                  parameters: o
                       order: nil];
@@ -318,10 +331,10 @@ main()
   fprintf(stdout, "Expect this to produce an error ... it tries a request"
     " on the local web server:\n");
   service = [GWSService new]; 
-  [service setDebug: YES];
+  [service setDebug: serviceDebug];
   [service setURL: @"http://localhost/"];
   coder = [[GWSSOAPCoder new] autorelease];
-  [coder setDebug: YES];
+  [coder setDebug: coderDebug];
   [service setCoder: coder];
   del = [SimpleDelegate new];
   token = [[WSSUsernameToken alloc] initWithName: @"me" password: @"private"];

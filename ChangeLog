@@ -1,3 +1,9 @@
+2012-12-08 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * GWSService.m: Try to improve timeout/cancellation of requests.
+        * testWebServices.m: Add options to control debug so we can test
+        the NSURLConnection code as well as the NSURLHandle code.
+
 2012-12-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * GWSService.m: Attempt to fix bug handling timeout and leaving
