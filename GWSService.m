@@ -740,10 +740,9 @@ available(NSString *host)
 
 - (void) _received
 {
-  if (_result != nil)
+  if (_result != nil && [_result objectForKey: GWSErrorKey] != nil)
     {
-      [_result release];
-      _result = nil;
+      return;   // Already failed (eg timeout part way through reading).
     }
 
   if (_code != 200 && [_coder isKindOfClass: [GWSXMLRPCCoder class]] == YES)
