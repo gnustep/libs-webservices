@@ -784,6 +784,17 @@ parse(context *ctxt)
   return YES;           // Built JSON-RPC
 }
 
+- (NSData*) buildFaultWithCode: (GWSRPCFaultCode)code andText: (NSString*)text
+{
+  NSDictionary  *params;
+
+  params = [NSDictionary dictionaryWithObjectsAndKeys:
+    text, @"faultString",
+    [NSNumber numberWithInt: code], @"faultCode",
+    nil];
+  return [self buildFaultWithParameters: params order: nil];
+}
+
 - (NSData*) buildRequest: (NSString*)method 
               parameters: (NSDictionary*)parameters
                    order: (NSArray*)order

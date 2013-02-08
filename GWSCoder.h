@@ -361,6 +361,26 @@ extern "C" {
 - (GWSPort*) webServicePort;
 @end
 
+/** This type defines standard JSONRPC and XMLRPC fault codes.<br />
+ * Use it with the utility methods for creating fault respnses.<br />
+ * If you wish to use your own error codes (because none of the standard
+ * ones is suitable), you can use almost any other integer value, but
+ * the range -32099 to -32000 inclusive is reserved for implementation
+ * defined server errors (so don't use this range).
+ */
+typedef enum {
+  GWSRPCParseError = -32700,
+  GWSRPCUnsupportedEncoding = -32701,
+  GWSRPCInvalidCharacter = -32702,
+  GWSRPCFormatError = -32600,
+  GWSRPCUnknownMethod = -32601,
+  GWSRPCInvalidParameter = -32602,
+  GWSRPCServerError = -32603,
+  GWSRPCApplicationError = -32500,
+  GWSRPCSystemError = -32400,
+  GWSRPCTransportError = -32300 
+} GWSRPCFaultCode;
+
 
 /** <p>The GWSXMLRPCCoder class is a concrete subclass of [GWSCoder] which
  * implements coding/decoding for the XMLRPC protocol.
@@ -402,6 +422,10 @@ extern "C" {
 @interface GWSXMLRPCCoder : GWSCoder
 {
 }
+/** Builds a simple fault response.
+ */
+- (NSData*) buildFaultWithCode: (GWSRPCFaultCode)code andText: (NSString*)text;
+
 /** Take the supplied date and encode it as an XMLRPC timestamp.<br />
  * This uses the timezone currently set in the receiver to determine
  * the time of day encoded.
@@ -460,6 +484,10 @@ extern "C" {
 /** This method appends an object to the mutable string in use by the coder.
  */
 - (void) appendObject: (id)o;
+
+/** Builds a simple fault response.
+ */
+- (NSData*) buildFaultWithCode: (GWSRPCFaultCode)code andText: (NSString*)text;
 
 /**
  * <p>The JSON-RPC format encoding depends on the GWSRPCVersionKey or
