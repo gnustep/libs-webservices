@@ -584,96 +584,60 @@ static Class		GWSElementClass = Nil;
 
 - (void) insertChild: (GWSElement*)child atIndex: (NSUInteger)index
 {
+  if (NO == [child isKindOfClass: GWSElementClass])
+    {
+      [NSException raise: NSInvalidArgumentException
+		  format: @"-insertChild:atIndex: child is not a GWSElement"];
+    }
   if (index > _children)
     {
       [NSException raise: NSRangeException
 		  format: @"-insertChild:atIndex: index out of range"];
     }
-  else if (NO == [child isKindOfClass: GWSElementClass])
-    {
-      [NSException raise: NSInvalidArgumentException
-		  format: @"-insertChild:atIndex: child is not a GWSElement"];
-    }
-  else if (child->_parent == self)
-    {
-      /* The child is being moved within the list (unless it's the only one)
-       */
-      if (_children > 1)
-	{
-	  GWSElement	*tmp;
-
-	  /* Adjust the start of the list if the child was the first element.
-	   */
-	  if (_first == child)
-	    {
-	      _first = child->_next;
-	    }
-
-	  /* Remove the child from its current position.
-	   */
-	  child->_next->_prev = child->_prev; 
-	  child->_prev->_next = child->_next; 
-
-	  /* Determine insertion point.
-	   */
-	  tmp = _first;
-	  if (0 == index)
-	    {
-	      _first = child;			// Child will be first in list
-	    }
-	  else if (index != _children)
-	    {
-	      while (--index > 0)
-		{
-		  tmp = tmp->_next;
-		}
-	    }
-
-	  /* Insert the child.
-	   */
-	  child->_next = tmp;
-	  child->_prev = tmp->_prev;
-	  child->_next->_prev = child;
-	  child->_prev->_next = child;
-	}
-    }
-  else if (YES == [child isAncestorOf: self])
+  if (YES == [child isAncestorOf: self])
     {
       [NSException raise: NSInvalidArgumentException
 		  format: @"-insertChild:atIndex: child is ancestor"];
     }
+
+  if (child->_parent == self)
+    {
+      if (index >= _children)
+        {
+          [NSException raise: NSRangeException
+                      format: @"-insertChild:atIndex: index out of range"];
+        }
+    }
+
+  [child retain];
+  [child remove];
+  if (nil == _first)
+    {
+      _first = child;
+    }
   else
     {
-      [child retain];
-      [child remove];
-      if (nil == _first)
+      GWSElement	*tmp;
+
+      tmp = _first;
+      if (0 == index)
         {
-          _first = child;
+          _first = child;	// New start of children
         }
       else
-	{
-	  GWSElement	*tmp;
-
-	  tmp = _first;
-	  if (0 == index)
-	    {
-	      _first = child;	// New start of children
-	    }
-	  else if (index != _children)
-	    {
-	      while (--index > 0)
-		{
-		  tmp = tmp->_next;
-		}
-	    }
-	  child->_next = tmp;
-	  child->_prev = tmp->_prev;
-	  child->_next->_prev = child;
-	  child->_prev->_next = child;
-	}
-      child->_parent = self;
-      _children++;
+        {
+          while (index-- > 0)
+            {
+              tmp = tmp->_next;
+            }
+        }
+      child->_next = tmp;
+      child->_prev = tmp->_prev;
+      child->_next->_prev = child;
+      child->_prev->_next = child;
     }
+  child->_parent = self;
+  _children++;
 }
 
 - (BOOL) isAncestorOf: (GWSElement*)other

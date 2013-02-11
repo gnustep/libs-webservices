@@ -1,5 +1,10 @@
 2013-02-08 Richard Frith-Macdonald  <rfm@gnu.org>
 
+        * GWSElement.m:
+        Fix error inserting child element.
+
+2013-02-08 Richard Frith-Macdonald  <rfm@gnu.org>
+
         * GWSXMLRPCCoder.m:
         * GWSJSONCoder.m:
         * GWSCoder.h:

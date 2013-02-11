@@ -220,8 +220,7 @@ extern "C" {
  * Raises an exception it the specified
  * index is greater than the number of children present.<br />
  * If the element is already a child of the receiver, this method
- * inserts it at the new location and then removes it from the old
- * location.
+ * moves it to the new location.
  */
 - (void) insertChild: (GWSElement*)child atIndex: (NSUInteger)index;
 
