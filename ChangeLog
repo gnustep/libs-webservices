@@ -1,4 +1,9 @@
-2013-02-08 Richard Frith-Macdonald  <rfm@gnu.org>
+2013-02-12 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSJSONCoder.m:
+        Allow direct setting of result for JSONRPC
+
+2013-02-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * GWSElement.m:
         Fix error inserting child element.

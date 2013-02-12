@@ -506,7 +506,12 @@ typedef enum {
  * If JSON-RPC is not used, a single parameter is encoded directly as a
  * JSON object, while multiple parameters are encoded as a struct.<br />
  * If an encoding order is specified (or if the RPC version is 1.0) then
- * parameters are passed by position, otherwise they are passed by name.
+ * the encoded result is an array and parameters are passed by position
+ * as items in that array.<br />
+ * Otherwise, if there is a single parameter whose name is GWSJSONResult,
+ * then that parameter is encoded as the result.<br />
+ * Otherwise the encoded result is an object, and the parameters are passed
+ * by name (as fields in that object).
  * </p>
  */
 - (NSData*) buildRequest: (NSString*)method 

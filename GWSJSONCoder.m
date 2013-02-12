@@ -837,8 +837,18 @@ parse(context *ctxt)
     {
       if (YES == [container isKindOfClass: NSDictionaryClass])
         {
-          [container setObject: [container objectForKey: @"params"]
-                        forKey: @"result"];
+          id    p = [container objectForKey: @"params"];
+
+          if (nil == p)
+            {
+              p = null;
+            }
+          else if (YES == [p isKindOfClass: [NSDictionary class]]
+            && 1 == [p count] && nil != [p objectForKey: @"GWSJSONResult"])
+            {
+              p = [p objectForKey: @"GWSJSONResult"];
+            }
+          [container setObject: p forKey: @"result"];
           [container removeObjectForKey: @"params"];
         }
     }
