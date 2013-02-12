@@ -2,6 +2,8 @@
 
 	* GWSJSONCoder.m:
         Allow direct setting of result for JSONRPC
+	* GNUmakefile: Bump subminor version to 0.5.10 for bugfix release
+        for GWSElement insertion at index.
 
 2013-02-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
