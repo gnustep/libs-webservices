@@ -713,7 +713,7 @@ parse(context *ctxt)
           [NSException raise: NSGenericException
                       format: @"Bad/missing error message"];
         }
-      [e setObject: o forKey: @"code"];
+      [e setObject: o forKey: @"message"];
 
       o = [parameters objectForKey: @"data"];
       if (nil != o)
