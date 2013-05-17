@@ -1,3 +1,14 @@
+2013-05-17 Niels Grewe <niels.grewe@halbordnung.de>
+
+	* GWSHash.[hm]: Add a class to calculate and verify
+	HMACs or signatures on web-service requests and
+	repsonses. Advanced features require gnutls.
+	* config.h.in
+	* config.make.in
+	* configure.ac
+	* configure:
+	Add configure script to detect gnutls availability.
+
 2013-02-12 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSJSONCoder.m:

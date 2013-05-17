@@ -32,6 +32,7 @@
 #import <WebServices/GWSDocument.h>
 #import <WebServices/GWSElement.h>
 #import <WebServices/GWSExtensibility.h>
+#import <WebServices/GWSHash.h>
 #import <WebServices/GWSMessage.h>
 #import <WebServices/GWSPort.h>
 #import <WebServices/GWSPortType.h>

@@ -42,6 +42,7 @@ WebServices_OBJC_FILES +=\
 	GWSDocument.m \
 	GWSElement.m \
 	GWSExtensibility.m \
+        GWSHash.m \
 	GWSMessage.m \
 	GWSPort.m \
 	GWSPortType.m \
@@ -60,15 +61,19 @@ WebServices_HEADER_FILES += \
 	GWSDocument.h \
 	GWSElement.h \
 	GWSExtensibility.h \
+        GWSHash.h \
 	GWSMessage.h \
 	GWSPort.h \
 	GWSPortType.h \
 	GWSService.h \
 	GWSType.h \
 	WSSUsernameToken.h \
+        config.h \
 
 ADDITIONAL_OBJC_LIBS += -lPerformance
-WebServices_LIBRARIES_DEPEND_UPON += -lPerformance
+WebServices_LIBRARIES_DEPEND_UPON += -lPerformance 
+ADDITIONAL_LDFLAGS += $(GNUTLS_LIBS)
+ADDITIONAL_OBJCFLAGS += $(GNUTLS_CFLAGS)
 
 WebServices_AGSDOC_FILES += \
 	WebServices.gsdoc \
