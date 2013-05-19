@@ -77,7 +77,7 @@ static NSArray* algorithms = nil;
 
 
 
-#ifndef __clang__
+#ifdef __clang__
 #define FOR_IN(type, var, collection) \
   for (type var in collection)\
    {
