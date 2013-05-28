@@ -1,3 +1,7 @@
+2013-05-28 Niels Grewe <niels.grewe@halbordnung.de>
+
+	* GWSCoder.m: Fix decoding of hex-encoded binary data.
+
 2013-05-19 Niels Grewe <niels.grewe@halbordnung.de>
 
 	* GWSHash.m: Fix conditional that was the wrong way around.

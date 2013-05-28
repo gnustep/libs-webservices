@@ -254,15 +254,15 @@ static id       boolY;
 	{
 	  if (isdigit(c))
 	    {
-	      c = c - '0' + 52;
+	      c = c - '0';
 	    }
 	  else if (isupper(c))
 	    {
-	      c -= 'A';
+	      c = c - 'A' + 0x0a;
 	    }
 	  else
 	    {
-	      c = c - 'a' + 26;
+	      c = c - 'a' + 0x0a;
 	    }
 	  if (hi == YES)
 	    {
@@ -271,7 +271,7 @@ static id       boolY;
 	    }
 	  else
 	    {
-	      *dst++ = hi | val;
+	      *dst++ = (0x0f & c) | val;
 	      hi = YES;
 	    }
 	}
