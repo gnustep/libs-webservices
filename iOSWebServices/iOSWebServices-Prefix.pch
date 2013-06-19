@@ -1,7 +1,0 @@
-//
-// Prefix header for all source files of the 'iOSWebServices' target in the 'iOSWebServices' project
-//
-
-#ifdef __OBJC__
-    #import <Foundation/Foundation.h>
-#endif
