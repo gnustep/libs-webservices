@@ -44,6 +44,8 @@
 #import <GNUstepBase/NSData+GNUstepBase.h>
 #endif
 
+#include "config.h"
+
 #if  USE_GNUTLS == 1
 #include <gnutls/gnutls.h>
 #include <gnutls/crypto.h>
@@ -403,7 +405,7 @@ computeDigestGnuTLS(NSString *algorithm, NSData *data)
 
 
 static NSData*
-computeHMACGnuTLS(NSString *algorithm, NSData *message, NSData *key)
+computeHMACGnuTLS(NSString *algorithm, NSData *data, NSData *key)
 {
   const void* input = [data bytes];
   NSUInteger length = [data length];
@@ -443,7 +445,7 @@ computeHMACGnuTLS(NSString *algorithm, NSData *message, NSData *key)
       hash = [NSData dataWithBytesNoCopy: &buffer[0]
                                   length: 16
                             freeWhenDone: NO];
-    
+    }    
   return hash;
 }
 #else
