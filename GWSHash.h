@@ -26,7 +26,6 @@
 #define	INCLUDED_GWSHASH_H
 
 #import <Foundation/NSObject.h>
-#import "config.h"
 
 #if     defined(__cplusplus)
 extern "C" {
@@ -122,18 +121,32 @@ extern NSString* const kGWSHashSSHA512;
   NSString		*hash;
 }
 
-- (NSString*)hashAlgorithm;
-- (NSString*)salt;
-- (NSString*)hashValue;
-- (NSString*)stringValue;
+/** Compute and return a digest of the supplied data using the specified
+ * hashAlgorithm.
+ */
++ (NSData*) computeDigest: (NSString*)hashAlgorithm
+                     from: (NSData*)data;
 
+/** Compute and return the HMAC of the supplied data using the specified
+ * hashAlgorithm and key.
+ */
++ (NSData*) computeHMAC: (NSString*)hashAlgorithm
+                   from: (NSData*)data
+                    key: (NSData*)key;
 
 /**
  * Parses a string of the format '{' + hashMethod + '}' + hash + salt
  * into a GWSHash. Returns nil if the string cannot be parsed.
  */
-+ (GWSHash*)hashWithString: (NSString*)string;
++ (GWSHash*) hashWithString: (NSString*)string;
 
+/** Return the hash algorithm used by the receiver.
+ */
+- (NSString*) hashAlgorithm;
+
+/** Return the hash value of the receiver.
+ */
+- (NSString*) hashValue;
 
 /**
  * Generate a hash for the specified parameters and order. Returns nil
@@ -158,6 +171,14 @@ extern NSString* const kGWSHashSSHA512;
                          extra: (id)additionalValue
 			asHMAC: (BOOL)extraIsKey;
 
+/** Return the salt used by the receiver.
+ */
+- (NSString*) salt;
+
+/** return the string value of the receiver.
+ */
+- (NSString*) stringValue;
+
 /**
  * Verifies a previously initialized hash using the parameters
  * and order values from the web service request. The
@@ -167,13 +188,13 @@ extern NSString* const kGWSHashSSHA512;
  * Pass an NSData and set <var>extraIsKey</var> to use it as key
  * data for HMAC generation.
  * <var>hashKey</var> specifies a key in the parameters dictionary
- * to be exlcuded. This should be the key containing the hash itself. 
+ * to be excluded. This should be the key containing the hash itself. 
  */
-- (BOOL)verifyWithParameters: (NSDictionary*)parameters
-                       order: (NSArray*)order
-                       extra: (id)additionalValue
-		      asHMAC: (BOOL)extraIsKey
-                   excluding: (NSString*)hashKey;
+- (BOOL) verifyWithParameters: (NSDictionary*)parameters
+                        order: (NSArray*)order
+                        extra: (id)additionalValue
+		       asHMAC: (BOOL)extraIsKey
+                    excluding: (NSString*)hashKey;
 @end
 
 #if	defined(__cplusplus)

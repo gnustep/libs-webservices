@@ -61,6 +61,8 @@ NSString* const kGWSHashSSHA1 = @"SSHA";
 NSString* const kGWSHashMD5 = @"MD5";
 NSString* const kGWSHashSMD5 = @"SMD5";
 
+static BOOL
+writeObject(id obj, NSMutableString *output);
 
 static NSArray* algorithms = nil;
 
@@ -115,8 +117,6 @@ static inline BOOL isSalted(NSString *method)
    || [method isEqualToString: kGWSHashSSHA512]);
 }
 
-static BOOL writeObject(id obj, NSMutableString *output);
-
 static BOOL
 writeJSON(id obj, NSMutableString *output, NSArray* order);
 
@@ -160,7 +160,7 @@ writeDictionary(NSDictionary* dict, NSMutableString *output, NSArray* order)
   return YES;
 }
 
-static inline BOOL
+static BOOL
 writeObject(id obj, NSMutableString *output)
 {
   return writeJSON(obj, output, nil);
@@ -356,87 +356,108 @@ static inline NSString* generateSalt(NSUInteger length)
 
 
 #if USE_GNUTLS == 1
-#define computeDigest(alg, stringToHash) computeDigestGnuTLS(alg, stringToHash)
-#define computeHMAC(alg, stringToHash, key) computeHMACGnuTLS(alg, stringToHash, key)
+#define computeDigest(alg, dataToHash)\
+  computeDigestGnuTLS(alg, dataToHash)
+#define computeHMAC(alg, dataToHash, key)\
+   computeHMACGnuTLS(alg, dataToHash, key)
 
 
-static NSString* computeDigestGnuTLS(NSString *algorithm, NSString *stringToHash)
+static NSData*
+computeDigestGnuTLS(NSString *algorithm, NSData *data)
 {
-  NSData *data = [stringToHash dataUsingEncoding: NSUTF8StringEncoding];
   const void* input = [data bytes];
   NSUInteger length = [data length];
   NSData *hash = nil;
-  // 64 bytes is the largest size we need.
-  uint8_t buffer[64];
+  uint8_t buffer[64]; // 64 bytes is the largest size we need.
+
   if (IS_METHOD(algorithm, SHA256))
     {
       gnutls_hash_fast(GNUTLS_DIG_SHA256, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 32 freeWhenDone: NO];
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 32
+                            freeWhenDone: NO];
     }
   else if (IS_METHOD(algorithm, SHA512))
     {
       gnutls_hash_fast(GNUTLS_DIG_SHA512, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 64 freeWhenDone: NO];
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 64
+                            freeWhenDone: NO];
     }
   else if (IS_METHOD(algorithm, SHA1))
     {
       gnutls_hash_fast(GNUTLS_DIG_SHA1, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 20 freeWhenDone: NO];
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 20
+                            freeWhenDone: NO];
     }
   else if (IS_METHOD(algorithm, MD5))
     { 
       gnutls_hash_fast(GNUTLS_DIG_MD5, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 16 freeWhenDone: NO];
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 16
+                            freeWhenDone: NO];
     }
- return [[GWSCoder coder] encodeHexBinaryFrom: hash];
+  return hash;
 }
 
 
-static NSString* computeHMACGnuTLS(NSString* algorithm, NSString* message, NSData* key)
+static NSData*
+computeHMACGnuTLS(NSString *algorithm, NSData *message, NSData *key)
 {
-
-  NSData *data = [message dataUsingEncoding: NSUTF8StringEncoding];
   const void* input = [data bytes];
   NSUInteger length = [data length];
   const void* inKey = [key bytes];
   NSUInteger keyLen = [key length];
-
   NSData *hash = nil;
-  // 64 bytes is the largest size we need.
-  uint8_t buffer[64];
+  uint8_t buffer[64]; // 64 bytes is the largest size we need.
+
   if (IS_METHOD(algorithm, SHA256))
     {
-      gnutls_hmac_fast(GNUTLS_MAC_SHA256, inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 32 freeWhenDone: NO];
+      gnutls_hmac_fast(GNUTLS_MAC_SHA256,
+        inKey, keyLen, input, length, &buffer[0]);
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 32
+                            freeWhenDone: NO];
     }
   else if (IS_METHOD(algorithm, SHA512))
     {
-      gnutls_hmac_fast(GNUTLS_MAC_SHA512, inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 64 freeWhenDone: NO];
+      gnutls_hmac_fast(GNUTLS_MAC_SHA512,
+        inKey, keyLen, input, length, &buffer[0]);
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 64
+                            freeWhenDone: NO];
     }
   else if (IS_METHOD(algorithm, SHA1))
     {
-      gnutls_hmac_fast(GNUTLS_MAC_SHA1, inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 20 freeWhenDone: NO];
+      gnutls_hmac_fast(GNUTLS_MAC_SHA1,
+        inKey, keyLen, input, length, &buffer[0]);
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 20
+                            freeWhenDone: NO];
     }
   else if (IS_METHOD(algorithm, MD5))
     { 
-      gnutls_hmac_fast(GNUTLS_MAC_MD5, inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0] length: 16 freeWhenDone: NO];
-    }
- return [[GWSCoder coder] encodeHexBinaryFrom: hash];
-
-
+      gnutls_hmac_fast(GNUTLS_MAC_MD5,
+        inKey, keyLen, input, length, &buffer[0]);
+      hash = [NSData dataWithBytesNoCopy: &buffer[0]
+                                  length: 16
+                            freeWhenDone: NO];
+    
+  return hash;
 }
 #else
 
-#define computeDigest(alg, stringToHash) computeDigestInternal(alg, stringToHash)
-#define computeHMAC(alg, stringToHash, key) computeHMACInternal(alg, stringToHash, key)
+#define computeDigest(alg, dataToHash)\
+  computeDigestInternal(alg, dataToHash)
+#define computeHMAC(alg, dataToHash, key)\
+  computeHMACInternal(alg, dataToHash, key)
 
-static NSString* computeDigestInternal(NSString *algorithm, NSString *stringToHash)
+static NSData*
+computeDigestInternal(NSString *algorithm, NSData *data)
 {
-  NSData *data = [stringToHash dataUsingEncoding: NSUTF8StringEncoding];
   NSData *hash = nil;
+
   if (IS_METHOD(algorithm, SHA1))
     {
       hash = [data SHA1];
@@ -446,10 +467,11 @@ static NSString* computeDigestInternal(NSString *algorithm, NSString *stringToHa
       hash = [data md5Digest]; 
     }
 
- return [[GWSCoder coder] encodeHexBinaryFrom: hash];
+  return hash;
 }
 
-static NSString* computeHMACInternal(NSString* algorithm, NSString* message, NSData* key)
+static NSData*
+computeHMACInternal(NSString* algorithm, NSData* message, NSData* key)
 {
   [NSException raise: NSInvalidArgumentException
               format: @"HMAC generation disabled."];
@@ -457,10 +479,12 @@ static NSString* computeHMACInternal(NSString* algorithm, NSString* message, NSD
 } 
 #endif
 
-static NSString* getStringToHash(NSString *method, id rpcID, 
+static NSString*
+getStringToHash(NSString *method, id rpcID, 
   NSDictionary *parameters, NSArray* order, NSString *extra, NSString *salt)
 {
   NSMutableString *output = [NSMutableString string];
+
   if (nil != salt)
     {
       [output appendString: salt];
@@ -493,35 +517,22 @@ static NSString* getStringToHash(NSString *method, id rpcID,
 }
 
 
-
-
 @implementation GWSHash
 
-- (NSString*)hashAlgorithm
++ (NSData*) computeDigest: (NSString*)hashAlgorithm
+                     from: (NSData*)data
 {
-  return method;
+  return computeDigest(hashAlgorithm, data);
 }
 
-- (NSString*)salt
++ (NSData*) computeHMAC: (NSString*)hashAlgorithm
+                   from: (NSData*)data
+                    key: (NSData*)key
 {
-  return salt;
-}
-- (NSString*)hashValue
-{
-  return hash;
-}
-- (NSString*)stringValue
-{
-  return [self description];
+  return computeHMAC(hashAlgorithm, data, key);
 }
 
-- (NSString*)description
-{
-  return [NSString stringWithFormat: @"{%@}%@%@", method, hash, (salt) ? salt : @""];
-}
-
-
-+ (void)initialize
++ (void) initialize
 {
   if ([GWSHash class] == self)
     {
@@ -542,9 +553,35 @@ static NSString* getStringToHash(NSString *method, id rpcID,
     }
 }
 
-- (id)initWithAlgorithm: (NSString*)algorithm
-                   hash: (NSString*)theHash
-                   salt: (NSString*)theSalt
+- (NSString*) hashAlgorithm
+{
+  return method;
+}
+
+- (NSString*) salt
+{
+  return salt;
+}
+
+- (NSString*) hashValue
+{
+  return hash;
+}
+
+- (NSString*) stringValue
+{
+  return [self description];
+}
+
+- (NSString*) description
+{
+  return [NSString stringWithFormat: @"{%@}%@%@",
+    method, hash, (salt) ? (NSString*)salt : (NSString*)@""];
+}
+
+- (id) initWithAlgorithm: (NSString*)algorithm
+                    hash: (NSString*)theHash
+                    salt: (NSString*)theSalt
 {
   if (nil == (self = [super init]))
     {
@@ -565,14 +602,14 @@ static NSString* getStringToHash(NSString *method, id rpcID,
    retain];
   // Check whether the hash length is sane
   if (NO == 
-      (HASH_LENGTH_MATCH(theHash, method, kGWSHashSHA1, 40)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashSSHA1, 40)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashSHA256, 64)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashSSHA256, 64)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashSHA512, 128)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashSSHA512, 128)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashMD5, 32)
-      || HASH_LENGTH_MATCH(theHash, method, kGWSHashSMD5, 32)))
+    (HASH_LENGTH_MATCH(theHash, method, kGWSHashSHA1, 40)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashSSHA1, 40)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashSHA256, 64)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashSSHA256, 64)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashSHA512, 128)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashSSHA512, 128)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashMD5, 32)
+    || HASH_LENGTH_MATCH(theHash, method, kGWSHashSMD5, 32)))
     {
       NSDebugMLog(@"Length of hash (%ld) invalid for %@",
        [theHash length], algorithm);
@@ -585,19 +622,19 @@ static NSString* getStringToHash(NSString *method, id rpcID,
 }
 
 
-- (id)copyWithZone: (NSZone*)zone
+- (id) copyWithZone: (NSZone*)zone
 {
   return [[GWSHash allocWithZone: zone] initWithAlgorithm: method
                                                      hash: hash
                                                      salt: salt]; 
 }
 
-- (NSUInteger)hash
+- (NSUInteger) hash
 {
   return [[self description] hash];
 }
 
-- (BOOL)isEqual: (id)obj
+- (BOOL) isEqual: (id)obj
 {
   if ([obj isKindOfClass: [GWSHash class]])
     {
@@ -606,7 +643,7 @@ static NSString* getStringToHash(NSString *method, id rpcID,
   return [super isEqual: obj];
 }
 
-- (void)dealloc
+- (void) dealloc
 {
   [method release];
   [hash release];
@@ -614,7 +651,7 @@ static NSString* getStringToHash(NSString *method, id rpcID,
   [super dealloc];
 }
 
-+ (GWSHash*)hashWithString: (NSString*)string
++ (GWSHash*) hashWithString: (NSString*)string
 {
   if (nil == string)
     {
@@ -626,6 +663,7 @@ static NSString* getStringToHash(NSString *method, id rpcID,
   NSString *method = nil;
   NSString *hash = nil;
   NSString *salt = nil;;
+
   if (NO == [scanner scanString: @"{" intoString: NULL])
     {
       return nil;
@@ -693,6 +731,7 @@ static NSString* getStringToHash(NSString *method, id rpcID,
   NSArray *o = [parameters objectForKey: GWSOrderKey];
   id rpcID = [parameters objectForKey: GWSRPCIDKey];
   NSString *salt = nil;
+
   if (isSalted(hashAlgorithm))
     {
       salt = generateSalt(32);
@@ -710,33 +749,37 @@ static NSString* getStringToHash(NSString *method, id rpcID,
       o = order;
     }
    
-  NSString *toHash = getStringToHash(rpcMethod, rpcID,
+  NSString      *toHash = getStringToHash(rpcMethod, rpcID,
     dict, o, (extraIsKey) ? nil : additionalValue, salt);
-  NSString *hash = nil;
+  NSString      *hash = nil;
+  NSData        *data = [toHash dataUsingEncoding: NSUTF8StringEncoding];
   if (extraIsKey)
     {
-      hash = computeHMAC(hashAlgorithm, toHash, additionalValue);
+      hash = [[GWSCoder coder] encodeHexBinaryFrom:
+        computeHMAC(hashAlgorithm, data, additionalValue)];
     }
   else
     {
-      hash = computeDigest(hashAlgorithm, toHash);
+      hash = [[GWSCoder coder] encodeHexBinaryFrom:
+        computeDigest(hashAlgorithm, data)];
     }
   return [[[GWSHash alloc] initWithAlgorithm: hashAlgorithm
                                         hash: hash
                                         salt: salt] autorelease];
 }
 
-- (BOOL)verifyWithParameters: (NSDictionary*)parameters
-                       order: (NSArray*)order
-                       extra: (id)additionalValue
-		      asHMAC: (BOOL)extraIsKey
-                   excluding: (NSString*)hashKey
+- (BOOL) verifyWithParameters: (NSDictionary*)parameters
+                        order: (NSArray*)order
+                        extra: (id)additionalValue
+		       asHMAC: (BOOL)extraIsKey
+                    excluding: (NSString*)hashKey
 		   
 {
   NSDictionary *dict = [parameters objectForKey: GWSFaultKey];
   NSString *rpcMethod = [parameters objectForKey: GWSMethodKey];
   NSArray *o = [parameters objectForKey: GWSOrderKey];
   id rpcID = [parameters objectForKey: GWSRPCIDKey];
+
   if (nil == dict)
     {
       dict = [parameters objectForKey: GWSParametersKey];
@@ -758,22 +801,28 @@ static NSString* getStringToHash(NSString *method, id rpcID,
       [(NSMutableArray*)o removeObject: hashKey];
       [(NSMutableDictionary*)dict removeObjectForKey: hashKey];
     }
-  NSDebugMLog(@"Verifying hash with parameters. Method: %@, RPCID: %@, Dict: %@, Order: %@, Salt: %@",
-   rpcMethod, rpcID, dict, o, salt);
+  NSDebugMLog(@"Verifying hash with parameters."
+    @" Method: %@, RPCID: %@, Dict: %@, Order: %@, Salt: %@",
+    rpcMethod, rpcID, dict, o, salt);
+
   NSString *toHash = getStringToHash(rpcMethod, rpcID,
     dict, o, (extraIsKey) ? nil : additionalValue, salt);
   
   NSString *otherHash = nil;
+  NSData    *data = [toHash dataUsingEncoding: NSUTF8StringEncoding];
+
   if (extraIsKey)
     { 
-      otherHash = computeHMAC(method, toHash, additionalValue);
+      otherHash = [[GWSCoder coder] encodeHexBinaryFrom:
+        computeHMAC(method, data, additionalValue)];
     }
   else
     {
-      otherHash = computeDigest(method, toHash);
+      otherHash = [[GWSCoder coder] encodeHexBinaryFrom:
+        computeDigest(method, data)];
     }
-  return (NSOrderedSame ==
-    [[self hashValue] caseInsensitiveCompare: otherHash]);
+  return (NSOrderedSame
+    == [[self hashValue] caseInsensitiveCompare: otherHash]);
 }
 @end
 
