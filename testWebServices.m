@@ -132,7 +132,7 @@ main()
   NSLog(@"Retry gives ... %@", result);
 
   xml = [document data];
-  NSLog(@"Document:\n%*.*s", [xml length], [xml length], [xml bytes]);
+  NSLog(@"Document:\n%*.*s", (int)[xml length], (int)[xml length], [xml bytes]);
   [document release];
   [inner release];
 
@@ -320,7 +320,7 @@ main()
                  parameters: o
                       order: nil];
   fprintf(stdout, "\nENCODED ... %*.*s\n\n\n",
-    [xml length], [xml length], (char*)[xml bytes]);
+    (int)[xml length], (int)[xml length], (char*)[xml bytes]);
   result = [coder parseMessage: xml];
   fprintf(stdout, "\nDECODED ... %s\n\n\n",
     (char*)[[result description] UTF8String]);

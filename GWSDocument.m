@@ -526,7 +526,7 @@ static NSLock			*extLock = nil;
   message = [_messages objectForKey: name];
   if (message == nil && shouldCreate == YES)
     {
-      message = [[GWSType alloc] _initWithName: name document: self];
+      message = [[GWSMessage alloc] _initWithName: name document: self];
       [_messages setObject: message forKey: name];
     }
   else
@@ -573,7 +573,7 @@ static NSLock			*extLock = nil;
   portType = [_portTypes objectForKey: name];
   if (portType == nil && shouldCreate == YES)
     {
-      portType = [[GWSType alloc] _initWithName: name document: self];
+      portType = [[GWSPortType alloc] _initWithName: name document: self];
       [_portTypes setObject: portType forKey: name];
     }
   else
@@ -668,7 +668,7 @@ static NSLock			*extLock = nil;
   service = [_services objectForKey: name];
   if (service == nil && shouldCreate == YES)
     {
-      service = [[GWSType alloc] _initWithName: name document: self];
+      service = [[GWSService alloc] _initWithName: name document: self];
       [_services setObject: service forKey: name];
     }
   else

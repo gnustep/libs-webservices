@@ -567,7 +567,8 @@ promote(NSMutableDictionary *d, NSString *k)
 	      if (u == nil)
 		{
 		  return [NSString stringWithFormat:
-		    @"bad location '%@' in SOAP port address: '%@'", location];
+		    @"bad location '%@' in SOAP port: '%@'",
+                    location, name];
 		}
 	      [service setURL: location];
 	    }

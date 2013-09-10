@@ -1006,7 +1006,7 @@ newHeader(NSString *prefix, id o)
                 {
                   x = @"xsd:int";
                 }
-              c = [NSString stringWithFormat: @"%d", i];
+              c = [NSString stringWithFormat: @"%ld", i];
             }
         }
       else

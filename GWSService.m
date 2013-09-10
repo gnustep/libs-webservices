@@ -795,7 +795,7 @@ available(NSString *host)
                   if (data != _response)
                     {
                       [_response release];
-                      _response = [data retain];
+                      _response = [data mutableCopy];
                     }
                 }
               res = [_coder parseMessage: _response];
@@ -1990,7 +1990,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
   [handle removeClient: (id<NSURLHandleClient>)self];
   [_response release];
-  _response = [[handle availableResourceData] retain];
+  _response = [[handle availableResourceData] mutableCopy];
   _code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
   if ([workThreads maxThreads] == 0
     && [NSThread currentThread] != _queueThread)

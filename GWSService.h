@@ -35,10 +35,10 @@ extern "C" {
 @class  NSArray;
 @class  NSDate;
 @class  NSDictionary;
-@class  NSLock;
 @class  NSMutableArray;
 @class  NSMutableData;
 @class  NSMutableDictionary;
+@class  NSRecursiveLock;
 @class  NSString;
 @class  NSThread;
 @class  NSTimer;
@@ -128,7 +128,7 @@ extern "C" {
   NSArray		*_prepOrder;
   NSThread		*_queueThread;
   NSThread		*_ioThread;
-  NSLock		*_lock;
+  NSRecursiveLock	*_lock;
   enum {
     RPCIdle = 0,	// Not performing RPC
     RPCQueued,		// In local queue waiting to do I/O or prepare
