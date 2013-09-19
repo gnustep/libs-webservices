@@ -536,7 +536,7 @@ parse(context *ctxt)
         }
       else
         {
-          [ms appendFormat: @"%f", [(NSNumber*)o doubleValue]];
+          [ms appendFormat: @"%g", [(NSNumber*)o doubleValue]];
         }
     }
   else if (YES == [o isKindOfClass: NSDataClass])
