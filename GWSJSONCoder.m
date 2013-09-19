@@ -839,19 +839,26 @@ parse(context *ctxt)
     {
       if (YES == [container isKindOfClass: NSDictionaryClass])
         {
-          id    p = [container objectForKey: @"params"];
+          id    o = [container objectForKey: @"params"];
 
-          if (nil == p)
+          if (nil == o)
             {
-              p = null;
+              o = null;
             }
-          else if (YES == [p isKindOfClass: [NSDictionary class]]
-            && 1 == [p count] && nil != [p objectForKey: GWSJSONResultKey])
+          else if (YES == [o isKindOfClass: [NSDictionary class]]
+            && 1 == [o count] && nil != [o objectForKey: GWSJSONResultKey])
             {
-              p = [p objectForKey: GWSJSONResultKey];
+              o = [o objectForKey: GWSJSONResultKey];
             }
-          [container setObject: p forKey: @"result"];
+          [container setObject: o forKey: @"result"];
           [container removeObjectForKey: @"params"];
+          o = [container objectForKey: GWSOrderKey];
+          if (nil == o)
+            {
+              o = [[container allKeys] sortedArrayUsingSelector:
+                @selector(compare:)];
+              [container setObject: o forKey: GWSOrderKey];
+            }
         }
     }
   [self appendObject: container];
