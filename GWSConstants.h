@@ -230,6 +230,13 @@ extern NSString * const GWSSOAPTypeKey;
  * would encode '&lt;foo "xmlns=http://foo/xxx.xsd"&gt;hello&lt;/foo&gt;'.
  */
 extern NSString * const GWSSOAPValueKey;
+
+/* If this key is present as the sole item in a parameters dictionary
+ * used for building a JSON response, the value referred to by the key
+ * is used as the 'result' field of a JSONRPC response.
+ */
+extern NSString * const GWSJSONResultKey;
+
 #if	defined(__cplusplus)
 }
 #endif

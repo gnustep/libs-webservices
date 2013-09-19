@@ -508,8 +508,9 @@ typedef enum {
  * If an encoding order is specified (or if the RPC version is 1.0) then
  * the encoded result is an array and parameters are passed by position
  * as items in that array.<br />
- * Otherwise, if there is a single parameter whose name is GWSJSONResult,
- * then that parameter is encoded as the result.<br />
+ * Otherwise, if there is a single parameter whose name is the constant
+ * GWSJSONResultKey (the string 'GWSJSONResult'), then that parameter
+ * parameter is encoded as the result.<br />
  * Otherwise the encoded result is an object, and the parameters are passed
  * by name (as fields in that object).
  * </p>

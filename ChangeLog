@@ -1,3 +1,9 @@
+2013-09-19 Richard Frith-Macdonald  <rfm@gnu.org>
+
+        * GWSConstants.h:
+        * GWSJSONCoder.m:
+        Add GWSJSONResultKey.
+
 2013-08-15 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * GWSHash.h:

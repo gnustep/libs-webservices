@@ -26,6 +26,8 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 
+NSString * const GWSJSONResultKey = @"GWSJSONResult";
+
 static NSString * const ver1 = @"1.0";
 static NSString * const ver2 = @"2.0";
 
@@ -677,7 +679,7 @@ parse(context *ctxt)
       /* If this request has no order specified and is version 2
        * then we encode parameters by name.
        */
-      if (nil == order)
+      if (nil == order || [order containsObject: GWSJSONResultKey])
         {
           positional = NO;
         }
@@ -844,9 +846,9 @@ parse(context *ctxt)
               p = null;
             }
           else if (YES == [p isKindOfClass: [NSDictionary class]]
-            && 1 == [p count] && nil != [p objectForKey: @"GWSJSONResult"])
+            && 1 == [p count] && nil != [p objectForKey: GWSJSONResultKey])
             {
-              p = [p objectForKey: @"GWSJSONResult"];
+              p = [p objectForKey: GWSJSONResultKey];
             }
           [container setObject: p forKey: @"result"];
           [container removeObjectForKey: @"params"];
