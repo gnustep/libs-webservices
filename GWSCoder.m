@@ -55,7 +55,8 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
     }
 
    /* If len was not a multiple of 3, then we have encoded too
-    * many characters.  Adjust appropriately.
+    * many characters.  Standard base64 encoding pads, so we must
+    * overwrite the excess characters with the pad character ('=').
     */
    if (sIndex == length + 1)
      {
@@ -67,6 +68,44 @@ encodebase64(unsigned char *dst, const unsigned char *src, int length)
        /* There was only 1 byte in that last group */
        dst[dIndex - 1] = '=';
        dst[dIndex - 2] = '=';
+     }
+  return dIndex;
+}
+
+static int
+encodebase64Url(unsigned char *dst, const unsigned char *src, int length)
+{
+  static char b64[]
+    = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+  int	dIndex = 0;
+  int	sIndex;
+
+  for (sIndex = 0; sIndex < length; sIndex += 3)
+    {
+      int	c0 = src[sIndex];
+      int	c1 = (sIndex+1 < length) ? src[sIndex+1] : 0;
+      int	c2 = (sIndex+2 < length) ? src[sIndex+2] : 0;
+
+      dst[dIndex++] = b64[(c0 >> 2) & 077];
+      dst[dIndex++] = b64[((c0 << 4) & 060) | ((c1 >> 4) & 017)];
+      dst[dIndex++] = b64[((c1 << 2) & 074) | ((c2 >> 6) & 03)];
+      dst[dIndex++] = b64[c2 & 077];
+    }
+
+   /* If len was not a multiple of 3, then we have encoded too
+    * many characters.  Base64URL encoding uses no padding, so
+    * we simply remove the excess characters.
+    */
+   if (sIndex == length + 1)
+     {
+       /* There were only 2 bytes in that last group */
+       dst[--dIndex] = '\0';
+     }
+   else if (sIndex == length + 2)
+     {
+       /* There was only 1 byte in that last group */
+       dst[--dIndex] = '\0';
+       dst[--dIndex] = '\0';
      }
   return dIndex;
 }
@@ -218,6 +257,96 @@ static id       boolY;
     initWithBytesNoCopy: result length: dst - result] autorelease];
 }
 
+- (NSData*) decodeBase64UrlFrom: (NSString*)str
+{
+  NSData        *source = [str dataUsingEncoding: NSASCIIStringEncoding];
+  int		length;
+  int		declen;
+  const unsigned char	*src;
+  const unsigned char	*end;
+  unsigned char *result;
+  unsigned char	*dst;
+  unsigned char	buf[4];
+  unsigned	pos = 0;
+
+  if (source == nil)
+    {
+      return nil;
+    }
+  length = [source length];
+  if (length == 0)
+    {
+      return [NSData data];
+    }
+  declen = ((length + 3) * 3)/4;
+  src = (const unsigned char*)[source bytes];
+  end = &src[length];
+
+  result = (unsigned char*)NSZoneMalloc(NSDefaultMallocZone(), declen);
+  dst = result;
+
+  while ((src != end) && *src != '\0')
+    {
+      int	c = *src++;
+
+      if (isupper(c))
+	{
+	  c -= 'A';
+	}
+      else if (islower(c))
+	{
+	  c = c - 'a' + 26;
+	}
+      else if (isdigit(c))
+	{
+	  c = c - '0' + 52;
+	}
+      else if (c == '_')
+	{
+	  c = 63;
+	}
+      else if (c == '-')
+	{
+	  c = 62;
+	}
+      else
+	{
+	  break;		/* end */
+	}
+
+      if (c >= 0)
+	{
+	  buf[pos++] = c;
+	  if (pos == 4)
+	    {
+	      pos = 0;
+	      decodebase64(dst, buf);
+	      dst += 3;
+	    }
+	}
+    }
+
+  if (pos > 0)
+    {
+      unsigned	i;
+
+      for (i = pos; i < 4; i++)
+	{
+	  buf[i] = '\0';
+	}
+      pos--;
+      if (pos > 0)
+	{
+	  unsigned char	tail[3];
+	  decodebase64(tail, buf);
+	  memcpy(dst, tail, pos);
+	  dst += pos;
+	}
+    }
+  return [[[NSData allocWithZone: NSDefaultMallocZone()]
+    initWithBytesNoCopy: result length: dst - result] autorelease];
+}
+
 - (NSData*) decodeHexBinaryFrom: (NSString*)str
 {
   NSData        *source = [str dataUsingEncoding: NSASCIIStringEncoding];
@@ -310,6 +439,32 @@ static id       boolY;
   dBuf = NSZoneMalloc(NSDefaultMallocZone(), destlen);
 
   destlen = encodebase64(dBuf, sBuf, length);
+
+  str = [[NSString alloc] initWithBytesNoCopy: dBuf
+                                       length: destlen
+                                     encoding: NSASCIIStringEncoding
+                                 freeWhenDone: YES];
+  return [str autorelease];
+}
+
+- (NSString*) encodeBase64UrlFrom: (NSData*)source
+{
+  NSString      *str;
+  int		length;
+  int		destlen;
+  unsigned char *sBuf;
+  unsigned char *dBuf;
+
+  length = [source length];
+  if (length == 0)
+    {
+      return @"";
+    }
+  destlen = 4 * ((length + 2) / 3);
+  sBuf = (unsigned char*)[source bytes];
+  dBuf = NSZoneMalloc(NSDefaultMallocZone(), destlen);
+
+  destlen = encodebase64Url(dBuf, sBuf, length);
 
   str = [[NSString alloc] initWithBytesNoCopy: dBuf
                                        length: destlen

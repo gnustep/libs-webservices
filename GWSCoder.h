@@ -111,6 +111,10 @@ extern "C" {
  */
 - (NSData*) decodeBase64From: (NSString*)str;
 
+/** Decode the supplied base64url encoded data and return the result.
+ */
+- (NSData*) decodeBase64UrlFrom: (NSString*)str;
+
 /** Decode the supplied hexBinary encoded data and return the result.<br />
  * This is a tolerant parser, it accepts lower case hex digits and white
  * space, but it does insist on an even number of hexadecimal digits.<br />
@@ -121,6 +125,10 @@ extern "C" {
 /** Take the supplied data and convert it to base64 encoded text.
  */
 - (NSString*) encodeBase64From: (NSData*)source;
+
+/** Take the supplied data and convert it to base64url encoded text.
+ */
+- (NSString*) encodeBase64UrlFrom: (NSData*)source;
 
 /** Encode the supplied data as hexBinary data in the canonical form
  * (as per W3 schema recommendations) and return the result.<br />
