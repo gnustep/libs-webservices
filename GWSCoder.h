@@ -429,6 +429,7 @@ typedef enum {
  */
 @interface GWSXMLRPCCoder : GWSCoder
 {
+  BOOL  _strictParsing;
 }
 /** Builds a simple fault response.
  */
@@ -440,6 +441,15 @@ typedef enum {
  */
 - (NSString*) encodeDateTimeFrom: (NSDate*)source;
 
+/** Sets whether parsing requires strict use of plain XML elements,
+ * or permits attributes and namespaces to be attached to them (and ignored).
+ */
+- (void) setStrictParsing: (BOOL)isStrict;
+
+/** Returns whether parsing requires strict use of plain XML elements,
+ * or permits attributes and namespaces to be attached to them (and ignored).
+ */
+- (BOOL) strictParsing;
 @end
 
 /** <p>The GWSJSONCoder class is a concrete subclass of [GWSCoder] which

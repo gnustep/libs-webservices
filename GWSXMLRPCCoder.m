@@ -29,6 +29,7 @@
 @interface      GWSXMLRPCCoder (Private)
 
 - (void) _appendObject: (id)o;
+- (void) _checkElement: (GWSElement*)elem;
 
 @end
 
@@ -336,6 +337,7 @@ static id               boolY;
       [NSException raise: NSGenericException
                   format: @"expected 'value' but got '%@'", name];
     }
+  if (_strictParsing) [self _checkElement: elem];
   if (c == 0)
     {
       s = [[elem content] copy];
@@ -451,6 +453,7 @@ static id               boolY;
           GWSElement    *e;
 	  id		o;
 
+          if (_strictParsing) [self _checkElement: elem];
           if ([[elem name] isEqualToString: @"member"] == NO)
             {
               [NSException raise: NSGenericException
@@ -462,6 +465,7 @@ static id               boolY;
                           format: @"member with wrong number of elements"];
             }
           e = [elem firstChild];
+          if (_strictParsing) [self _checkElement: e];
           if ([[e name] isEqualToString: @"name"] == NO)
             {
               [NSException raise: NSGenericException
@@ -493,6 +497,7 @@ static id               boolY;
 		      format: @"array with bad number of elements"];
         }
       elem = [elem firstChild];
+      if (_strictParsing) [self _checkElement: elem];
       if ([[elem name] isEqualToString: @"data"] == NO)
         {
 	  [NSException raise: NSGenericException
@@ -534,6 +539,7 @@ static id               boolY;
   NS_DURING
     {
       tree = [self parseXML: data];
+      if (_strictParsing) [self _checkElement: tree];
       name = [tree name];
       if ([name isEqualToString: @"methodCall"] == YES)
         {
@@ -543,6 +549,7 @@ static id               boolY;
                           format: @"too many elements in methodCall"];
             }
           elem = [tree firstChild]; 
+          if (_strictParsing) [self _checkElement: elem];
           if ([[elem name] isEqualToString: @"methodName"] == NO)
             {
               [NSException raise: NSGenericException
@@ -562,6 +569,7 @@ static id               boolY;
 		    format: @"found %@ when expecting params in methodCall",
 		    [elem name]];
                 }
+              if (_strictParsing) [self _checkElement: elem];
 
               params = [NSMutableDictionary dictionaryWithCapacity: c];
               order = [NSMutableArray arrayWithCapacity: c];
@@ -581,6 +589,7 @@ static id               boolY;
                       [NSException raise: NSGenericException
                                   format: @"bad element at param %u", i];
                     }
+                  if (_strictParsing) [self _checkElement: elem];
 
                   name = [NSString stringWithFormat: @"Arg%u", i];
                   o = [[self delegate] decodeWithCoder: self
@@ -615,6 +624,7 @@ static id               boolY;
             {
               id                o;
 
+              if (_strictParsing) [self _checkElement: elem];
               if ([elem countChildren] != 1)
                 {
                   [NSException raise: NSGenericException
@@ -632,6 +642,7 @@ static id               boolY;
                   [NSException raise: NSGenericException
                               format: @"bad element count in param"];
                 }
+              if (_strictParsing) [self _checkElement: elem];
 
               o = [[self delegate] decodeWithCoder: self
                                               item: [elem firstChild]
@@ -656,8 +667,10 @@ static id               boolY;
             }
           else if ([name isEqualToString: @"fault"] == YES)
             {
-	      id	o = [self _newParsedValue: [elem firstChild]];
+	      id	o;
 
+              if (_strictParsing) [self _checkElement: elem];
+	      o = [self _newParsedValue: [elem firstChild]];
               [result setObject: o forKey: GWSFaultKey];
 	      [o release];
             }
@@ -685,6 +698,15 @@ static id               boolY;
   return result;
 }
 
+- (void) setStrictParsing: (BOOL)isStrict
+{
+  _strictParsing = (isStrict ? YES : NO);
+}
+
+- (BOOL) strictParsing
+{
+  return _strictParsing;
+}
 @end
 
 @implementation GWSXMLRPCCoder (Private)
@@ -815,6 +837,27 @@ static id               boolY;
   else
     {
       [self _appendObject: [o description]];
+    }
+}
+
+- (void) _checkElement: (GWSElement*)elem
+{
+  if (YES == _strictParsing)
+    {
+      NSString          *n = [elem name];
+      NSString          *p = [elem prefix];
+      NSDictionary      *a = [elem attributes];
+
+      if ([p length] > 0)
+        {
+          [NSException raise: NSGenericException
+                      format: @"unexpected prefix for '%@': %@", n, p];
+        }
+      else if ([a count] > 0)
+        {
+          [NSException raise: NSGenericException
+                      format: @"unexpected attributes for '%@': %@", n, a];
+        }
     }
 }
 
