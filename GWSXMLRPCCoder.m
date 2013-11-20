@@ -350,6 +350,7 @@ static id               boolY;
     }
   elem = [elem firstChild];
   name = [elem name];
+  if (_strictParsing) [self _checkElement: elem];
 
   if ([name isEqualToString: @"string"])
     {
@@ -453,7 +454,6 @@ static id               boolY;
           GWSElement    *e;
 	  id		o;
 
-          if (_strictParsing) [self _checkElement: elem];
           if ([[elem name] isEqualToString: @"member"] == NO)
             {
               [NSException raise: NSGenericException
@@ -464,8 +464,9 @@ static id               boolY;
               [NSException raise: NSGenericException
                           format: @"member with wrong number of elements"];
             }
+          if (_strictParsing) [self _checkElement: elem];
+
           e = [elem firstChild];
-          if (_strictParsing) [self _checkElement: e];
           if ([[e name] isEqualToString: @"name"] == NO)
             {
               [NSException raise: NSGenericException
@@ -477,6 +478,8 @@ static id               boolY;
               [NSException raise: NSGenericException
                           format: @"member name is empty"];
             }
+          if (_strictParsing) [self _checkElement: e];
+
           e = [e sibling];
           o = [self _newParsedValue: e];
           [m setObject: o forKey: name];
@@ -497,12 +500,12 @@ static id               boolY;
 		      format: @"array with bad number of elements"];
         }
       elem = [elem firstChild];
-      if (_strictParsing) [self _checkElement: elem];
       if ([[elem name] isEqualToString: @"data"] == NO)
         {
 	  [NSException raise: NSGenericException
 		      format: @"array without 'data' element"];
         }
+      if (_strictParsing) [self _checkElement: elem];
       c = [elem countChildren];
       m = [NSMutableArray arrayWithCapacity: c];
       elem = [elem firstChild];
@@ -549,12 +552,12 @@ static id               boolY;
                           format: @"too many elements in methodCall"];
             }
           elem = [tree firstChild]; 
-          if (_strictParsing) [self _checkElement: elem];
           if ([[elem name] isEqualToString: @"methodName"] == NO)
             {
               [NSException raise: NSGenericException
                           format: @"methodName missing in methodCall"];
             }
+          if (_strictParsing) [self _checkElement: elem];
           [result setObject: [elem content] forKey: GWSMethodKey];
           elem = [elem sibling];
           if (elem != nil)
