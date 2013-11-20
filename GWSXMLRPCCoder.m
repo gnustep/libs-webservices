@@ -847,19 +847,20 @@ static id               boolY;
 {
   if (YES == _strictParsing)
     {
-      NSString          *n = [elem name];
       NSString          *p = [elem prefix];
       NSDictionary      *a = [elem attributes];
 
       if ([p length] > 0)
         {
           [NSException raise: NSGenericException
-                      format: @"unexpected prefix for '%@': %@", n, p];
+                      format: @"unexpected prefix for '%@': %@",
+            [[elem path] componentsJoinedByString: @"/"], p];
         }
       else if ([a count] > 0)
         {
           [NSException raise: NSGenericException
-                      format: @"unexpected attributes for '%@': %@", n, a];
+                      format: @"unexpected attributes for '%@': %@",
+            [[elem path] componentsJoinedByString: @"/"], a];
         }
     }
 }
