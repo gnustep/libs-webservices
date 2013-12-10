@@ -187,7 +187,14 @@ extern "C" {
  */
 - (NSArray*) fetchElements: (NSString*)path;
 
-/** A convenience method to search the receiver for an elemement whose
+/** A convenience method to search the receiver's children for an element
+ * whose name (ignoring any namespace prefix) matches the method argument.<br />
+ * The return value is the first matching direct child, or nil if
+ * no such element is found.
+ */
+- (GWSElement*) findChild: (NSString*)name;
+
+/** A convenience method to search the receiver for an element whose
  * name (ignoring any namespace prefix) matches the method argument.<br />
  * The return value could be the receiver itsself, any of it's direct
  * (or indirect) children, or nil if no such element is found.<br />

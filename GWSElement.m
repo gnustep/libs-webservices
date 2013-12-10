@@ -474,6 +474,20 @@ static Class		GWSElementClass = Nil;
   return result;
 }
 
+- (GWSElement*) findChild: (NSString*)name
+{
+  GWSElement	*child = _first;
+
+  while (nil != child)
+    {
+      if ([name isEqualToString: child->_name] == YES)
+        {
+          return child;
+        }
+      child = child->_next;
+    }
+  return nil;
+}
 
 - (GWSElement*) findElement: (NSString*)name
 {
