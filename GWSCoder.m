@@ -800,6 +800,7 @@ static id       boolY;
       int		hour;
       int		minute;
       int		second;
+      int               milli;
 
       s = [value UTF8String];
       if (0 == s)
@@ -820,7 +821,17 @@ static id       boolY;
       s = strchr(s, ':');
       s++;
       while (isdigit(*s)) s++;
-      if (*s == 'Z')
+      if ('.' == *s)
+        {
+          s++;
+          milli = atoi(s);
+          while (isdigit(*s)) s++;
+        }
+      else
+        {
+          milli = 0;
+        }
+      if ('Z' == *s)
 	{
 	  tz = [NSTimeZone timeZoneForSecondsFromGMT: 0];
 	}
@@ -883,6 +894,14 @@ static id       boolY;
 					      minute: minute
 					      second: second 
 					    timeZone: tz] autorelease]; 
+      if (0 != milli)
+        {
+          NSTimeInterval        ti = [result timeIntervalSinceReferenceDate];
+
+          ti += milli;
+          result = [NSCalendarDate dateWithTimeIntervalSinceReferenceDate: ti];
+          [result setTimeZone: tz];
+        }
     }
   else if ([type isEqualToString: @"xsd:double"] == YES)
     {
