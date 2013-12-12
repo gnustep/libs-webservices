@@ -40,6 +40,40 @@ main()
 
   defs = [NSUserDefaults standardUserDefaults];
 
+  if ([defs boolForKey: @"Internal"] == YES)
+    {
+      GWSSOAPCoder      *coder;
+      NSCalendarDate    *now;
+      NSCalendarDate    *dec;
+      NSString          *str;
+
+      coder = [[GWSSOAPCoder new] autorelease];
+      now = [NSCalendarDate date];
+
+      [now setTimeZone: [NSTimeZone timeZoneWithAbbreviation: @"GMT"]];
+      str = [coder encodeDateTimeFrom: now];
+      dec = [coder parseXSI: @"xsd:dateTime" string: str];
+      if (NO == [[dec description] isEqual: [now description]])
+        {
+          GSPrintf(stderr, @"Date encoding failure %@ %@ %@\n", now, str, dec);
+          [pool release];
+          return 1;
+        }
+
+      [now setTimeZone: [NSTimeZone timeZoneWithAbbreviation: @"PST"]];
+      str = [coder encodeDateTimeFrom: now];
+      dec = [coder parseXSI: @"xsd:dateTime" string: str];
+      if (NO == [[dec description] isEqual: [now description]])
+        {
+          GSPrintf(stderr, @"Date encoding failure %@ %@ %@\n", now, str, dec);
+          [pool release];
+          return 1;
+        }
+
+      [pool release];
+      return 0;
+    }
+
   file = [defs stringForKey: @"Encode"];
   if (file != nil)
     {
@@ -72,6 +106,7 @@ main()
       GSPrintf(stderr, @"	-Method name (method/operation to use)\n");
       GSPrintf(stderr, @"	-Service name (for service in WSDL)\n");
       GSPrintf(stderr, @"	-WSDL filename (for WSDL document)\n");
+      GSPrintf(stderr, @"\nor	-Internal YES for docer self test\n");
       [pool release];
       return 1;
     }

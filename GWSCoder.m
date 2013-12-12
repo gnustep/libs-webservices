@@ -818,6 +818,7 @@ static id       boolY;
       s = strchr(s, ':');
       s++;
       s = strchr(s, ':');
+      s++;
       while (isdigit(*s)) s++;
       if (*s == 'Z')
 	{
