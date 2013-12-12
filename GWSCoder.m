@@ -824,21 +824,56 @@ static id       boolY;
 	  tz = [NSTimeZone timeZoneForSecondsFromGMT: 0];
 	}
       else if (*s == '+' || *s == '-')
-	{
-	  int   zh = (s[1] - '0') * 10 + s[2] - '0';
-	  int   zm = (s[3] - '0') * 10 + s[4] - '0';
-	  int   zs = ((zh * 60) + zm) * 60;
+        {
+          int   zh;
+          int   zm;
+          int   zs;
+          int   l = strlen(s);
 
-	  if (*s == '-')
-	    {
-	      zs = - zs;
-	    }
-	  tz = [NSTimeZone timeZoneForSecondsFromGMT: zs];
-	}
-      else
+          if (l < 3 || !isdigit(s[1]) || !isdigit(s[2]))
+            {
+              return nil;       //Bad timezone
+            }
+
+          zh = (s[1] - '0') * 10 + s[2] - '0';
+
+          if (3 == l)
+            {
+              // HH (sloppy parsing allow just hour)
+              zm = 0;
+            }
+          else if (5 == l && isdigit(s[3]) && isdigit(s[4]))
+            {
+              // HHMM (sloppy parsing allow missing colon)
+              zm = (s[3] - '0') * 10 + s[4] - '0';
+            }
+          else if (6 == l && ':' == s[3]
+            && isdigit(s[4]) && isdigit(s[5]))
+            {
+              // HH:MM (standard format)
+              zm = (s[4] - '0') * 10 + s[5] - '0';
+            }
+          else
+            {
+              return nil;
+            }
+
+          zs = ((zh * 60) + zm) * 60;
+
+          if (*s == '-')
+            {
+              zs = - zs;
+            }
+          tz = [NSTimeZone timeZoneForSecondsFromGMT: zs];
+        }
+      else if (0 == *s)
 	{
 	  tz = [self timeZone];
 	}
+      else
+        {
+          return nil;
+        }
 
       result = [[[NSCalendarDate alloc] initWithYear: year
 					       month: month

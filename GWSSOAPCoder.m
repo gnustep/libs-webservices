@@ -603,6 +603,7 @@ newHeader(NSString *prefix, id o)
 - (NSString*) encodeDateTimeFrom: (NSDate*)source
 {
   NSTimeZone    *tz;
+  int           t;
 
   if ([source isKindOfClass: [NSCalendarDate class]] == YES)
     {
@@ -615,9 +616,25 @@ newHeader(NSString *prefix, id o)
   source = [NSCalendarDate dateWithTimeIntervalSinceReferenceDate:
     [source timeIntervalSinceReferenceDate]];
   [(NSCalendarDate*)source setTimeZone: tz];
-  if ([tz secondsFromGMT] != 0)
+  t = [tz secondsFromGMTForDate: source];
+  if (t != 0)
     {
-      [(NSCalendarDate*)source setCalendarFormat: @"%Y-%m-%dT%H:%M:%S%z"];
+      char      sign;
+      NSString  *fmt;
+
+      if (t < 0)
+        {
+          sign = '-';
+          t = -t;
+        }
+      else
+        {
+          sign = '+';
+        }
+      t /= 60;
+      fmt = [NSString stringWithFormat: @"%%Y-%%m-%%dT%%H:%%M:%%S%c%02d:%02d",
+        sign, t / 60, t % 60];
+      [(NSCalendarDate*)source setCalendarFormat: fmt];
     }
   else
     {
