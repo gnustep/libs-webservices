@@ -12,10 +12,16 @@ PKG_PROG_PKG_CONFIG([])
 #--------------------------------------------------------------------
 PKG_CHECK_MODULES([GNUTLS], gnutls, HAVE_GNUTLS=1, HAVE_GNUTLS=0)
 if test "$HAVE_GNUTLS" = "1"; then
+  saved_CFLAGS=$CFLAGS
+  saved_LIBS=$LIBS
+  GNUTLS_CFLAGS=`pkg-config --cflags gnutls`
+  GNUTLS_LIBS=`pkg-config --libs gnutls`
+  CFLAGS="$CFLAGS $GNUTLS_CFLAGS"
+  LIBS="$GNUTLS_LIBS $LIBS"
   AC_CHECK_FUNCS(gnutls_hash_fast)
   if test "$ac_cv_func_gnutls_hash_fast" = "no"; then
-    GNUTLS_CFLAGS=
-    GNUTLS_LIBS=
+    CFLAGS=$saved_CFLAGS
+    LIBS=$saved_LIBS
     HAVE_GNUTLS=0
   fi
 fi
