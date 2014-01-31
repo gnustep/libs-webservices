@@ -1926,6 +1926,12 @@ $as_echo "yes" >&6; }
 	HAVE_GNUTLS=1
 fi
 if test "$HAVE_GNUTLS" = "1"; then
+  saved_CFLAGS=$CFLAGS
+  saved_LIBS=$LIBS
+  GNUTLS_CFLAGS=`pkg-config --cflags gnutls`
+  GNUTLS_LIBS=`pkg-config --libs gnutls`
+  CFLAGS="$CFLAGS $GNUTLS_CFLAGS"
+  LIBS="$GNUTLS_LIBS $LIBS"
   ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
 ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
@@ -2962,8 +2968,8 @@ fi
 done
 
   if test "$ac_cv_func_gnutls_hash_fast" = "no"; then
-    GNUTLS_CFLAGS=
-    GNUTLS_LIBS=
+    CFLAGS=$saved_CFLAGS
+    LIBS=$saved_LIBS
     HAVE_GNUTLS=0
   fi
 fi
