@@ -863,6 +863,8 @@ available(NSString *host)
 
 - (void) _start
 {
+  NSData        *toSend;
+
   [_lock lock];
   if (YES == _cancelled)
     {
@@ -872,6 +874,7 @@ available(NSString *host)
       return;
     }
   _stage = RPCActive;
+  toSend = [_request retain];
   [_lock unlock];
 
   /* Now we initiate the asynchronous I/O process.
@@ -909,7 +912,7 @@ available(NSString *host)
 	      [request setValue: v forHTTPHeaderField: k];
 	    }
 	}
-      [request setHTTPBody: _request];
+      [request setHTTPBody: toSend];
 
       if (_connection != nil)
 	{
@@ -967,10 +970,12 @@ available(NSString *host)
 	      [handle writeProperty: v forKey: k];
 	    }
 	}
-      [handle writeData: _request];
+      [handle writeData: toSend];
       [handle loadInBackground];
 #endif
     }
+  NSAssert(nil != toSend, NSInternalInconsistencyException);
+  [toSend release];
 }
 
 @end
