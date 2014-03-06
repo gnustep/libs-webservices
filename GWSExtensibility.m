@@ -39,7 +39,7 @@ mutable(NSMutableDictionary *d, NSString *k)
     {
       return nil;
     }
-  if ([o isKindOfClass: [NSMutableDictionary class]] == NO)
+  if (nil != k && [o isKindOfClass: [NSMutableDictionary class]] == NO)
     {
       o = [o mutableCopy];
       [d setObject: o forKey: k];
@@ -59,7 +59,7 @@ promote(NSMutableDictionary *d, NSString *k)
 {
   id	o = mutable(d, k);
 
-  if (o == nil)
+  if (nil == o && nil != k)
     {
       o = [d objectForKey: k];
       if (o != nil)
@@ -484,7 +484,10 @@ promote(NSMutableDictionary *d, NSString *k)
 			containsObject: partName] == NO)
 			{
 			  [h setObject: o forKey: partName];
-			  [p removeObjectForKey: elementName];
+                          if (nil != elementName)
+                            {
+                              [p removeObjectForKey: elementName];
+                            }
 			}
 		    }
 		  /* FIXME ... what if there is no value ... is it ok to

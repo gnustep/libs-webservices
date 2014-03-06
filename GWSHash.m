@@ -594,8 +594,8 @@ getStringToHash(NSString *method, id rpcID,
       algorithm = [algorithm uppercaseString];
       if (NO == [algorithms containsObject: algorithm])
         {
-          [self release];
           NSDebugMLog(@"No such algorithm (%@)", algorithm);
+          [self release];
           return nil;
         }
     }
