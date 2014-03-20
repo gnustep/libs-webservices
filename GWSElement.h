@@ -280,7 +280,9 @@ extern "C" {
 /** Searches the tree for the next element with the specified name (ignoring
  * any namespace prefix).  Children of the receiver are searched first,
  * then siblings of the receiver's parent, then siblings of the parent's
- * parent and so on.
+ * parent and so on.<br />
+ * If the supplied name is nil, any element matches, so this method may be
+ * used to traverse the entire tree passing through all nodes.
  */
 - (GWSElement*) nextElement: (NSString*)name;
 

@@ -801,8 +801,9 @@ static Class		GWSElementClass = Nil;
 
   while (count-- > 0)
     {
-      GWSElement	*found = [elem findElement: name];
+      GWSElement	*found;
 
+      found = (nil == name) ? elem : [elem findElement: name];
       if (found != nil)
 	{
 	  return found;
@@ -812,8 +813,9 @@ static Class		GWSElementClass = Nil;
   elem = [self sibling];
   while (elem != nil)
     {
-      GWSElement	*found = [elem findElement: name];
+      GWSElement	*found;
 
+      found = (nil == name) ? elem : [elem findElement: name];
       if (found != nil)
 	{
 	  return found;
@@ -826,8 +828,9 @@ static Class		GWSElementClass = Nil;
       elem = [up sibling];
       while (elem != nil)
 	{
-	  GWSElement	*found = [elem findElement: name];
+	  GWSElement	*found;
 
+          found = (nil == name) ? elem : [elem findElement: name];
 	  if (found != nil)
 	    {
 	      return found;
