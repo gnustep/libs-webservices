@@ -654,6 +654,7 @@ available(NSString *host)
 - (void) _prepare
 {
   static NSData		*empty = nil;
+  int                   stage;
   NSData		*req;
   NSString              *pm;
   NSDictionary          *pp;
@@ -665,6 +666,7 @@ available(NSString *host)
     }
 
   [_lock lock];
+  stage = _stage;
   _stage = RPCPreparing;
   pm = _prepMethod;
   _prepMethod = nil;
@@ -725,13 +727,18 @@ available(NSString *host)
     {
       req = empty;
     }
+  /* We must use a lock around the changes we actually make so that a
+   * call to _run: in another thread won't pick this one up prematurely.
+   */
+  [queueLock lock];
   _request = [req retain];
+  _stage = stage;
+  [queueLock unlock];
 }
 
 - (void) _prepareAndRun
 {
   [self _prepare];
-  _stage = RPCQueued;
 
   /* Make sure that this is de-queued and run if possible.
    */
@@ -1714,7 +1721,32 @@ available(NSString *host)
 - (void) timeout: (NSTimer*)t
 {
   NSThread	*cancelThread = nil;
+  BOOL          notYetActive;
+  NSUInteger    index;
 
+  /* First we check to see if the timeout occurred while the request was
+   * still in the queue (not yet active) and remove it from the queue if
+   * it did.
+   */ 
+  [queueLock lock];
+  index = [queued indexOfObjectIdenticalTo: self];
+  if (NSNotFound == index)
+    {
+      notYetActive = YES;
+    }
+  else
+    {
+      NSString	*host = [_connectionURL host];
+
+      notYetActive = NO;
+      [queued removeObjectAtIndex: index];
+      [[queues objectForKey: host] removeObjectIdenticalTo: self];
+    }
+  [queueLock unlock];
+
+  /* Now we clean up the timer, set the request status, and initiate
+   * the cancellation of the request I/O if necessary.
+   */
   [_lock lock];
   if (t == _timer)
     {
@@ -1729,19 +1761,26 @@ available(NSString *host)
       [self _setProblem: @"cancelled"];
     }
   _timer = nil;
-  if (NO == _cancelled && NO == _completedIO)
+  if (NO == notYetActive)
     {
-      _cancelled = YES;
-      cancelThread = _ioThread;
-    }
-  if (nil != cancelThread)
-    {
-      [self performSelector: @selector(_cancel)
-		   onThread: cancelThread
-		 withObject: nil
-	      waitUntilDone: NO];
+      if (NO == _cancelled && NO == _completedIO)
+        {
+          _cancelled = YES;
+          cancelThread = _ioThread;
+        }
+      if (nil != cancelThread)
+        {
+          [self performSelector: @selector(_cancel)
+                       onThread: cancelThread
+                     withObject: nil
+                  waitUntilDone: NO];
+        }
     }
   [_lock unlock];
+
+  /* Finally, if no cancellation is in progress (the request was never
+   * started or the cancellation already finished) we can handle completion.
+   */
   if (nil == cancelThread)
     {
       [self _completed];

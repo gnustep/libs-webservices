@@ -1,7 +1,12 @@
+2014-03-28 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Fix thread safety issue when -timeout: of a request
+	is invoked and the request is still in the queue waiting to be sent.
+
 2014-03-20 Richard Frith-Macdonald  <rfm@gnu.org>
 
-	GWSElement.h:
-	GWSElement.m:
+	* GWSElement.h:
+	* GWSElement.m:
 	Change -nextElement: to traverse all nodes in tree if the requested
 	element name is nil.
 
