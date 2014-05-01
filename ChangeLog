@@ -1,3 +1,8 @@
+2014-05-01 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Fix possible premature deallocation when removing
+	self as a client of the url handle.
+
 2014-03-28 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Fix thread safety issue when -timeout: of a request

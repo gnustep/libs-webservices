@@ -1980,6 +1980,10 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (void) URLHandle: (NSURLHandle*)sender
   resourceDidFailLoadingWithReason: (NSString*)reason
 {
+  /* Retain self during this process ... since removing self as a
+   * client of the handle could cause the receiver to be deallocated
+   */ 
+  RETAIN(self);
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);
@@ -1991,6 +1995,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
       [self _setProblem: reason];
     }
   [self _completed];
+  RELEASE(self);
 }
 
 - (void) URLHandleResourceDidBeginLoading: (NSURLHandle*)sender
