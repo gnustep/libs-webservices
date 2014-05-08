@@ -1,3 +1,8 @@
+2014-05-08 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: bump version for release
+	Version 0.6.0: inew version for hadded hash functionality and bugfixes
+
 2014-05-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Fix possible premature deallocation when removing
