@@ -338,7 +338,7 @@ extern "C" {
 /** Sets extra headers to be sent as part of any HTTP or HTTPS request
  * initiated by this service.<br />
  * NB. These headers are set *after* the default headers set for content
- * type and user agent etc, so yu can override the values normally set
+ * type and user agent etc, so you can override the values normally set
  * by the service.
  */
 - (void) setHeaders: (NSDictionary*)headers;

@@ -1983,19 +1983,17 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   /* Retain self during this process ... since removing self as a
    * client of the handle could cause the receiver to be deallocated
    */ 
-  RETAIN(self);
+  [[self retain] autorelease];
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);
   [_lock unlock];
-
   [handle removeClient: (id<NSURLHandleClient>)self];
   if (NO == _cancelled)
     {
       [self _setProblem: reason];
     }
   [self _completed];
-  RELEASE(self);
 }
 
 - (void) URLHandleResourceDidBeginLoading: (NSURLHandle*)sender
@@ -2005,11 +2003,14 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) URLHandleResourceDidCancelLoading: (NSURLHandle*)sender
 {
+  /* Retain self during this process ... since removing self as a
+   * client of the handle could cause the receiver to be deallocated
+   */ 
+  [[self retain] release];
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);
   [_lock unlock];
-
   [handle removeClient: (id<NSURLHandleClient>)self];
   if (NO == _cancelled)
     {
@@ -2031,12 +2032,15 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 
 - (void) URLHandleResourceDidFinishLoading: (NSURLHandle*)sender
 {
+  /* Retain self during this process ... since removing self as a
+   * client of the handle could cause the receiver to be deallocated
+   */ 
+  [[self retain] release];
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);
   _stage = RPCParsing;
   [_lock unlock];
-
   [handle removeClient: (id<NSURLHandleClient>)self];
   [_response release];
   _response = [[handle availableResourceData] mutableCopy];
