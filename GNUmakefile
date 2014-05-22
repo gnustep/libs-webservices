@@ -21,7 +21,7 @@ include $(GNUSTEP_MAKEFILES)/common.make
 -include config.make
 
 PACKAGE_NAME = WebServices
-PACKAGE_VERSION = 0.6.1
+PACKAGE_VERSION = 0.6.2
 WebServices_INTERFACE_VERSION=0.6
 CVS_MODULE_NAME = gnustep/dev-libs/WebServices
 CVS_TAG_NAME = WebServices
@@ -68,7 +68,7 @@ WebServices_HEADER_FILES += \
 	GWSService.h \
 	GWSType.h \
 	WSSUsernameToken.h \
-        config.h \
+
 
 ADDITIONAL_OBJC_LIBS += -lPerformance
 WebServices_LIBRARIES_DEPEND_UPON += -lPerformance 

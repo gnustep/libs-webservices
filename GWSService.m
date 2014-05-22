@@ -1265,7 +1265,7 @@ available(NSString *host)
 	    {
 	      [self _clean];
 	      [self _setProblem: problem];
-	      return NO;
+	      return nil;
 	    }
 	  elem = [elem sibling];
 	}

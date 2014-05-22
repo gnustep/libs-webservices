@@ -1,3 +1,11 @@
+2014-05-22 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	Improvements by Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
+	* GWSService.m: ([buildRequest:parameters:order:]) return nil rather
+	than NO in one failure case.
+	* GNUmakefile: Don't install conmfig.h. Bump version for release
+	Version 0.6.2: bugfix release.
+
 2014-05-21 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m: Fix thread safety issue ... retain/autorelease self
