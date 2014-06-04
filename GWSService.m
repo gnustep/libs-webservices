@@ -2006,7 +2006,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   /* Retain self during this process ... since removing self as a
    * client of the handle could cause the receiver to be deallocated
    */ 
-  [[self retain] release];
+  [[self retain] autorelease];
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);
@@ -2035,7 +2035,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
   /* Retain self during this process ... since removing self as a
    * client of the handle could cause the receiver to be deallocated
    */ 
-  [[self retain] release];
+  [[self retain] autorelease];
   [_lock lock];
   _completedIO = YES;
   threadRem(&_ioThread);

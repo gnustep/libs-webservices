@@ -1,3 +1,9 @@
+2014-06-04  Wolfgang Lux  <wolfgang.lux@gmail.com>
+
+	* GWSService.m (-URLHandleResourceDidCancelLoading:):
+	* GWSService.m (-URLHandleResourceDidFinishLoading:): Really
+	retain the receiver.
+
 2014-05-22 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	Improvements by Sebastian Reitenbach <sebastia@l00-bugdead-prods.de>
