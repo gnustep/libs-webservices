@@ -491,6 +491,18 @@ available(NSString *host)
     }
 }
 
+- (void) _completedIO
+{
+  /* Must be called in locked region and when _ioThread is not nil!
+   * Once I/O has been completed, we can't time out ... the RPC has
+   * either failed or succeeded. 
+   */
+  _completedIO = YES;
+  threadRem(&_ioThread);
+  [_timer invalidate];
+  _timer = nil;
+}
+
 - (BOOL) _enqueue
 {
   NSString	*host = [_connectionURL host];
@@ -902,7 +914,14 @@ available(NSString *host)
       [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
       [request setHTTPMethod: @"POST"];  
       [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
-      [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+      if (nil == _contentType)
+        {
+          [request setValue: @"text/xml" forHTTPHeaderField: @"Content-Type"];
+        }
+      else
+        {
+          [request setValue: _contentType forHTTPHeaderField: @"Content-Type"];
+        }
       if (_SOAPAction != nil)
 	{
 	  [request setValue: _SOAPAction forHTTPHeaderField: @"SOAPAction"];
@@ -964,7 +983,14 @@ available(NSString *host)
       [handle addClient: (id<NSURLHandleClient>)self];
       [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
       [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
-      [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
+      if (nil == _contentType)
+        {
+          [handle writeProperty: @"text/xml" forKey: @"Content-Type"];
+        }
+      else
+        {
+          [handle writeProperty: _contentType forKey: @"Content-Type"];
+        }
       if ([_headers count] > 0)
 	{
 	  NSEnumerator	*e = [_headers keyEnumerator];
@@ -1571,6 +1597,21 @@ available(NSString *host)
   _compact = flag;
 }
 
+- (void) setContentType: (NSString*)cType
+{
+  if ([cType length] == 0)
+    {
+      cType = nil;
+    }
+  if (NO == [_contentType isEqual: cType])
+    {
+      NSString	*old = _contentType;
+
+      _contentType = [cType copy];
+      [old release];
+    }
+}
+
 - (void) setDebug: (BOOL)flag
 {
   _debug = flag;
@@ -1619,7 +1660,7 @@ available(NSString *host)
 
 - (void) setSOAPAction: (NSString*)action
 {
-  if (_SOAPAction != action)
+  if (NO == [_SOAPAction isEqual: action])
     {
       NSString	*old = _SOAPAction;
 
@@ -1709,8 +1750,7 @@ available(NSString *host)
       [_lock lock];
       if (nil != _ioThread)
         {
-          _completedIO = YES;
-          threadRem(&_ioThread);
+          [self _completedIO];
           [_connection cancel];
         }
       [_lock unlock];
@@ -1748,19 +1788,23 @@ available(NSString *host)
    * the cancellation of the request I/O if necessary.
    */
   [_lock lock];
-  if (t == _timer)
+  if (NO == _cancelled && NO == _completedIO)
     {
-      [self _setProblem: @"timed out"];
+      if (t == _timer)
+        {
+          [self _setProblem: @"timed out"];
+        }
     }
   else
     {
-      /* We invalidate the timer: otherwise we could get a timeout just after
-       * cancelling ... which would change our problem report from 'cancelled'
-       */
-      [_timer invalidate];
       [self _setProblem: @"cancelled"];
     }
+  /* We invalidate the timer: otherwise we could get a timeout just after
+   * cancelling ... which would change our problem report from 'cancelled'
+   */
+  [_timer invalidate];
   _timer = nil;
+
   if (NO == notYetActive)
     {
       if (NO == _cancelled && NO == _completedIO)
@@ -1841,14 +1885,12 @@ didCancelAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
    didFailWithError: (NSError*)error
 {
   [_lock lock];
-  _completedIO = YES;
-  threadRem(&_ioThread);
-  [_lock unlock];
-
+  [self _completedIO];
   if (NO == _cancelled)
     {
       [self _setProblem: [error localizedDescription]];
     }
+  [_lock unlock];
   [self _completed];
 }
 
@@ -1884,8 +1926,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 - (void) connectionDidFinishLoading: (NSURLConnection*)connection 
 {
   [_lock lock];
-  _completedIO = YES;
-  threadRem(&_ioThread);
+  [self _completedIO];
   _stage = RPCParsing;
   [_lock unlock];
 
@@ -1985,14 +2026,13 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
    */ 
   [[self retain] autorelease];
   [_lock lock];
-  _completedIO = YES;
-  threadRem(&_ioThread);
-  [_lock unlock];
+  [self _completedIO];
   [handle removeClient: (id<NSURLHandleClient>)self];
   if (NO == _cancelled)
     {
       [self _setProblem: reason];
     }
+  [_lock unlock];
   [self _completed];
 }
 
@@ -2008,9 +2048,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
    */ 
   [[self retain] autorelease];
   [_lock lock];
-  _completedIO = YES;
-  threadRem(&_ioThread);
-  [_lock unlock];
+  [self _completedIO];
   [handle removeClient: (id<NSURLHandleClient>)self];
   if (NO == _cancelled)
     {
@@ -2027,6 +2065,7 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
         }
       [self _setProblem: str];
     }
+  [_lock unlock];
   [self _completed];
 }
 
@@ -2037,14 +2076,13 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
    */ 
   [[self retain] autorelease];
   [_lock lock];
-  _completedIO = YES;
-  threadRem(&_ioThread);
+  [self _completedIO];
   _stage = RPCParsing;
-  [_lock unlock];
   [handle removeClient: (id<NSURLHandleClient>)self];
   [_response release];
   _response = [[handle availableResourceData] mutableCopy];
   _code = [[handle propertyForKey: NSHTTPPropertyStatusCodeKey] intValue];
+  [_lock unlock];
   if ([workThreads maxThreads] == 0
     && [NSThread currentThread] != _queueThread)
     {

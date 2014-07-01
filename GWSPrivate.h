@@ -77,6 +77,7 @@ typedef int NSInteger;
 - (void) _activate;
 - (void) _clean;
 - (void) _completed;
+- (void) _completedIO;
 - (BOOL) _enqueue;
 - (id) _initWithName: (NSString*)name document: (GWSDocument*)document;
 - (void) _received;

@@ -1,3 +1,15 @@
+2014-07-01 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Allow content type of request to be controlled.
+	* GNUmakefile: bump version for release
+	Version 0.6.4: bugfix release.
+
+2014-06-23 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Ensure that timer is cancelled when I/O is complete.
+
 2014-06-04 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: bump version for release

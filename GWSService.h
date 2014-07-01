@@ -136,6 +136,7 @@ extern "C" {
     RPCActive,		// In the I/O thread
     RPCParsing		// Parsing the response data
   } _stage;
+  NSString		*_contentType;
 }
 
 /** Returns a description of the current asynchronous service queues.
@@ -316,6 +317,12 @@ extern "C" {
  * different delegate.
  */
 - (void) setCoder: (GWSCoder*)aCoder;
+
+/**
+ * Sets the value of the Content-Type header to be sent with a request.<br />
+ * Setting a nil or empty string value reverts to the default of text/xml.
+ */
+- (void) setContentType: (NSString*)cType;
 
 /** Specifies whether debug information is enabled.  See -debug for more
  * information.
