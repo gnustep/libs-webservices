@@ -28,6 +28,7 @@ extern "C" {
 #define WEBSERVICES_CONFIG_H
 
 #define USE_GNUTLS @HAVE_GNUTLS@
+#define USE_NETTLE @HAVE_NETTLE@
 
 #if     defined(__cplusplus)
 }

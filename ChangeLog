@@ -1,3 +1,15 @@
+2014-07-18 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* WSSUsernameToken.h:
+	* WSSUsernameToken.m:
+	* configure.ac: Check for nettle availability
+	* configure: regenerate
+	* GNUmakefile: bump version for release (Version 0.7.0)
+	Add some support for more modern message digest algorithm since
+	SHA1 is no longer considered secure ... on the other hand, there
+	is no new WSS standard yet, so different companies are implementing
+	variations of SHA2 etc in their own proprietory manners.
+
 2014-07-01 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

@@ -26,7 +26,13 @@
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
 #import "WSSUsernameToken.h"
+#include <config.h>
 #include <stdlib.h>
+
+#if     USE_NETTLE
+#include <nettle/sha2.h>
+#include <nettle/sha3.h>
+#endif
 
 static NSTimeZone	*gmt = nil;
 static GWSCoder		*coder = nil;
@@ -44,6 +50,17 @@ static GWSCoder		*coder = nil;
 + (NSString*) digestHashForPassword: (NSString*)password
 		       andTimestamp: (NSCalendarDate**)date
 			  withNonce: (NSString**)nonce
+{
+  return [self digestHashForPassword: password
+		        andTimestamp: date
+			   withNonce: nonce
+                           algorithm: GWSDigestSHA1];
+}
+
++ (NSString*) digestHashForPassword: (NSString*)password
+		       andTimestamp: (NSCalendarDate**)date
+			  withNonce: (NSString**)nonce
+                          algorithm: (GWSDigestAlgorithm)algorithm
 {
   NSCalendarDate	*d = (0 == date) ? nil : (id)*date;
   NSString		*n = (0 == nonce) ? nil : (id)*nonce;
@@ -121,8 +138,21 @@ static GWSCoder		*coder = nil;
   [hashable appendData: nd];
   [hashable appendData: when];
   [hashable appendData: pass];
-  hash = [hashable SHA1];
+  switch (algorithm)
+    {
+      case GWSDigestSHA1: hash = [hashable SHA1]; break;
+      case GWSDigestSHA2_256: hash = [hashable SHA2_256]; break;
+      case GWSDigestSHA2_512: hash = [hashable SHA2_512]; break;
+      case GWSDigestSHA3_256: hash = [hashable SHA3_256]; break;
+      case GWSDigestSHA3_512: hash = [hashable SHA3_512]; break;
+      default: hash = nil; break;
+    }
   [hashable release];
+  if (nil == hash)
+    {
+      [NSException raise: NSInvalidArgumentException
+                  format: @"Uknown/unsupported hash algorithm requested"];
+    }
   return [coder encodeBase64From: hash];
 }
 
@@ -293,7 +323,8 @@ static GWSCoder		*coder = nil;
       _nonce = nil;
       hash = [[self class] digestHashForPassword: _password
 				    andTimestamp: &_created
-				       withNonce: &_nonce];
+				       withNonce: &_nonce
+                                       algorithm: _algorithm];
       [_created retain];
       [_nonce retain];
 
@@ -338,6 +369,11 @@ static GWSCoder		*coder = nil;
   return header;
 }
 
+- (GWSDigestAlgorithm) algorithm
+{
+  return _algorithm;
+}
+
 - (void) dealloc
 {
   [_name release];
@@ -364,11 +400,17 @@ static GWSCoder		*coder = nil;
 {
   if (nil != (self = [super init]))
     {
+      _algorithm = GWSDigestSHA1;
       _name = [name copy];
       _password = [password copy];
       _ttl = ttl;
     }
   return self;
+}
+
+- (void) setAlgorithm: (GWSDigestAlgorithm)algorithm
+{
+  _algorithm = algorithm;
 }
 
 - (GWSElement*) tree
@@ -378,7 +420,7 @@ static GWSCoder		*coder = nil;
 @end
 
 
-@implementation	NSData (SHA1)
+@implementation	NSData (GWSDigest)
 /* SHA1 based on original public domain code by Steve Reid
  */
 
@@ -665,5 +707,70 @@ Digest(Ctxt *ctx, uint8_t output[20])
   Digest(&ctx, output);
   return [NSData dataWithBytes: output length: 20];
 }
+
+#if     USE_NETTLE
+- (NSData*) SHA2_256
+{
+  struct sha256_ctx ctx;
+  uint8_t	output[32];
+
+  sha256_init(&ctx);
+  sha256_update(&ctx, [self length], [self bytes]);
+  sha256_digest(&ctx, sizeof(output), output);
+
+  return [NSData dataWithBytes: output length: sizeof(output)];
+}
+- (NSData*) SHA2_512
+{
+  struct sha512_ctx ctx;
+  uint8_t	output[64];
+
+  sha512_init(&ctx);
+  sha512_update(&ctx, [self length], [self bytes]);
+  sha512_digest(&ctx, sizeof(output), output);
+
+  return [NSData dataWithBytes: output length: sizeof(output)];
+}
+- (NSData*) SHA3_256
+{
+  struct sha3_256_ctx ctx;
+  uint8_t	output[32];
+
+  sha3_256_init(&ctx);
+  sha3_256_update(&ctx, [self length], [self bytes]);
+  sha3_256_digest(&ctx, sizeof(output), output);
+
+  return [NSData dataWithBytes: output length: sizeof(output)];
+}
+- (NSData*) SHA3_512
+{
+  struct sha3_512_ctx ctx;
+  uint8_t	output[64];
+
+  sha3_512_init(&ctx);
+  sha3_512_update(&ctx, [self length], [self bytes]);
+  sha3_512_digest(&ctx, sizeof(output), output);
+
+  return [NSData dataWithBytes: output length: sizeof(output)];
+}
+#else
+- (NSData*) SHA2_256
+{
+  return nil;
+}
+- (NSData*) SHA2_512
+{
+  return nil;
+}
+- (NSData*) SHA3_256
+{
+  return nil;
+}
+- (NSData*) SHA3_512
+{
+  return nil;
+}
+#endif
+
 @end
 

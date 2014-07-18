@@ -37,6 +37,17 @@ extern "C" {
 @class  NSString;
 @class  GWSElement;
 
+/** The GWSDigestAlgorithm enumeration is used to specify what algorithm
+ * is to be used for working with digests.
+ */
+typedef enum {
+  GWSDigestSHA1,
+  GWSDigestSHA2_256,
+  GWSDigestSHA2_512,
+  GWSDigestSHA3_256,
+  GWSDigestSHA3_512
+} GWSDigestAlgorithm;
+
 /** <p>Supports the Web Services Security Username Token capability.<br />
  * The initial implementation only supports plaintext password client use
  * </p>
@@ -65,6 +76,8 @@ extern "C" {
   NSCalendarDate	*_created;
   NSString		*_nonce;
   unsigned		_ttl;
+  GWSDigestAlgorithm    _algorithm;
+  void                  *_reserved;
 }
 
 /** Takes a plaintext password, timestamp, and a base64 encoded nonce,
@@ -80,12 +93,33 @@ extern "C" {
 		       andTimestamp: (NSCalendarDate**)date
 			  withNonce: (NSString**)nonce;
 
+/** Takes a plaintext password, timestamp, and a base64 encoded nonce,
+ * and generates and returns a base64 encoded hash digest.<br />
+ * If the supplied date is nil then the current timestamp is used and
+ * returned, otherwise the timestamp has its timezone and format adjusted
+ * as necessary and is used for the digest.<br />
+ * If the supplied nonce is nil then a new one is generated and returned.<br />
+ * If the supplied date is actually a string, it is parsed to form a date
+ * and replaced by the resulting calendar date object.<br />
+ * The algorithm argument overrides the default behavior of producing the
+ * digest using SHA1 (the standard).
+ */
+
++ (NSString*) digestHashForPassword: (NSString*)password
+		       andTimestamp: (NSCalendarDate**)date
+			  withNonce: (NSString**)nonce
+                          algorithm: (GWSDigestAlgorithm)algorithm;
+
 /** Adds a representation of the receiver to the specified SOAP header
  * and returns the modified header.  If the header is nil, this simply
  * returns a representation of the receiver which can then be added to
  * a SOAP header.
  */
 - (GWSElement*) addToHeader: (GWSElement*)header;
+
+/** Returns the encryption algorithm used for the digest.
+ */
+- (GWSDigestAlgorithm) algorithm;
 
 /** Initialise the receiver with a name and password used to authenticate
  * with a remote server.
@@ -105,21 +139,47 @@ extern "C" {
 	   password: (NSString*)password
 	 timeToLive: (unsigned)ttl;
 
+/** Sets the algorithm used for digests.
+ */
+- (void) setAlgorithm: (GWSDigestAlgorithm)algorithm;
+
 /** Return a tree representation of the WSS Username Token for inclusion
  * in the header of a SOAP request.
  */
 - (GWSElement*) tree;
 @end
 
-/** Produce an SHA1 digest of an NSData object.<br />
+/** Produce a digest of an NSData object.<br />
  * Used internally by [WSSUsernameToken] when hash based authentication
  * is in use.
  */
-@interface	NSData (SHA1)
+@interface	NSData (GWSDigest)
 /** This method produces an SHA1 digest of the receiver and returns the
- * resulting value as an autoreleased NSData object.
+ * resulting value as an autoreleased NSData object.<br />
+ * NB SHA1 is considered insecure.
  */
 - (NSData*) SHA1;
+
+/** This method produces an SHA2_256 digest of the receiver and returns the
+ * resulting value as an autoreleased NSData object.
+ */
+- (NSData*) SHA2_256;
+
+/** This method produces an SHA2_512 digest of the receiver and returns the
+ * resulting value as an autoreleased NSData object.
+ */
+- (NSData*) SHA2_512;
+
+/** This method produces an SHA3_256 digest of the receiver and returns the
+ * resulting value as an autoreleased NSData object.
+ */
+- (NSData*) SHA3_256;
+
+/** This method produces an SHA3_512 digest of the receiver and returns the
+ * resulting value as an autoreleased NSData object.
+ */
+- (NSData*) SHA3_512;
+
 @end
 
 #if	defined(__cplusplus)
