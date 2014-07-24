@@ -1,3 +1,13 @@
+2014-07-24 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSHash.h: Declare ([+salt:size:])
+	* GWSHash.m: Implement ([+salt:size:])
+        * WSSUsernameToken.m: Use ([GWSHash+salt:size:])
+	* GNUmakefile: bump version for release (Version 0.7.1)
+	Remove redundant salt generation code, combining use of gnutls
+	falling back to /dev/urandom and finally the C library routines.
+	Expose for use by other code.
+
 2014-07-18 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* WSSUsernameToken.h:

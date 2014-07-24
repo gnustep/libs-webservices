@@ -140,6 +140,15 @@ extern NSString* const kGWSHashSSHA512;
  */
 + (GWSHash*) hashWithString: (NSString*)string;
 
+/** Generates a cryptographically random salt of the specified length in
+ * the supplied buffer.  This attmpts to use the best random data source
+ * available (from gnutls or /dev/urandom or the C library random number
+ * generator).<br />
+ * This method is used internally to generate the nonce (which is a hex
+ * encoded string representation of 16 bytes of random data).
+ */
++ (void) salt: (uint8_t*)buffer size: (unsigned)length;
+
 /** Return the hash algorithm used by the receiver.
  */
 - (NSString*) hashAlgorithm;

@@ -45,6 +45,8 @@
 #endif
 
 #include "config.h"
+#include <unistd.h>
+#include <fcntl.h>
 
 #if  USE_GNUTLS == 1
 #include <gnutls/gnutls.h>
@@ -316,9 +318,9 @@ writeJSON(id obj, NSMutableString *output, NSArray* order)
 
 static inline NSString* generateSalt(NSUInteger length)
 {
-#if  USE_GNUTLS == 1
   uint8_t stack[32];
   void *buffer;
+
   if (length <= 32)
     {
       // Use the stack as a buffer
@@ -333,15 +335,7 @@ static inline NSString* generateSalt(NSUInteger length)
 	              format: @"Out of memory when allocating buffer for RNG"];
 	}
     }
-  if (0 != gnutls_rnd(GNUTLS_RND_NONCE, buffer, length))
-    {
-      if (length > 32)
-        {
-	  free(buffer);
-	}
-      [NSException raise: NSInternalInconsistencyException
-	          format: @"Error when generating random number"];
-    }
+  [GWSHash salt: buffer size: length];
   NSString *salt = [[GWSCoder coder] encodeHexBinaryFrom: 
     [NSData dataWithBytesNoCopy: buffer length: length freeWhenDone: NO]];
   if (length > 32)
@@ -349,11 +343,6 @@ static inline NSString* generateSalt(NSUInteger length)
       free(buffer);
     }
   return [salt lowercaseString];
-#else
-  [NSException raise: NSInvalidArgumentException
-              format: @"Random number generation disabled."];
-  return nil;
-#endif
 }
 
 
@@ -768,6 +757,70 @@ getStringToHash(NSString *method, id rpcID,
   return [[[GWSHash alloc] initWithAlgorithm: hashAlgorithm
                                         hash: hash
                                         salt: salt] autorelease];
+}
+
++ (void) salt: (uint8_t*)buffer size: (unsigned)length
+{
+  unsigned      pos = 0;
+
+#if  USE_GNUTLS == 1
+  if (0 == gnutls_rnd(GNUTLS_RND_NONCE, buffer, length))
+    {
+      pos = length;     // We managed to get data from gnutls
+    }
+#endif
+
+  if (pos < length)
+    {
+      int       desc;
+
+      /* Try to read random data from /dev/urandom ... the preferred
+       * source for cryptographically random data.
+       */
+      if ((desc = open("/dev/urandom", O_RDONLY)) > 0)
+        {
+          while (pos < length)
+            {
+              ssize_t result = read(desc, buffer + pos, length - pos);
+
+              if (result < 0)
+                {
+                  break;    // Failed to read random data
+                }
+              pos += (unsigned)result;
+            }
+          close(desc);
+        }
+    }
+
+  if (pos < length)
+    {
+      uint32_t  r;
+
+#ifdef __MINGW__
+#define RANDOM()   rand()
+#define SRANDOM(s)  srand(s)
+#else
+#define RANDOM()   random()
+#define SRANDOM(s)  srandom(s)
+#endif
+
+      /* Anything we couldn't get from /dev/urandom comes from the C library
+       * pseudo-random data function instead.
+       */
+      SRANDOM((unsigned)[[NSDate date] timeIntervalSinceReferenceDate]);
+      while (length - pos >= 4)
+        {
+          r = (uint32_t)RANDOM();
+          memcpy(buffer + pos, &r, 4);
+          pos += 4;
+        }
+      if (pos < length)
+        {
+          r = (uint32_t)RANDOM();
+          memcpy(buffer + pos, &r, length - pos);
+        }
+    }
 }
 
 - (BOOL) verifyWithParameters: (NSDictionary*)parameters

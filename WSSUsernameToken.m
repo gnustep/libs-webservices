@@ -25,6 +25,7 @@
 
 #import <Foundation/Foundation.h>
 #import "GWSPrivate.h"
+#import "GWSHash.h"
 #import "WSSUsernameToken.h"
 #include <config.h>
 #include <stdlib.h>
@@ -36,14 +37,6 @@
 
 static NSTimeZone	*gmt = nil;
 static GWSCoder		*coder = nil;
-
-#ifdef __MINGW__
-#define RANDOM()   rand()
-#define SRANDOM(s)  srand(s)
-#else
-#define RANDOM()   random()
-#define SRANDOM(s)  srandom(s)
-#endif
 
 @implementation	WSSUsernameToken
 
@@ -119,11 +112,8 @@ static GWSCoder		*coder = nil;
     {
       uint32_t	buf[4];
 
-      buf[0] = (uint32_t)RANDOM();
-      buf[1] = (uint32_t)RANDOM();
-      buf[2] = (uint32_t)RANDOM();
-      buf[3] = (uint32_t)RANDOM();
-      nd = [NSData dataWithBytes: buf length: 16];
+      [GWSHash salt: (uint8_t*)buf size: sizeof(buf)];
+      nd = [NSData dataWithBytes: (const void*)buf length: 16];
       n = [coder encodeBase64From: nd];
       if (0 != nonce)
 	{
@@ -158,7 +148,6 @@ static GWSCoder		*coder = nil;
 
 + (void) initialize
 {
-  SRANDOM((unsigned)[[NSDate date] timeIntervalSinceReferenceDate]);
   if (gmt == nil)
     {
       gmt = [[NSTimeZone timeZoneForSecondsFromGMT: 0] retain];
