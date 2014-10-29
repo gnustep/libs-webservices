@@ -1,3 +1,9 @@
+2014-10-29 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSHash.m: Fix error generating hashes using gnutls ...check return
+	values and manage memory properly.
+	* GNUmakefile: bump version for release (Version 0.7.2)
+
 2014-07-24 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSHash.h: Declare ([+salt:size:])
