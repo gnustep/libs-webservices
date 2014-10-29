@@ -363,31 +363,31 @@ computeDigestGnuTLS(NSString *algorithm, NSData *data)
 
   if (IS_METHOD(algorithm, SHA256))
     {
-      gnutls_hash_fast(GNUTLS_DIG_SHA256, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 32
-                            freeWhenDone: NO];
+      if (gnutls_hash_fast(GNUTLS_DIG_SHA256, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 32];
+        }
     }
   else if (IS_METHOD(algorithm, SHA512))
     {
-      gnutls_hash_fast(GNUTLS_DIG_SHA512, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 64
-                            freeWhenDone: NO];
+      if (gnutls_hash_fast(GNUTLS_DIG_SHA512, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 64];
+        }
     }
   else if (IS_METHOD(algorithm, SHA1))
     {
-      gnutls_hash_fast(GNUTLS_DIG_SHA1, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 20
-                            freeWhenDone: NO];
+      if (gnutls_hash_fast(GNUTLS_DIG_SHA1, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 20];
+        }
     }
   else if (IS_METHOD(algorithm, MD5))
     { 
-      gnutls_hash_fast(GNUTLS_DIG_MD5, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 16
-                            freeWhenDone: NO];
+      if (gnutls_hash_fast(GNUTLS_DIG_MD5, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 16];
+        }
     }
   return hash;
 }
@@ -405,41 +405,41 @@ computeHMACGnuTLS(NSString *algorithm, NSData *data, NSData *key)
 
   if (IS_METHOD(algorithm, SHA256))
     {
-      gnutls_hmac_fast(GNUTLS_MAC_SHA256,
-        inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 32
-                            freeWhenDone: NO];
+      if (gnutls_hmac_fast(GNUTLS_MAC_SHA256,
+        inKey, keyLen, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 32];
+        }
     }
   else if (IS_METHOD(algorithm, SHA512))
     {
-      gnutls_hmac_fast(GNUTLS_MAC_SHA512,
-        inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 64
-                            freeWhenDone: NO];
+      if (gnutls_hmac_fast(GNUTLS_MAC_SHA512,
+        inKey, keyLen, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 64];
+        }
     }
   else if (IS_METHOD(algorithm, SHA1))
     {
-      gnutls_hmac_fast(GNUTLS_MAC_SHA1,
-        inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 20
-                            freeWhenDone: NO];
+      if (gnutls_hmac_fast(GNUTLS_MAC_SHA1,
+        inKey, keyLen, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 20];
+        }
     }
   else if (IS_METHOD(algorithm, MD5))
     { 
-      gnutls_hmac_fast(GNUTLS_MAC_MD5,
-        inKey, keyLen, input, length, &buffer[0]);
-      hash = [NSData dataWithBytesNoCopy: &buffer[0]
-                                  length: 16
-                            freeWhenDone: NO];
+      if (gnutls_hmac_fast(GNUTLS_MAC_MD5,
+        inKey, keyLen, input, length, &buffer[0]) == 0)
+        {
+          hash = [NSData dataWithBytes: &buffer[0] length: 16];
+        }
     }    
   return hash;
 }
 #else
 
-#define computeDigest(alg, dataToHash)\
+  #define computeDigest(alg, dataToHash)\
   computeDigestInternal(alg, dataToHash)
 #define computeHMAC(alg, dataToHash, key)\
   computeHMACInternal(alg, dataToHash, key)
