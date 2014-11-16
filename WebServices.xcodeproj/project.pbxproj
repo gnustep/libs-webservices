@@ -33,27 +33,16 @@
 		79DC40BD0ED21ED9009451BF /* GWSPort.h in Headers */ = {isa = PBXBuildFile; fileRef = 79DC40B80ED21E79009451BF /* GWSPort.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 79DC40B70ED21E79009451BF /* GWSPort.m */; };
 		79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
-		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; };
+		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8591FB731A12E2F300923420 /* performance.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8591FA991A12E27A00923420 /* performance.framework */; };
+		8591FBC71A12E74600923420 /* GWSHash.h in Headers */ = {isa = PBXBuildFile; fileRef = 8591FBC41A12E74600923420 /* GWSHash.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8591FBC81A12E74600923420 /* GWSHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBC51A12E74600923420 /* GWSHash.m */; };
+		8591FBE61A12E85800923420 /* GWSJSONCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBE31A12E85800923420 /* GWSJSONCoder.m */; };
+		8591FBE71A12E85800923420 /* WSSUsernameToken.h in Headers */ = {isa = PBXBuildFile; fileRef = 8591FBE41A12E85800923420 /* WSSUsernameToken.h */; settings = {ATTRIBUTES = (Public, ); }; };
+		8591FBE81A12E85800923420 /* WSSUsernameToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBE51A12E85800923420 /* WSSUsernameToken.m */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
-
-/* Begin PBXBuildStyle section */
-		85456429113BA88E00F0FDF8 /* Development */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = NO;
-			};
-			name = Development;
-		};
-		8545642A113BA88E00F0FDF8 /* Deployment */ = {
-			isa = PBXBuildStyle;
-			buildSettings = {
-				COPY_PHASE_STRIP = YES;
-			};
-			name = Deployment;
-		};
-/* End PBXBuildStyle section */
 
 /* Begin PBXContainerItemProxy section */
 		7918673B0D4A4E28003EBF9C /* PBXContainerItemProxy */ = {
@@ -98,7 +87,13 @@
 		792C21700D55B94900459A2C /* GWSDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSDocument.m; sourceTree = "<group>"; };
 		79DC40B70ED21E79009451BF /* GWSPort.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSPort.m; sourceTree = "<group>"; };
 		79DC40B80ED21E79009451BF /* GWSPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSPort.h; sourceTree = "<group>"; };
-		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xml; path = Info.plist; sourceTree = "<group>"; };
+		8591FA991A12E27A00923420 /* performance.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = performance.framework; path = /Library/Frameworks/performance.framework; sourceTree = "<absolute>"; };
+		8591FBC41A12E74600923420 /* GWSHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSHash.h; sourceTree = "<group>"; };
+		8591FBC51A12E74600923420 /* GWSHash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSHash.m; sourceTree = "<group>"; };
+		8591FBE31A12E85800923420 /* GWSJSONCoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSJSONCoder.m; sourceTree = "<group>"; };
+		8591FBE41A12E85800923420 /* WSSUsernameToken.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WSSUsernameToken.h; sourceTree = "<group>"; };
+		8591FBE51A12E85800923420 /* WSSUsernameToken.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WSSUsernameToken.m; sourceTree = "<group>"; };
+		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* WebServices.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebServices.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
 /* End PBXFileReference section */
@@ -117,6 +112,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
+				8591FB731A12E2F300923420 /* performance.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -166,6 +162,11 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				8591FBE31A12E85800923420 /* GWSJSONCoder.m */,
+				8591FBE41A12E85800923420 /* WSSUsernameToken.h */,
+				8591FBE51A12E85800923420 /* WSSUsernameToken.m */,
+				8591FBC41A12E74600923420 /* GWSHash.h */,
+				8591FBC51A12E74600923420 /* GWSHash.m */,
 				792C216F0D55B94900459A2C /* GWSDocument.h */,
 				792C21700D55B94900459A2C /* GWSDocument.m */,
 				791866C40D4A46A0003EBF9C /* GWSBinding.h */,
@@ -209,6 +210,7 @@
 				0867D6A5FE840307C02AAC07 /* AppKit.framework */,
 				D2F7E79907B2D74100F64583 /* CoreData.framework */,
 				0867D69BFE84028FC02AAC07 /* Foundation.framework */,
+				8591FA991A12E27A00923420 /* performance.framework */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
@@ -241,6 +243,8 @@
 				79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */,
 				790D8DC30ED0A36D00CF2935 /* GWSExtensibility.h in Headers */,
 				79DC40BD0ED21ED9009451BF /* GWSPort.h in Headers */,
+				8591FBC71A12E74600923420 /* GWSHash.h in Headers */,
+				8591FBE71A12E85800923420 /* WSSUsernameToken.h in Headers */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -289,16 +293,19 @@
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "WebServices" */;
-			buildSettings = {
-			};
-			buildStyles = (
-				85456429113BA88E00F0FDF8 /* Development */,
-				8545642A113BA88E00F0FDF8 /* Deployment */,
-			);
+			compatibilityVersion = "Xcode 2.4";
+			developmentRegion = English;
 			hasScannedForEncodings = 1;
+			knownRegions = (
+				English,
+				Japanese,
+				French,
+				German,
+			);
 			mainGroup = 0867D691FE84028FC02AAC07 /* WebServices */;
 			productRefGroup = 034768DFFF38A50411DB9C8B /* Products */;
 			projectDirPath = "";
+			projectRoot = "";
 			targets = (
 				8DC2EF4F0486A6940098B216 /* WebServices */,
 				7918671E0D4A4C45003EBF9C /* testWebServices */,
@@ -342,6 +349,9 @@
 				79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */,
 				790D8DC40ED0A37000CF2935 /* GWSExtensibility.m in Sources */,
 				79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */,
+				8591FBC81A12E74600923420 /* GWSHash.m in Sources */,
+				8591FBE61A12E85800923420 /* GWSJSONCoder.m in Sources */,
+				8591FBE81A12E85800923420 /* WSSUsernameToken.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -408,24 +418,25 @@
 		1DEB91B208733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				ARCHS = "$(NATIVE_ARCH_ACTUAL)";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SYMROOT = "$(PROJECT_DIR)/build";
 			};
 			name = Debug;
 		};
 		1DEB91B308733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = (
-					ppc,
-					i386,
-				);
+				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
+				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
+				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SYMROOT = "$(PROJECT_DIR)/build";
 			};
 			name = Release;
 		};
