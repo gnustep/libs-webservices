@@ -1867,10 +1867,11 @@ pkg_failed=no
 { $as_echo "$as_me:$LINENO: checking for NETTLE" >&5
 $as_echo_n "checking for NETTLE... " >&6; }
 
-if test -n "$NETTLE_CFLAGS"; then
-    pkg_cv_NETTLE_CFLAGS="$NETTLE_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$NETTLE_CFLAGS"; then
+        pkg_cv_NETTLE_CFLAGS="$NETTLE_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { ($as_echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"nettle\"") >&5
   ($PKG_CONFIG --exists --print-errors "nettle") 2>&5
   ac_status=$?
@@ -1880,13 +1881,15 @@ if test -n "$NETTLE_CFLAGS"; then
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
-if test -n "$NETTLE_LIBS"; then
-    pkg_cv_NETTLE_LIBS="$NETTLE_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$NETTLE_LIBS"; then
+        pkg_cv_NETTLE_LIBS="$NETTLE_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { ($as_echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"nettle\"") >&5
   ($PKG_CONFIG --exists --print-errors "nettle") 2>&5
   ac_status=$?
@@ -1896,8 +1899,9 @@ if test -n "$NETTLE_LIBS"; then
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
 
 
@@ -1910,9 +1914,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        NETTLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "nettle" 2>&1`
+	        NETTLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "nettle"`
         else
-	        NETTLE_PKG_ERRORS=`$PKG_CONFIG --print-errors "nettle" 2>&1`
+	        NETTLE_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "nettle"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$NETTLE_PKG_ERRORS" >&5
@@ -2994,10 +2998,11 @@ pkg_failed=no
 { $as_echo "$as_me:$LINENO: checking for GNUTLS" >&5
 $as_echo_n "checking for GNUTLS... " >&6; }
 
-if test -n "$GNUTLS_CFLAGS"; then
-    pkg_cv_GNUTLS_CFLAGS="$GNUTLS_CFLAGS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$GNUTLS_CFLAGS"; then
+        pkg_cv_GNUTLS_CFLAGS="$GNUTLS_CFLAGS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { ($as_echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gnutls\"") >&5
   ($PKG_CONFIG --exists --print-errors "gnutls") 2>&5
   ac_status=$?
@@ -3007,13 +3012,15 @@ if test -n "$GNUTLS_CFLAGS"; then
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
-if test -n "$GNUTLS_LIBS"; then
-    pkg_cv_GNUTLS_LIBS="$GNUTLS_LIBS"
- elif test -n "$PKG_CONFIG"; then
-    if test -n "$PKG_CONFIG" && \
+if test -n "$PKG_CONFIG"; then
+    if test -n "$GNUTLS_LIBS"; then
+        pkg_cv_GNUTLS_LIBS="$GNUTLS_LIBS"
+    else
+        if test -n "$PKG_CONFIG" && \
     { ($as_echo "$as_me:$LINENO: \$PKG_CONFIG --exists --print-errors \"gnutls\"") >&5
   ($PKG_CONFIG --exists --print-errors "gnutls") 2>&5
   ac_status=$?
@@ -3023,8 +3030,9 @@ if test -n "$GNUTLS_LIBS"; then
 else
   pkg_failed=yes
 fi
- else
-    pkg_failed=untried
+    fi
+else
+	pkg_failed=untried
 fi
 
 
@@ -3037,9 +3045,9 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GNUTLS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors "gnutls" 2>&1`
+	        GNUTLS_PKG_ERRORS=`$PKG_CONFIG --short-errors --errors-to-stdout --print-errors "gnutls"`
         else
-	        GNUTLS_PKG_ERRORS=`$PKG_CONFIG --print-errors "gnutls" 2>&1`
+	        GNUTLS_PKG_ERRORS=`$PKG_CONFIG --errors-to-stdout --print-errors "gnutls"`
         fi
 	# Put the nasty error message in config.log where it belongs
 	echo "$GNUTLS_PKG_ERRORS" >&5
@@ -3178,7 +3186,7 @@ if test "$HAVE_GNUTLS" = "0"; then
 $as_echo "$as_me: WARNING: \"GnuTLS not available (or too old); advanced cryptographic functions are disabled.\"" >&2;}
 fi
 
-ac_config_files="$ac_config_files config.make config.h GWSHash.h WSSUsernameToken.h"
+ac_config_files="$ac_config_files config.make config.h GWSHash.h"
 
 
 cat >confcache <<\_ACEOF
@@ -3792,7 +3800,6 @@ do
     "config.make") CONFIG_FILES="$CONFIG_FILES config.make" ;;
     "config.h") CONFIG_FILES="$CONFIG_FILES config.h" ;;
     "GWSHash.h") CONFIG_FILES="$CONFIG_FILES GWSHash.h" ;;
-    "WSSUsernameToken.h") CONFIG_FILES="$CONFIG_FILES WSSUsernameToken.h" ;;
 
   *) { { $as_echo "$as_me:$LINENO: error: invalid argument: $ac_config_target" >&5
 $as_echo "$as_me: error: invalid argument: $ac_config_target" >&2;}

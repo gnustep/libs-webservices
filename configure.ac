@@ -58,6 +58,6 @@ if test "$HAVE_GNUTLS" = "0"; then
   AC_MSG_WARN("GnuTLS not available (or too old); advanced cryptographic functions are disabled.")
 fi
 
-AC_CONFIG_FILES([config.make config.h GWSHash.h WSSUsernameToken.h])
+AC_CONFIG_FILES([config.make config.h GWSHash.h])
 
 AC_OUTPUT
