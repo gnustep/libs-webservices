@@ -25,6 +25,7 @@
 
    */ 
 #define GWSHash_INTERNAL
+#import "GWSPrivate.h"
 #import "GWSHash.h"
 #import "GWSConstants.h"
 #import "GWSCoder.h"
