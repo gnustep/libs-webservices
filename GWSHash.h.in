@@ -42,6 +42,9 @@ extern "C" {
  */
 extern NSString* const kGWSHashSHA1 GWSHash_DEPRECATED;
 
+#ifndef USE_GNUTLS
+#define USE_GNUTLS      @HAVE_GNUTLS@
+#endif
 
 #if  defined(GNUSTEP) || USE_GNUTLS == 1
 /**
@@ -107,7 +110,7 @@ extern NSString* const kGWSHashSSHA512;
  * 1. Get the hash string from the parameters and remove the corresponding key
  * 2. Get the hash method, salt and actual hash from the hash string.
  * 3. Use the parameters to look up potential additional "secrets" 
- * 4. Perform steps 3.–8. from the hash generation algorithm  
+ * 4. Perform steps 3. to 8. from the hash generation algorithm  
  * 5. Verify that the computed hash matches the one specified.
  * 
  * You do this by obtaining an hash object using +hashWithString: and calling 

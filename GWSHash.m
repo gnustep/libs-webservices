@@ -455,7 +455,12 @@ computeDigestInternal(NSString *algorithm, NSData *data)
     }
   else if (IS_METHOD(algorithm, MD5))
     { 
+#ifdef GNUSTEP
       hash = [data md5Digest]; 
+#else
+      [NSException raise: NSInvalidArgumentException
+                  format: @"MD5 generation disabled."];
+#endif
     }
 
   return hash;
