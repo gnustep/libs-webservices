@@ -1,5 +1,5 @@
 /** 
-   Copyright (C) 2013 Free Software Foundation, Inc.
+   Copyright (C) 2013-2014 Free Software Foundation, Inc.
    
    Written by:  Niels Grewe <niels.grewe@halbordnung.de>
    Date:	May 2013
@@ -508,7 +508,7 @@ getStringToHash(NSString *method, id rpcID,
        return nil;
     }
   NSDebugFLog(@"Created the following string to hash: %@ "
-    @"(plus %ld characters from secret string)", output, [extra length]);
+              @"(plus %ld characters from secret string)", output, (long int)[extra length]);
   [output appendString: extra];
   return output;
 }
@@ -609,7 +609,7 @@ getStringToHash(NSString *method, id rpcID,
     || HASH_LENGTH_MATCH(theHash, method, kGWSHashSMD5, 32)))
     {
       NSDebugMLog(@"Length of hash (%ld) invalid for %@",
-       [theHash length], algorithm);
+                  (long int)[theHash length], algorithm);
       [self release];
       return nil;
     }
