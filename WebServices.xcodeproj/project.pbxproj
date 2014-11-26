@@ -34,7 +34,7 @@
 		79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 79DC40B70ED21E79009451BF /* GWSPort.m */; };
 		79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
 		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8591FB731A12E2F300923420 /* performance.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8591FA991A12E27A00923420 /* performance.framework */; };
+		8591FB731A12E2F300923420 /* Performance.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8591FA991A12E27A00923420 /* Performance.framework */; };
 		8591FBC71A12E74600923420 /* GWSHash.h in Headers */ = {isa = PBXBuildFile; fileRef = 8591FBC41A12E74600923420 /* GWSHash.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8591FBC81A12E74600923420 /* GWSHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBC51A12E74600923420 /* GWSHash.m */; };
 		8591FBE61A12E85800923420 /* GWSJSONCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBE31A12E85800923420 /* GWSJSONCoder.m */; };
@@ -87,7 +87,7 @@
 		792C21700D55B94900459A2C /* GWSDocument.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSDocument.m; sourceTree = "<group>"; };
 		79DC40B70ED21E79009451BF /* GWSPort.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSPort.m; sourceTree = "<group>"; };
 		79DC40B80ED21E79009451BF /* GWSPort.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSPort.h; sourceTree = "<group>"; };
-		8591FA991A12E27A00923420 /* performance.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = performance.framework; path = /Library/Frameworks/performance.framework; sourceTree = "<absolute>"; };
+		8591FA991A12E27A00923420 /* Performance.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Performance.framework; path = /Library/Frameworks/Performance.framework; sourceTree = "<absolute>"; };
 		8591FBC41A12E74600923420 /* GWSHash.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GWSHash.h; sourceTree = "<group>"; };
 		8591FBC51A12E74600923420 /* GWSHash.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSHash.m; sourceTree = "<group>"; };
 		8591FBE31A12E85800923420 /* GWSJSONCoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSJSONCoder.m; sourceTree = "<group>"; };
@@ -112,7 +112,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
-				8591FB731A12E2F300923420 /* performance.framework in Frameworks */,
+				8591FB731A12E2F300923420 /* Performance.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -210,7 +210,7 @@
 				0867D6A5FE840307C02AAC07 /* AppKit.framework */,
 				D2F7E79907B2D74100F64583 /* CoreData.framework */,
 				0867D69BFE84028FC02AAC07 /* Foundation.framework */,
-				8591FA991A12E27A00923420 /* performance.framework */,
+				8591FA991A12E27A00923420 /* Performance.framework */,
 			);
 			name = "Other Frameworks";
 			sourceTree = "<group>";
