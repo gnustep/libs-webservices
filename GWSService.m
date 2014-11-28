@@ -1920,6 +1920,31 @@ didReceiveAuthenticationChallenge: (NSURLAuthenticationChallenge*)challenge
 	     willSendRequest: (NSURLRequest*)request
 	    redirectResponse: (NSURLResponse*)redirectResponse 
 {
+  /* This is a request to allow a redirect ...
+   * If redirectResponse is nil then it's internal rewriting of the
+   * request (canonicalisation) by  NSURLConnection itself, so it is
+   * safe (and necessary) to permit it.
+   */
+  if (nil == redirectResponse)
+    {
+      return request;
+    }
+
+  /* Real redirects are not supported ... if we wanted to allow that we
+   * would also have to devise some mechanism to prevent an infinite loop.
+   * NB. Some versions of OSX have a bug and don't handle a nil return
+   * properly (they don't use the callbacks to tell us the connection
+   * has failed).  So we do the cleanup here:
+   */
+  [_lock lock];
+  [self _completedIO];
+  if (NO == _cancelled)
+    {
+      [self _setProblem: @"remote host attempted redirect"];
+    }
+  [_lock unlock];
+  [self _completed];
+
   return nil;
 }
 
