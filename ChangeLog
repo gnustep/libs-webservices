@@ -1,3 +1,7 @@
+2015-03-17 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSXMLRPCCoder.m: add more checks when strict parsing in use.
+
 2014-11-17 Richard Frith-Macdonald  <rfm@gnu.org>
 
         * configure: regenerate

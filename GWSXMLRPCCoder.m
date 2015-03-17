@@ -354,6 +354,11 @@ static id               boolY;
 
   if ([name isEqualToString: @"string"])
     {
+      if (_strictParsing && nil != [elem firstChild])
+        {
+          [NSException raise: NSGenericException
+                      format: @"xml element inside %@", name];
+        }
       s = [[elem content] copy];
       return s;
     }
@@ -361,6 +366,11 @@ static id               boolY;
   if ([name isEqualToString: @"i4"]
     || [name isEqualToString: @"int"])
     {
+      if (_strictParsing && nil != [elem firstChild])
+        {
+          [NSException raise: NSGenericException
+                      format: @"xml element inside %@", name];
+        }
       s = [elem content];
       if ([s length] == 0)
 	{
@@ -374,6 +384,11 @@ static id               boolY;
     {
       char	c;
 
+      if (_strictParsing && nil != [elem firstChild])
+        {
+          [NSException raise: NSGenericException
+                      format: @"xml element inside %@", name];
+        }
       s = [elem content];
       if ([s length] == 0)
 	{
@@ -390,6 +405,11 @@ static id               boolY;
 
   if ([name isEqualToString: @"double"])
     {
+      if (_strictParsing && nil != [elem firstChild])
+        {
+          [NSException raise: NSGenericException
+                      format: @"xml element inside %@", name];
+        }
       s = [elem content];
       if ([s length] == 0)
 	{
@@ -401,6 +421,11 @@ static id               boolY;
 
   if ([name isEqualToString: @"base64"])
     {
+      if (_strictParsing && nil != [elem firstChild])
+        {
+          [NSException raise: NSGenericException
+                      format: @"xml element inside %@", name];
+        }
       s = [elem content];
       if ([s length] == 0)
 	{
@@ -420,6 +445,11 @@ static id               boolY;
       int		minute;
       int		second;
 
+      if (_strictParsing && nil != [elem firstChild])
+        {
+          [NSException raise: NSGenericException
+                      format: @"xml element inside %@", name];
+        }
       s = [elem content];
       if ([s length] == 0)
 	{
@@ -446,6 +476,11 @@ static id               boolY;
     {
       NSMutableDictionary       *m;
 
+      if (_strictParsing && [[[elem content] stringByTrimmingSpaces] length])
+        {
+          [NSException raise: NSGenericException
+                      format: @"character content inside %@", name];
+        }
       c = [elem countChildren];
       m = [NSMutableDictionary dictionaryWithCapacity: c];
       elem = [elem firstChild];
@@ -493,6 +528,11 @@ static id               boolY;
     {
       NSMutableArray    *m;
 
+      if (_strictParsing && [[[elem content] stringByTrimmingSpaces] length])
+        {
+          [NSException raise: NSGenericException
+                      format: @"character content inside %@", name];
+        }
       c = [elem countChildren];
       if (c != 1)
         {
