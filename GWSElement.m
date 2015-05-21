@@ -546,28 +546,21 @@ static Class		GWSElementClass = Nil;
          attributes: (NSDictionary*)attributes
 {
   NSString	*prefix = @"";
+  NSUInteger	nl = [name length];
 
-  NSAssert([name length] > 0, NSInvalidArgumentException);
-  NSAssert(0 == [name rangeOfString: @":"].length,
-    NSInvalidArgumentException);
+  NSAssert(nl > 0, NSInvalidArgumentException);
 
   if (nil != qualified)
     {
-      NSRange	r = [qualified rangeOfString: @":"];
+      NSUInteger	ql = [qualified length];
 
-      if (0 == r.length)
+      NSAssert(ql >= nl, NSInvalidArgumentException);
+      if (ql > nl)
 	{
-	  NSAssert([qualified isEqualToString: name],
+	  NSAssert(ql > nl + 1
+	    && [qualified characterAtIndex: ql - nl] == ':',
 	    NSInvalidArgumentException);
-	}
-      else
-	{
-	  NSString	*n;
-
-	  prefix = [qualified substringToIndex: r.location];
-	  n = [qualified substringFromIndex: NSMaxRange(r)];
-	  NSAssert([n isEqualToString: name],
-	    NSInvalidArgumentException);
+	  prefix = [qualified substringToIndex: ql - nl - 1];
 	}
     }
 
