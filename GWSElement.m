@@ -983,9 +983,11 @@ static Class		GWSElementClass = Nil;
 
 - (void) setName: (NSString*)name
 {
+  NSRange       r;
+
   NSAssert([name length] > 0, NSInvalidArgumentException);
-  NSAssert(0 == [name rangeOfString: @":"].length,
-    NSInvalidArgumentException);
+  r = [name rangeOfString: @":" options: NSLiteralSearch];
+  NSAssert(0 == r.length, NSInvalidArgumentException);
   name = [name copy];
   [_name release];
   _name = name;
@@ -1004,12 +1006,14 @@ static Class		GWSElementClass = Nil;
 
 - (void) setNamespace: (NSString*)uri forPrefix: (NSString*)prefix
 {
+  NSRange       r;
+
   if (prefix == nil)
     {
       prefix = @"";
     }
-  NSAssert(0 == [prefix rangeOfString: @":"].length,
-    NSInvalidArgumentException);
+  r = [prefix rangeOfString: @":" options: NSLiteralSearch];
+  NSAssert(0 == r.length, NSInvalidArgumentException);
   if ([uri length] == 0)
     {
       if (_namespaces != nil)
@@ -1046,8 +1050,8 @@ static Class		GWSElementClass = Nil;
     {
       prefix = @"";
     }
-  NSAssert(0 == [prefix rangeOfString: @":"].length,
-    NSInvalidArgumentException);
+  r = [prefix rangeOfString: @":" options: NSLiteralSearch];
+  NSAssert(0 == r.length, NSInvalidArgumentException);
   empty = (0 == [prefix length]) ? YES : NO;
 
   ns = [self namespaceForPrefix: prefix];
@@ -1057,7 +1061,7 @@ static Class		GWSElementClass = Nil;
 		  format: @"No namespace found for prefix '%@'", prefix];
     }
 
-  r = [_qualified rangeOfString: @":"];
+  r = [_qualified rangeOfString: @":" options: NSLiteralSearch];
   if (YES == empty)
     {
       if (r.length > 0)

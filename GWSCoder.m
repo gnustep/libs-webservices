@@ -953,9 +953,10 @@ static id       boolY;
 
   if (_oldparser == YES)
     {
-      NSRange       r = [elementName rangeOfString: @":"];
+      NSRange       r;
       NSString      *prefix = @"";
 
+      r = [elementName rangeOfString: @":" options: NSLiteralSearch];
       qualifiedName = elementName;
       if (r.length > 0)
         {
@@ -971,13 +972,19 @@ static id       boolY;
             {
               NSString  *name = nil;
 
-              if ([key isEqualToString: @"xmlns"] == YES)
+              if ([key rangeOfString: @"xmlns"
+                options: (NSLiteralSearch | NSAnchoredSearch)].length > 0)
                 {
-                  name = @"";
-                }
-              else if ([key hasPrefix: @"xmlns:"] == YES)
-                {
-                  name = [key substringFromIndex: 6];
+                  NSUInteger    l = [key length];
+
+                  if (5 == l)
+                    {
+                      name = @"";
+                    }
+                  else if (6 == l && [key characterAtIndex: 5] == ':')
+                    {
+                      name = [key substringFromIndex: 6];
+                    }
                 }
               if (name != nil)
                 {
@@ -1045,8 +1052,9 @@ static id       boolY;
 
   if (_oldparser == YES)
     {
-      NSRange       r = [elementName rangeOfString: @":"];
+      NSRange       r;
 
+      r = [elementName rangeOfString: @":" options: NSLiteralSearch];
       if (r.length > 0)
         {
           elementName = [elementName substringFromIndex: NSMaxRange(r)];
