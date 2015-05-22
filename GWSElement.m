@@ -77,6 +77,7 @@ static Class		GWSElementClass = Nil;
 
 - (void) addChild: (GWSElement*)child
 {
+#if     defined(DEBUG)
   if (NO == [child isKindOfClass: GWSElementClass])
     {
       [NSException raise: NSInvalidArgumentException
@@ -87,8 +88,13 @@ static Class		GWSElementClass = Nil;
       [NSException raise: NSInvalidArgumentException
 		  format: @"-addChild: child is ancestor"];
     }
+#endif
+
   [child retain];
-  [child remove];
+  if (child->_parent)
+    {
+      [child remove];
+    }
   if (nil == _first)
     {
       _first = child;
@@ -591,6 +597,7 @@ static Class		GWSElementClass = Nil;
 
 - (void) insertChild: (GWSElement*)child atIndex: (NSUInteger)index
 {
+#if     defined(DEBUG)
   if (NO == [child isKindOfClass: GWSElementClass])
     {
       [NSException raise: NSInvalidArgumentException
@@ -606,7 +613,6 @@ static Class		GWSElementClass = Nil;
       [NSException raise: NSInvalidArgumentException
 		  format: @"-insertChild:atIndex: child is ancestor"];
     }
-
   if (child->_parent == self)
     {
       if (index >= _children)
@@ -615,9 +621,13 @@ static Class		GWSElementClass = Nil;
                       format: @"-insertChild:atIndex: index out of range"];
         }
     }
+#endif
 
   [child retain];
-  [child remove];
+  if (child->_parent)
+    {
+      [child remove];
+    }
   if (nil == _first)
     {
       _first = child;
