@@ -564,7 +564,7 @@ static Class		GWSElementClass = Nil;
       if (ql > nl)
 	{
 	  NSAssert(ql > nl + 1
-	    && [qualified characterAtIndex: ql - nl] == ':',
+	    && [qualified characterAtIndex: ql - nl - 1] == ':',
 	    NSInvalidArgumentException);
 	  prefix = [qualified substringToIndex: ql - nl - 1];
 	}
@@ -783,16 +783,6 @@ static Class		GWSElementClass = Nil;
 
 - (NSDictionary*) namespaces
 {
-  if (_namespaces == nil)
-    {
-      static NSDictionary	*empty = nil;
-
-      if (empty == nil)
-	{
-	  empty = [NSDictionary new];
-	}
-      return empty;
-    }
   return [[_namespaces copy] autorelease];
 }
 
@@ -882,24 +872,28 @@ static Class		GWSElementClass = Nil;
   while (toSearch != nil)
     {
       NSDictionary	*d = [toSearch namespaces];
-      NSEnumerator	*e = [d keyEnumerator];
-      NSString		*k;
 
-      while ((k = [e nextObject]) != nil)
-	{
-	  NSString	*v = [d objectForKey: k];
+      if ([d count] > 0)
+        {
+          NSEnumerator	*e = [d keyEnumerator];
+          NSString	*k;
 
-	  if ([uri isEqualToString: v] == YES)
-	    {
-	      /* Found the namespace ... but it's only usable if
-	       * the corresponding previd maps to it at our level.
-	       */
-	      if ([uri isEqual: [self namespaceForPrefix: k]] == YES)
-		{
-		  return k;
-		}
-	    }
-	}
+          while ((k = [e nextObject]) != nil)
+            {
+              NSString	*v = [d objectForKey: k];
+
+              if ([uri isEqualToString: v] == YES)
+                {
+                  /* Found the namespace ... but it's only usable if
+                   * the corresponding prefix maps to it at our level.
+                   */
+                  if ([uri isEqual: [self namespaceForPrefix: k]] == YES)
+                    {
+                      return k;
+                    }
+                }
+            }
+        }
       toSearch = toSearch->_parent;
     }
   return nil;

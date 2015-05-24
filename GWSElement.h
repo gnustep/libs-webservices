@@ -273,7 +273,7 @@ extern "C" {
 - (NSString*) namespaceForPrefix: (NSString*)prefix;
 
 /** Returns the namespaces mappings introduced by this element.<br />
- * If there are no namespaces introduced, this returns an empty dictionary.
+ * If there are no namespaces introduced, this returns nil.
  */
 - (NSDictionary*) namespaces;
 

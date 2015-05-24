@@ -166,7 +166,7 @@ skipSpace(context *ctxt)
 }
 
 static id
-parse(context *ctxt)
+newParsed(context *ctxt)
 {
   int	c;
 
@@ -178,7 +178,9 @@ parse(context *ctxt)
     }
   else if ('"' == c)
     {
+      BOOL	ascii = YES;
       BOOL	escapes = NO;
+      BOOL	unicode = NO;
       unsigned	start = ctxt->index;
       NSString	*s;
 
@@ -187,12 +189,20 @@ parse(context *ctxt)
 	  if ('\\' == c)
 	    {
 	      escapes = YES;
-	      get(ctxt);
+	      c = get(ctxt);
+              if ('u' == c)
+                {
+                  unicode = YES;
+                }
 	    }
 	  else if ('"' == c)
 	    {
 	      break;
 	    }
+          else if (c > 0x7f)
+            {
+              ascii = NO;
+            }
 	  else if (c < 0)
 	    {
 	      ctxt->error = "premature end of string";
@@ -203,21 +213,69 @@ parse(context *ctxt)
       if (NO == escapes)
 	{
 	  s = [NSStringClass alloc];
-	  s = [s initWithBytes: ctxt->buffer + start
-			length: ctxt->index - start - 1
-		      encoding: NSUTF8StringEncoding];
-	  [s autorelease];
+          if (YES == ascii)
+            {
+              s = [s initWithBytes: ctxt->buffer + start
+                            length: ctxt->index - start - 1
+                          encoding: NSASCIIStringEncoding];
+            }
+          else
+            {
+              s = [s initWithBytes: ctxt->buffer + start
+                            length: ctxt->index - start - 1
+                          encoding: NSUTF8StringEncoding];
+            }
+	}
+      else if (NO == unicode)
+	{
+          char  *buf;
+          int   len;
+          int   pos = ctxt->index;
+          int   end = ctxt->index - start - 1;
+
+          buf = malloc(ctxt->index - start - 1);
+          for (len = 0; pos < end; len++)
+            {
+              buf[len] = ctxt->buffer[pos++];
+              if ('\\' == buf[len])
+                {
+                  buf[len] = ctxt->buffer[pos++];
+                  switch (buf[len])
+                    {
+		      case 'b': buf[len] = '\b'; break;
+		      case 'f': buf[len] = '\f'; break;
+		      case 'r': buf[len] = '\r'; break;
+		      case 'n': buf[len] = '\n'; break;
+		      case 't': buf[len] = '\t'; break;
+                      default: break;
+                    }
+                }
+            }
+	  s = [NSStringClass alloc];
+          if (YES == ascii)
+            {
+              s = [s initWithBytesNoCopy: buf
+                                  length: len
+                                encoding: NSASCIIStringEncoding
+                            freeWhenDone: YES];
+            }
+          else
+            {
+              s = [s initWithBytesNoCopy: buf
+                                  length: len
+                                encoding: NSUTF8StringEncoding
+                            freeWhenDone: YES];
+            }
 	}
       else
 	{
 	  NSMutableString	*m;
 	  NSRange		r;
 
-	  m = [NSMutableString alloc];
+	  s = m = [NSMutableString alloc];
 	  m = [m initWithBytes: ctxt->buffer + start
 			length: ctxt->index - start - 1
 		      encoding: NSUTF8StringEncoding];
-	  [m autorelease];
 	  r = NSMakeRange(0, [m length]);
 	  r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
 	  while (r.length > 0)
@@ -270,21 +328,22 @@ parse(context *ctxt)
 	      r = NSMakeRange(pos, [m length] - pos);
 	      r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
 	    }
-	  s = [[m copy] autorelease];
 	}
       return s;
     }
   else if ('[' == c)
     {
-      NSMutableArray	*a = [NSMutableArray array];
+      NSMutableArray	*a;
 
+      a = [[NSMutableArray alloc] initWithCapacity: 100];
       for (;;)
 	{
 	  id	o;
 
-	  if (nil != (o = parse(ctxt)))
+	  if (nil != (o = newParsed(ctxt)))
 	    {
 	      [a addObject: o];
+              [o release];
 	    }
 
 	  c = skipSpace(ctxt);
@@ -305,6 +364,7 @@ parse(context *ctxt)
 		  ctxt->error = "bad character in array";
 		}
 	      ctxt->index = ctxt->length;
+              [a release];
 	      return nil;
 	    }
 	  get(ctxt);	// Skip past comma
@@ -312,36 +372,41 @@ parse(context *ctxt)
     }
   else if ('{' == c)
     {
-      NSMutableDictionary	*d = [NSMutableDictionary dictionary];
+      NSMutableDictionary	*d;
 
+      d = [[NSMutableDictionary alloc] initWithCapacity: 100];
       for (;;)
 	{
 	  id	k;
 	  id	v;
 
-	  k = parse(ctxt);
+	  k = newParsed(ctxt);
 	  c = skipSpace(ctxt);
 	  if ('}' == c && nil == k)
 	    {
+              [k release];
 	      get(ctxt);
 	      return d;	// Empty
 	    }
 	  if (NO == [k isKindOfClass: NSStringClass])
 	    {
+              [k release];
 	      ctxt->error = "non-string value for key";
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
 	  if (':' != c)
 	    {
+              [k release];
 	      ctxt->error = "missing colon after key";
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
 	  get(ctxt);	// Skip the colon
-	  v = parse(ctxt);
+	  v = newParsed(ctxt);
 	  if (nil == v)
 	    {
+              [k release];
 	      ctxt->error = "missing value after colon";
 	      ctxt->index = ctxt->length;
 	      return nil;
@@ -350,16 +415,22 @@ parse(context *ctxt)
 	  if (',' == c)
 	    {
 	      [d setObject: v forKey: k];
+              [k release];
+              [v release];
 	      get(ctxt);
 	    }
 	  else if ('}' == c)
 	    {
 	      [d setObject: v forKey: k];
+              [k release];
+              [v release];
 	      get(ctxt);
 	      return d;
 	    }
 	  else
 	    {
+              [k release];
+              [v release];
 	      if (c < 0)
 		{
 		  ctxt->error = "premature end of object";
@@ -422,7 +493,7 @@ parse(context *ctxt)
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
-	  n = [NSNumberClass numberWithDouble: d];
+	  n = [[NSNumberClass alloc] initWithDouble: d];
 	}
       else
 	{
@@ -433,7 +504,7 @@ parse(context *ctxt)
 	      ctxt->index = ctxt->length;
 	      return nil;
 	    }
-	  n = [NSNumberClass numberWithLongLong: l];
+	  n = [[NSNumberClass alloc] initWithLongLong: l];
 	}
       if (nil == n)
 	{
@@ -454,7 +525,7 @@ parse(context *ctxt)
     {
       if (get(ctxt) == 'r' && get(ctxt) == 'u' && get(ctxt) == 'e')
 	{
-	  return boolY;
+	  return [boolY retain];
 	}
       ctxt->error = "bad character (expecting 'true')";
       ctxt->index = ctxt->length;
@@ -465,7 +536,7 @@ parse(context *ctxt)
       if (get(ctxt) == 'a' && get(ctxt) == 'l' && get(ctxt) == 's'
 	&& get(ctxt) == 'e')
 	{
-	  return boolN;
+	  return [boolN retain];
 	}
       ctxt->error = "bad character (expecting 'false')";
       ctxt->index = ctxt->length;
@@ -475,7 +546,7 @@ parse(context *ctxt)
     {
       if (get(ctxt) == 'u' && get(ctxt) == 'l' && get(ctxt) == 'l')
 	{
-	  return null;
+	  return [null retain];
 	}
       ctxt->error = "bad character (expecting 'null')";
       ctxt->index = ctxt->length;
@@ -903,7 +974,7 @@ parse(context *ctxt)
       x.column = 1;
       x.index = 0;
 
-      o = parse(&x);
+      o = [newParsed(&x) autorelease];
       if (skipSpace(&x) >= 0)
 	{
 	  x.error = "unexpected data at end of text";
@@ -1130,12 +1201,12 @@ parse(context *ctxt)
       x.column = 1;
       x.index = 0;
 
-      o = parse(&x);
+      o = newParsed(&x);
       if (skipSpace(&x) >= 0)
 	{
+          [o release];
 	  o = nil;	// Excess data
 	}
-      [o retain];
       [pool release];
       [o autorelease];
     }
