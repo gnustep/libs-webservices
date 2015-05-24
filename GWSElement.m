@@ -271,9 +271,21 @@ static Class		GWSElementClass = Nil;
 {
   [_attributes release];
   [_content release];
-  while (nil != _first)
+  if (nil != _first)
     {
-      [_first remove];
+      GWSElement        *e = _first;
+
+      _first->_prev->_next = nil;
+      while (e)
+        {
+          _first = e->_next;
+          e->_next = nil;
+          e->_prev = nil;
+          e->_parent = nil;
+          [e release];
+          e = _first;
+        }
+      _children = 0;
     }
   [_name release];
   [_namespace release];
