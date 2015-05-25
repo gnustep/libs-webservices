@@ -66,7 +66,7 @@ static Class		GWSElementClass = Nil;
 	    {
 	      content = [content substringFromIndex: pos];
 	    }
-          _content = [content mutableCopy];
+          _content = [content mutableCopyWithZone: 0];
         }
       else
         {
@@ -133,7 +133,7 @@ static Class		GWSElementClass = Nil;
 	   */
 	  if ([k isKindOfClass: [NSDictionary class]] == YES)
 	    {
-	      attributes = [(NSDictionary*)k copy];
+	      attributes = [(NSDictionary*)k copyWithZone: 0];
 	      break;
 	    }
 	  a = [NSMutableDictionary new];
@@ -191,7 +191,7 @@ static Class		GWSElementClass = Nil;
 	}
       return empty;
     }
-  return [[_attributes copy] autorelease];
+  return [[_attributes copyWithZone: 0] autorelease];
 }
 
 - (GWSElement*) childAtIndex: (NSUInteger)index
@@ -795,7 +795,7 @@ static Class		GWSElementClass = Nil;
 
 - (NSDictionary*) namespaces
 {
-  return [[_namespaces copy] autorelease];
+  return [[_namespaces copyWithZone: 0] autorelease];
 }
 
 - (GWSElement*) nextElement: (NSString*)name
@@ -1004,7 +1004,7 @@ static Class		GWSElementClass = Nil;
   NSAssert([name length] > 0, NSInvalidArgumentException);
   r = [name rangeOfString: @":" options: NSLiteralSearch];
   NSAssert(0 == r.length, NSInvalidArgumentException);
-  name = [name copy];
+  name = [name copyWithZone: 0];
   [_name release];
   _name = name;
   [_qualified release];
@@ -1043,14 +1043,14 @@ static Class		GWSElementClass = Nil;
         {
           _namespaces = [[NSMutableDictionary alloc] initWithCapacity: 1];
         }
-      uri = [uri copy];
+      uri = [uri copyWithZone: 0];
       [_namespaces setObject: uri forKey: prefix];
       [uri release];
     }
   if ([prefix isEqual: [self prefix]])
     {
       [_namespace release];
-      _namespace = [uri copy];
+      _namespace = [uri copyWithZone: 0];
     }
   [_start release];	// Discard any cached start element
   _start = nil;
@@ -1115,7 +1115,7 @@ static Class		GWSElementClass = Nil;
 	}
     }
   [_prefix release];
-  _prefix = [prefix copy];
+  _prefix = [prefix copyWithZone: 0];
   [_start release];	// Discard any cached start element
   _start = nil;
 }
