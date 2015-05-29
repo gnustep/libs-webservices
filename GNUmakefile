@@ -103,13 +103,18 @@ JAVA_WRAPPER_NAME = WebServices
 # Assume that the use of the gnu runtime means we have the gnustep
 # base library and can use its extensions to build WebServices stuff.
 #
-ifeq ($(OBJC_RUNTIME_LIB),gnu)
-APPLE=0
-else
-APPLE=1
+BASEADD=0
+ifeq ($(OBJC_RUNTIME_LIB),apple)
+BASEADD=1
+endif
+ifeq ($(OBJC_RUNTIME_LIB),nx)
+BASEADD=1
+endif
+ifeq ($(OBJC_RUNTIME_LIB),fd)
+BASEADD=1
 endif
 
-ifeq ($(APPLE),1)
+ifeq ($(BASEADD),1)
 ADDITIONAL_OBJC_LIBS += -lgnustep-baseadd
 WebServices_LIBRARIES_DEPEND_UPON = -lgnustep-baseadd
 endif

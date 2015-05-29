@@ -1064,7 +1064,7 @@ static id       boolY;
 // NSLog(@"End element '%@'", elementName);
 
   top = [_stack lastObject];
-  if ([elementName isEqualToString: [top name]] == NO)
+  if ([elementName isEqual: [top name]] == NO)
     {
       [NSException raise: NSInvalidArgumentException
                   format: @"Element missmatch found '%@' expecting '%@'",
