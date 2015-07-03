@@ -230,8 +230,8 @@ newParsed(context *ctxt)
 	{
           char  *buf;
           int   len;
-          int   pos = ctxt->index;
-          int   end = ctxt->index - start - 1;
+          int   pos = start;
+          int   end = ctxt->index - 1;
 
           buf = malloc(ctxt->index - start - 1);
           for (len = 0; pos < end; len++)

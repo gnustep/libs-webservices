@@ -1,3 +1,9 @@
+2015-07-03  Wolfgang Lux  <wolfgang.lux@gmail.com>
+
+	* GWSJSONCoder.m (newParsed): Fix bug parsing JSON strings
+	containing backslashes, which would result in the returned string
+	being empty.
+
 2015-03-17 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSXMLRPCCoder.m: add more checks when strict parsing in use.
