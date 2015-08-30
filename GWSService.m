@@ -43,6 +43,9 @@ static NSMutableDictionary	*perHostReserve = nil;
 static BOOL			useIOThreads = NO;
 static NSThread			*ioThreads[IOTHREADS] = { 0 };
 static NSUInteger		ioRequests[IOTHREADS] = { 0 };
+#if	defined(GNUSTEP)
+static BOOL                     requestDebug = NO;
+#endif
 
 static inline void
 threadAdd(NSThread **t)
@@ -127,6 +130,9 @@ available(NSString *host)
 @interface	NSURLHandle (Debug)
 - (void) setDebug: (BOOL)flag;
 - (void) setReturnAll: (BOOL)flag;
+@end
+@interface	NSURLRequest (Debug)
+- (void) setDebug: (BOOL)flag;
 @end
 #endif
 
@@ -939,6 +945,12 @@ available(NSString *host)
 	    }
 	}
       [request setHTTPBody: toSend];
+#if	defined(GNUSTEP)
+      if (YES == requestDebug)
+        {
+          [request setDebug: [self debug]];
+        }
+#endif
 
       if (_connection != nil)
 	{
@@ -1020,6 +1032,10 @@ available(NSString *host)
 {
   if (self == [GWSService class])
     {
+#if	defined(GNUSTEP)
+      requestDebug = [[NSMutableURLRequest class]
+        instancesRespondToSelector: @selector(setDebug:)];
+#endif
       queueLock = [NSRecursiveLock new];
       active = [NSMutableDictionary new];
       queues = [NSMutableDictionary new];
