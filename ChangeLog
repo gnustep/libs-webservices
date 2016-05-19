@@ -1,3 +1,7 @@
+2016-05-19 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: bump version for bugfix release (Version 0.7.3)
+
 2015-07-03  Wolfgang Lux  <wolfgang.lux@gmail.com>
 
 	* GWSJSONCoder.m (newParsed): Fix bug parsing JSON strings
