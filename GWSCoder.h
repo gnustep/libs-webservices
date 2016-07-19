@@ -179,7 +179,9 @@ extern "C" {
 
 /**
  * Resets parsing and/or building, releasing any temporary
- * data stored during parse etc.
+ * data stored during parse etc.<br />
+ * This does not alter the effects of the -setCompact:
+ * or -setCRLF: methods.
  */
 - (void) reset;
 
@@ -192,7 +194,9 @@ extern "C" {
 - (void) setCompact: (BOOL)flag;
 
 /** Specifies whether newlines are represented as a single LF or as a
- * CRLF sequence when generating output.
+ * CRLF sequence when generating output.<br />
+ * NB this has no effect for compact output (where all output is on a
+ * single line).
  */
 - (void) setCRLF: (BOOL)flag;
 
