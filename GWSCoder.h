@@ -85,6 +85,7 @@ extern "C" {
   BOOL			_debug;		// YES if debug is enabled.
   BOOL			_fault;		// YES while building a fault.
   BOOL                  _oldparser;     // YES if no namespace support.
+  BOOL                  _crlf;          // YES to use CRLF rather than LF
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
@@ -150,7 +151,9 @@ extern "C" {
 
 /** Add a new line to the temporary string currently in use for
  * creating an XML document, and add padding on the new line so
- * that the next item written is indented correctly.
+ * that the next item written is indented correctly.<br />
+ * A newline is a linefeed (LF) character unless the -setCRLF
+ * method is used to override that.
  */
 - (void) nl;
 
@@ -187,6 +190,11 @@ extern "C" {
  * slow/low bandwidth connections), but sacrifices readability.
  */
 - (void) setCompact: (BOOL)flag;
+
+/** Specifies whether newlines are represented as a single LF or as a
+ * CRLF sequence when generating output.
+ */
+- (void) setCRLF: (BOOL)flag;
 
 /** Specifies whether debug information is enabled.  See -debug for more
  * information.

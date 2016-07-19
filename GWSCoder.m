@@ -706,7 +706,14 @@ static id       boolY;
     {
       unsigned  index;
 
-      [_ms appendString: @"\n"];
+      if (YES == _crlf)
+        {
+          [_ms appendString: @"\r\n"];
+        }
+      else
+        {
+          [_ms appendString: @"\n"];
+        }
       if ((index = _level) > 0)
         {
           if (index > sizeof(indentations)/sizeof(*indentations))
@@ -1089,6 +1096,11 @@ static id       boolY;
 - (void) setCompact: (BOOL)flag
 {
   _compact = flag;
+}
+
+- (void) setCRLF: (BOOL)flag
+{
+  _crlf = flag;
 }
 
 - (void) setDebug: (BOOL)flag
