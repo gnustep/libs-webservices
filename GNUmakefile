@@ -21,8 +21,8 @@ include $(GNUSTEP_MAKEFILES)/common.make
 -include config.make
 
 PACKAGE_NAME = WebServices
-PACKAGE_VERSION = 0.7.3
-WebServices_INTERFACE_VERSION=0.7
+PACKAGE_VERSION = 0.8.0
+WebServices_INTERFACE_VERSION=0.8
 CVS_MODULE_NAME = gnustep/dev-libs/WebServices
 CVS_TAG_NAME = WebServices
 SVN_BASE_URL=svn+ssh://svn.gna.org/svn/gnustep/libs

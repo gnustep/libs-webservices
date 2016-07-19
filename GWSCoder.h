@@ -81,7 +81,7 @@ extern "C" {
 @private
   NSMutableDictionary   *_nmap;         // Mapping namespaces.
   NSTimeZone	        *_tz;           // Default timezone.
-  BOOL		        _compact;
+  BOOL		        _compact;       // YES for single line output.
   BOOL			_debug;		// YES if debug is enabled.
   BOOL			_fault;		// YES while building a fault.
   BOOL                  _oldparser;     // YES if no namespace support.

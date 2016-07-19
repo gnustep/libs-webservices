@@ -1,3 +1,9 @@
+2016-07-19 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSCoder.m: Add ([-setCRLF:]) method to allow generation of XML
+	with CRLF rather than LF as line terminator.
+	* GNUmakefile: bump version for ivar change (Version 0.8.0)
+
 2016-05-19 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: bump version for bugfix release (Version 0.7.3)
