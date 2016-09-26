@@ -272,10 +272,10 @@ newParsed(context *ctxt)
 	  NSMutableString	*m;
 	  NSRange		r;
 
-	  s = m = [NSMutableString alloc];
-	  m = [m initWithBytes: ctxt->buffer + start
-			length: ctxt->index - start - 1
-		      encoding: NSUTF8StringEncoding];
+	  m = [NSMutableString alloc];
+	  s = m = [m initWithBytes: ctxt->buffer + start
+                            length: ctxt->index - start - 1
+                          encoding: NSUTF8StringEncoding];
 	  r = NSMakeRange(0, [m length]);
 	  r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
 	  while (r.length > 0)
