@@ -270,65 +270,71 @@ newParsed(context *ctxt)
       else
 	{
 	  NSMutableString	*m;
-	  NSRange		r;
 
 	  m = [NSMutableString alloc];
 	  s = m = [m initWithBytes: ctxt->buffer + start
                             length: ctxt->index - start - 1
                           encoding: NSUTF8StringEncoding];
-	  r = NSMakeRange(0, [m length]);
-	  r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
-	  while (r.length > 0)
-	    {
-	      unsigned	pos = r.location;
-	      NSString	*rep;
+          if (nil != s)
+            {
+              NSRange       r = NSMakeRange(0, [m length]);
 
-	      c = [m characterAtIndex: pos + 1];
-	      if ('u' == c)
-		{
-		  const char	*hex;
-		  unichar	u;
+              r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
+              while (r.length > 0)
+                {
+                  unsigned	pos = r.location;
+                  NSString	*rep;
 
-		  if (pos + 6 > [m length])
-		    {
-		      ctxt->error = "short unicode escape in string";
-		      ctxt->index = ctxt->length;
-		      return nil;
-		    }
-		  hex = [[m substringWithRange: NSMakeRange(pos + 2, 4)]
-		    UTF8String];
-		  if (isxdigit(hex[0]) && isxdigit(hex[1])
-		    && isxdigit(hex[2]) && isxdigit(hex[3]))
-		    {
-		      u = (unichar) strtol(hex, 0, 16);
-		    }
-		  else
-		    {
-		      ctxt->error = "invalid unicode escape in string";
-		      ctxt->index = ctxt->length;
-		      return nil;
-		    }
-		  rep = [NSStringClass stringWithCharacters: &u length: 1];
-                  r.length += 5;
-		}
-	      else
-		{
-		  if ('"' == c) rep = @"\"";
-		  else if ('\\' == c) rep = @"\\";
-		  else if ('b' == c) rep = @"\b";
-		  else if ('f' == c) rep = @"\f";
-		  else if ('r' == c) rep = @"\r";
-		  else if ('n' == c) rep = @"\n";
-		  else if ('t' == c) rep = @"\t";
-		  else rep = [NSStringClass stringWithFormat: @"%c", (char)c];
-                  r.length += 1;
-		}
-	      [m replaceCharactersInRange: r withString: rep];
-	      pos++;
-	      r = NSMakeRange(pos, [m length] - pos);
-	      r = [m rangeOfString: @"\\" options: NSLiteralSearch range: r];
-	    }
-	}
+                  c = [m characterAtIndex: pos + 1];
+                  if ('u' == c)
+                    {
+                      const char	*hex;
+                      unichar	        u;
+
+                      if (pos + 6 > [m length])
+                        {
+                          ctxt->error = "short unicode escape in string";
+                          ctxt->index = ctxt->length;
+                          return nil;
+                        }
+                      hex = [[m substringWithRange: NSMakeRange(pos + 2, 4)]
+                        UTF8String];
+                      if (isxdigit(hex[0]) && isxdigit(hex[1])
+                        && isxdigit(hex[2]) && isxdigit(hex[3]))
+                        {
+                          u = (unichar) strtol(hex, 0, 16);
+                        }
+                      else
+                        {
+                          ctxt->error = "invalid unicode escape in string";
+                          ctxt->index = ctxt->length;
+                          return nil;
+                        }
+                      rep = [NSStringClass stringWithCharacters: &u length: 1];
+                      r.length += 5;
+                    }
+                  else
+                    {
+                      if ('"' == c) rep = @"\"";
+                      else if ('\\' == c) rep = @"\\";
+                      else if ('b' == c) rep = @"\b";
+                      else if ('f' == c) rep = @"\f";
+                      else if ('r' == c) rep = @"\r";
+                      else if ('n' == c) rep = @"\n";
+                      else if ('t' == c) rep = @"\t";
+                      else rep = [NSStringClass
+                        stringWithFormat: @"%c", (char)c];
+                      r.length += 1;
+                    }
+                  [m replaceCharactersInRange: r withString: rep];
+                  pos++;
+                  r = NSMakeRange(pos, [m length] - pos);
+                  r = [m rangeOfString: @"\\"
+                               options: NSLiteralSearch
+                                 range: r];
+                }
+            }
+        }
       return s;
     }
   else if ('[' == c)
