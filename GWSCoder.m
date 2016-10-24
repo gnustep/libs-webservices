@@ -113,6 +113,8 @@ encodebase64Url(unsigned char *dst, const unsigned char *src, int length)
 
 @class  GWSXMLRPCCoder;
 
+static Class _defaultParserClass;
+static Class _sloppyParserClass;
 
 @implementation	GWSCoder
 
@@ -136,13 +138,39 @@ static id       boolY;
 
 + (void) initialize
 {
-  boolN = [[NSNumber numberWithBool: NO] retain];
-  boolY = [[NSNumber numberWithBool: YES] retain];
+  if (self == [GWSCoder class])
+    {
+      boolN = [[NSNumber numberWithBool: NO] retain];
+      boolY = [[NSNumber numberWithBool: YES] retain];
+      _defaultParserClass = [NSXMLParser class];
+      _sloppyParserClass = NSClassFromString(@"GSSloppyXMLParser");
+      if (Nil == _sloppyParserClass)
+        {
+          _sloppyParserClass = _defaultParserClass;
+#ifdef GNUSTEP
+          NSWarnMLog(@"No separate class for the sloppy parser. All parsers "
+                     @"will be sloppy.");
+#else
+          NSWarnMLog(@"No separate class for the sloppy parser. All parsers "
+                     @"will be strict.");
+#endif
+        }
+    }
 }
 
 - (BOOL) compact
 {
   return _compact;
+}
+
+- (BOOL) preferSloppyParser
+{
+  return _preferSloppyParser;
+}
+
+- (void) setPreferSloppyParser: (BOOL)flag
+{
+  _preferSloppyParser = flag;
 }
 
 - (void) dealloc
@@ -727,12 +755,17 @@ static id       boolY;
 
 - (GWSElement*) parseXML: (NSData*)xml
 {
-  NSAutoreleasePool     *pool;
-  NSXMLParser           *parser;
+  NSAutoreleasePool     *pool       = nil;
+  NSXMLParser           *parser     = nil;
+  Class                 parserClass = _defaultParserClass;
 
   pool = [NSAutoreleasePool new];
   [self reset];
-  parser = [[[NSXMLParser alloc] initWithData: xml] autorelease];
+  if (_preferSloppyParser)
+    {
+      parserClass = _sloppyParserClass;
+    }
+  parser = [[[parserClass alloc] initWithData: xml] autorelease];
   [parser setShouldProcessNamespaces: YES];
   [parser setShouldReportNamespacePrefixes: YES];
   _oldparser = NO;

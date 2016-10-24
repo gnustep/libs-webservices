@@ -1,3 +1,7 @@
+2016-10-24 Niels Grewe <niels.grewe@halbordnung.de>
+
+	* GWSCoder.[hm]: Allow XML coders to use the 'sloppy' XML parser.
+
 2016-07-19 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSCoder.m: Add ([-setCRLF:]) method to allow generation of XML

@@ -89,6 +89,8 @@ extern "C" {
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
+  BOOL                  _preferSloppyParser; // Whether the old GNUstep
+                                                // parser should be preferred
 }
 
 /** Creates and returns an autoreleased instance.<br />
@@ -210,6 +212,17 @@ extern "C" {
  */
 - (void) unindent;
 
+/**
+ * Whether the old non-libxml2 parser in GNUstep should be preferred.
+ */
+- (BOOL)preferSloppyParser;
+
+/**
+ * Specifies whether the old non-libxml2 parser should be preferred if
+ * available. This supports a wider range of not-entirely valid XML, but
+ * omits features such as external entity support.
+ */
+- (void)setPreferSloppyParser: (BOOL)flag;
 @end
 
 /** The methods in this category are used to handle web services
