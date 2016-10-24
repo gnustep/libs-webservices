@@ -697,10 +697,12 @@ static id       boolY;
 {
   if ((self = [super init]) != nil)
     {
+      NSUserDefaults *dflts = [NSUserDefaults standardUserDefaults];
       _ms = [NSMutableString new];
       _stack = [NSMutableArray new];
       _nmap = [NSMutableDictionary new];
-      _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
+      _debug = [dflts boolForKey: @"GWSDebug"];
+      _preferSloppyParser = [dflts boolForKey: @"GWSPreferSloppyParser"];
     }
   return self;
 }
