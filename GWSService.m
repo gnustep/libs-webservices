@@ -889,6 +889,7 @@ available(NSString *host)
 - (void) _start
 {
   NSData        *toSend;
+  NSString      *method;
 
   [_lock lock];
   if (YES == _cancelled)
@@ -900,6 +901,7 @@ available(NSString *host)
     }
   _stage = RPCActive;
   toSend = [_request retain];
+  method = [_HTTPMethod retain];
   [_lock unlock];
 
   /* Now we initiate the asynchronous I/O process.
@@ -918,7 +920,7 @@ available(NSString *host)
       request = [NSMutableURLRequest alloc];
       request = [request initWithURL: _connectionURL];
       [request setCachePolicy: NSURLRequestReloadIgnoringCacheData];
-      [request setHTTPMethod: @"POST"];  
+      [request setHTTPMethod: method];  
       [request setValue: @"GWSService/0.1.0" forHTTPHeaderField: @"User-Agent"];
       if (nil == _contentType)
         {
@@ -993,7 +995,7 @@ available(NSString *host)
 	  [handle writeProperty: _SOAPAction forKey: @"SOAPAction"];
 	}
       [handle addClient: (id<NSURLHandleClient>)self];
-      [handle writeProperty: @"POST" forKey: GSHTTPPropertyMethodKey];
+      [handle writeProperty: method forKey: GSHTTPPropertyMethodKey];
       [handle writeProperty: @"GWSService/0.1.0" forKey: @"User-Agent"];
       if (nil == _contentType)
         {
@@ -1020,6 +1022,7 @@ available(NSString *host)
 #endif
     }
   NSAssert(nil != toSend, NSInternalInconsistencyException);
+  [method release];
   [toSend release];
 }
 
@@ -1393,6 +1396,7 @@ available(NSString *host)
   [_documentation release];
   [_extensibility release];
   [_SOAPAction release];
+  [_HTTPMethod release];
   [_ports release];
   [_name release];
   [_headers release];
@@ -1656,6 +1660,18 @@ available(NSString *host)
 
   [_headers release];
   _headers = tmp;
+}
+
+- (void) setHTTPMethod: (NSString*)method
+{
+  if (0 == [method length]) method = @"POST";
+  if (NO == [_HTTPMethod isEqual: method])
+    {
+      NSString	*old = _HTTPMethod;
+
+      _HTTPMethod = [method copy];
+      [old release];
+    }
 }
 
 - (void) setObject: (id)anObject forKey: (NSString*)aKey

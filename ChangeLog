@@ -1,3 +1,10 @@
+2016-10-25 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Add -setHTTPMethod: to control what HTTP method is used by an RPC,
+	so we can use this class for RESTful APIs.
+
 2016-10-24 Niels Grewe <niels.grewe@halbordnung.de>
 
 	* GWSCoder.[hm]: Allow XML coders to use the 'sloppy' XML parser.

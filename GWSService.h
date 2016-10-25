@@ -106,6 +106,7 @@ extern "C" {
   id			_delegate;	// Not retained.
   NSTimeZone		*_tz;
   GWSCoder              *_coder;
+  NSString		*_HTTPMethod;
   NSString		*_SOAPAction;
   BOOL			_compact;
   BOOL			_debug;
@@ -350,6 +351,11 @@ extern "C" {
  */
 - (void) setHeaders: (NSDictionary*)headers;
 
+/** Sets the value of the HTTP method to be used for a request.<br />
+ * Setting an nil string reverts to the default 'POST' method.<br />
+ */
+- (void) setHTTPMethod: (NSString*)method;
+
 /** Tags the service with entra information in the form of anObject
  * references by aKey.  if anObject is nil, this removes any previous
  * association for aKey.<br />
@@ -359,8 +365,7 @@ extern "C" {
  */
 - (void) setObject: (id)anObject forKey: (NSString*)aKey;
 
-/**
- * Sets the value of the SOAPAction header to be sent with a request.<br />
+/** Sets the value of the SOAPAction header to be sent with a request.<br />
  * Setting an nil string value suppresses the sending of this header.<br />
  * Most servers expect two double quotes characters for this,
  * so you should probably set @&quot;\&quot;\&quot;&quot; as the action.<br />
