@@ -901,7 +901,10 @@ available(NSString *host)
     }
   _stage = RPCActive;
   toSend = [_request retain];
-  method = [_HTTPMethod retain];
+  if (nil == (method = [_HTTPMethod retain]))
+    {
+      method = @"POST";
+    }
   [_lock unlock];
 
   /* Now we initiate the asynchronous I/O process.
