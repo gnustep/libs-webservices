@@ -576,6 +576,11 @@ static id       boolY;
 		escape = YES;
 	        break;
 
+              case '\r':
+                output += 5;
+                escape = YES;
+                break;
+
 	      default:
 		/*
 		 * For non-ascii characters, we can use &#nnnn; escapes
@@ -654,6 +659,14 @@ static id       boolY;
 		    to[j++] = '&';
 		    to[j++] = 'g';
 		    to[j++] = 't';
+		    to[j++] = ';';
+		    break;
+
+                  case '\r':
+		    to[j++] = '&';
+		    to[j++] = '#';
+		    to[j++] = '1';
+		    to[j++] = '3';
 		    to[j++] = ';';
 		    break;
 
