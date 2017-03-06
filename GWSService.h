@@ -326,9 +326,11 @@ extern "C" {
 - (void) setContentType: (NSString*)cType;
 
 /** Specifies whether debug information is enabled.  See -debug for more
- * information.
+ * information.<br />
+ * A non-zero setting sets debg to YES while a zero setting sets it to NO.
+ * The method returns the previous setting.
  */
-- (void) setDebug: (BOOL)flag;
+- (int) setDebug: (int)flag;
 
 /**
  * Sets the delegate object which will receive callbacks when an RPC

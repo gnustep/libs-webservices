@@ -2,6 +2,8 @@
 
 	* GSWCoder.h:
 	* GSWCoder.m:
+	* GSWService.h:
+	* GSWService.m:
         Change signature of -setDebug: method to be consistent with other
 	classes using a method of the same name.
 	Add option to preserve white space when parsing XML.

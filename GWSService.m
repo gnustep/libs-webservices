@@ -128,11 +128,11 @@ available(NSString *host)
 
 #if	defined(GNUSTEP)
 @interface	NSURLHandle (Debug)
-- (void) setDebug: (BOOL)flag;
+- (int) setDebug: (int)flag;
 - (void) setReturnAll: (BOOL)flag;
 @end
 @interface	NSURLRequest (Debug)
-- (void) setDebug: (BOOL)flag;
+- (int) setDebug: (int)flag;
 @end
 #endif
 
@@ -1635,9 +1635,16 @@ available(NSString *host)
     }
 }
 
-- (void) setDebug: (BOOL)flag
+/* Much software uses integer settings for debub levels, so to selector
+ * type conflicts we use the same convention even though we are using it
+ * as a boolean.
+ */
+- (int) setDebug: (int)flag
 {
-  _debug = flag;
+  BOOL  old = _debug;
+
+  _debug = flag ? YES : NO;
+  return old;
 }
 
 - (void) setDelegate: (id)aDelegate
