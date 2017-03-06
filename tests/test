@@ -8,35 +8,37 @@ echo "Starting simple regression tests."
 echo "Error count on completion should be zero"
 echo ""
 
+DIR=../obj/`gnustep-config --host-ldir`
+
 err=0
 
-../obj/testGWSSOAPCoder -Internal YES
+$DIR/testGWSSOAPCoder -Internal YES
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSSOAPCoder -Decode xml1 -Compare pl1
+$DIR/testGWSSOAPCoder -Decode xml1 -Compare pl1
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSSOAPCoder -Decode xml2 -Compare pl2
+$DIR/testGWSSOAPCoder -Decode xml2 -Compare pl2
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSSOAPCoder -Decode xml3 -Compare pl3
+$DIR/testGWSSOAPCoder -Decode xml3 -Compare pl3
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSSOAPCoder -Encode pl4 -Compare xml4 \
+$DIR/testGWSSOAPCoder -Encode pl4 -Compare xml4 \
  -WSDL test4.wsdl -Service ViewDevice -Method getDevice
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi
 
-../obj/testGWSJSONCoder -Decode json1 -Compare jpl1
+$DIR/testGWSJSONCoder -Decode json1 -Compare jpl1
 if [ $? = 1 ]; then
   err=`expr $err + 1`
 fi

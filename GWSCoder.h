@@ -86,11 +86,12 @@ extern "C" {
   BOOL			_fault;		// YES while building a fault.
   BOOL                  _oldparser;     // YES if no namespace support.
   BOOL                  _crlf;          // YES to use CRLF rather than LF
+  BOOL                  _preferSloppyParser; // Whether the tolerant GNUstep
+                                             // parser should be used.
+  BOOL                  _preserveSpace; // YES to preserve white spece
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
-  BOOL                  _preferSloppyParser; // Whether the old GNUstep
-                                                // parser should be preferred
 }
 
 /** Creates and returns an autoreleased instance.<br />
@@ -180,6 +181,17 @@ extern "C" {
 - (id) parseXSI: (NSString*)type string: (NSString*)value;
 
 /**
+ * Whether the more tolerant, non-libxml2 parser in GNUstep should be used.
+ */
+- (BOOL) preferSloppyParser;
+
+/**
+ * Whether whitespace in contrent adjacent to element markup should be
+ * stripped/ignored.
+ */
+- (BOOL) preserveSpace;
+
+/**
  * Resets parsing and/or building, releasing any temporary
  * data stored during parse etc.<br />
  * This does not alter the effects of the -setCompact:
@@ -195,34 +207,38 @@ extern "C" {
  */
 - (void) setCompact: (BOOL)flag;
 
-/** Specifies whether newlines are represented as a single LF or as a
- * CRLF sequence when generating output.<br />
+/** Specifies whether newlines between elements are represented as a
+ * single LF or as a CRLF sequence when generating output.<br />
  * NB this has no effect for compact output (where all output is on a
  * single line).
  */
 - (void) setCRLF: (BOOL)flag;
 
 /** Specifies whether debug information is enabled.  See -debug for more
- * information.
+ * information.<br />
+ * A non-zero setting sets debg to YES while a zero setting sets it to NO.
+ * The method returns the previous setting.
  */
-- (void) setDebug: (BOOL)flag;
+- (int) setDebug: (int)flag;
+
+/**
+ * Specifies whether the more tolerant, non-libxml2 parser should be used if
+ * available. This supports a wider range of not-entirely valid XML, but
+ * omits features such as external entity support.
+ */
+- (void) setPreferSloppyParser: (BOOL)flag;
+
+/** Specifies whether leading and trailing whie space character content
+ * of an element is preserved or stripped/ignored (standard xml behavior
+ * is to strip/ignore it).
+ */
+- (void) setPreserveSpace: (BOOL)flag;
 
 /** Decrease the indentation level used while creating an XML document.
  * creating an XML document.
  */
 - (void) unindent;
 
-/**
- * Whether the old non-libxml2 parser in GNUstep should be preferred.
- */
-- (BOOL)preferSloppyParser;
-
-/**
- * Specifies whether the old non-libxml2 parser should be preferred if
- * available. This supports a wider range of not-entirely valid XML, but
- * omits features such as external entity support.
- */
-- (void)setPreferSloppyParser: (BOOL)flag;
 @end
 
 /** The methods in this category are used to handle web services

@@ -163,16 +163,6 @@ static id       boolY;
   return _compact;
 }
 
-- (BOOL) preferSloppyParser
-{
-  return _preferSloppyParser;
-}
-
-- (void) setPreferSloppyParser: (BOOL)flag
-{
-  _preferSloppyParser = flag;
-}
-
 - (void) dealloc
 {
   [_stack release];
@@ -1125,12 +1115,26 @@ static id       boolY;
                   format: @"Element missmatch found '%@' expecting '%@'",
                   elementName, [top name]];
     }
+  if (NO == _preserveSpace)
+    {
+      [top condense: NO];
+    }
   count = [_stack count];
   if (count > 1)
     {
       [(GWSElement*)[_stack objectAtIndex: count - 2] addChild: top];
       [_stack removeLastObject];
     }
+}
+
+- (BOOL) preferSloppyParser
+{
+  return _preferSloppyParser;
+}
+
+- (BOOL) preserveSpace
+{
+  return _preserveSpace;
 }
 
 - (void) reset
@@ -1151,15 +1155,34 @@ static id       boolY;
   _crlf = flag;
 }
 
-- (void) setDebug: (BOOL)flag
+/* Much software uses integer settings for debug levels, so to selector
+ * type conflicts we use the same convention even though we are using it
+ * as a boolean.
+ */
+- (int) setDebug: (int)flag
 {
-  _debug = flag;
+  BOOL  old = _debug;
+
+  _debug = flag ? YES : NO;
+  return old;
+}
+
+- (void) setPreferSloppyParser: (BOOL)flag
+{
+  _preferSloppyParser = flag;
+}
+
+- (void) setPreserveSpace: (BOOL)flag
+{
+  _preserveSpace = flag;
 }
 
 - (void) unindent
 {
   if (_level > 0)
-    _level--;
+    {
+      _level--;
+    }
 }
 
 @end

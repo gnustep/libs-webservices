@@ -44,7 +44,7 @@ static Class		GWSElementClass = Nil;
     }
 }
 
-#define	MEMBER(X)	(*cimImp)(ws, cimSel, (X))
+#define	ISSPACE(X)	(*cimImp)(ws, cimSel, (X))
 
 - (void) addContent: (NSString*)content
 {
@@ -54,18 +54,6 @@ static Class		GWSElementClass = Nil;
     {
       if (_content == nil)
         {
-	  NSUInteger	pos = 0;
-
-	  /* Ignore leading white space within an element.
-	   */
-	  while (pos < length && MEMBER([content characterAtIndex: pos]))
-	    {
-	      pos++;
-	    }
-	  if (pos > 0)
-	    {
-	      content = [content substringFromIndex: pos];
-	    }
           _content = [content mutableCopyWithZone: 0];
         }
       else
@@ -241,6 +229,83 @@ static Class		GWSElementClass = Nil;
     }
 }
 
+- (void) condense: (BOOL)internal
+{
+  NSUInteger	length = [_content length];
+  NSUInteger	end = length;
+  NSUInteger	start = 0;
+
+  if (length > 0)
+    {
+      SEL       caiSel = @selector(characterAtIndex:);
+      unichar	(*caiImp)(NSString*, SEL, NSUInteger);
+      unichar	letter;
+
+      caiImp = (unichar (*)())[_content methodForSelector: caiSel];
+
+      while (end > 0)
+	{
+	  letter = (*caiImp)(_content, caiSel, end-1);
+	  if (ISSPACE(letter) == NO)
+	    {
+	      break;
+	    }
+	  end--;
+	}
+      while (start < end)
+	{
+	  letter = (*caiImp)(_content, caiSel, start);
+	  if (ISSPACE(letter) == NO)
+	    {
+	      break;
+	    }
+	  start++;
+	}
+      if (end != length)
+        {
+          /* Trim trailing space.
+           */
+          [_content deleteCharactersInRange: NSMakeRange(end, length - end)];
+        }
+      if (start > 0)
+        {
+          /* Trim leading space.
+           */
+          [_content deleteCharactersInRange: NSMakeRange(0, start)];
+        }
+      length = end - start;
+      if (YES == internal && (end = length) > 0)
+        {
+          /* Condense internal sequences of spaces.
+           */
+          while (end-- > 0)
+            {
+              letter = (*caiImp)(_content, caiSel, end);
+              if (ISSPACE(letter) == YES)
+                {
+                  start = end;
+                  while (start-- > 0)
+                    {
+                      letter = (*caiImp)(_content, caiSel, start);
+                      if (ISSPACE(letter) == NO)
+                        {
+                          if (end - start > 1)
+                            {
+                              /* Reduce multiple whitespace characters to
+                               * a single space by deleting all but first.
+                               */
+                              [_content deleteCharactersInRange:
+                                NSMakeRange(start + 1, end - start - 1)];
+                            }
+                        }
+                    }
+                  end = start;
+                }
+            }
+        }
+    }
+}
+
 - (NSString*) content
 {
   if (_content == nil)
@@ -249,16 +314,7 @@ static Class		GWSElementClass = Nil;
     }
   else
     {
-      NSUInteger	pos = [_content length];
-
-      /* Strip trailing white space (leading space was already stripped as
-       * content was added).
-       */
-      while (pos > 0 && MEMBER([_content characterAtIndex: pos-1]))
-	{
-	  pos--;
-	}
-      return [_content substringToIndex: pos];
+      return [[_content copyWithZone: 0] autorelease];
     }
 }
 

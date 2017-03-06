@@ -96,8 +96,7 @@ extern "C" {
 		      content: (NSString*)content, ...;
 		    
 /** Adds a string to the content of the receiver.  New content is appended
- * to any existing content (with any white space between the two parts
- * being condensed to a single space).
+ * to any existing content.
  */
 - (void) addContent: (NSString*)content;
 
@@ -121,9 +120,15 @@ extern "C" {
  */
 - (NSArray*) children;
 
+/** Condenses the character content of the receiver by stripping leading
+ * and trailing white space.  If the internal flag is YES, any sequence of
+ * internal white space is also condensed to a single character by deleting
+ * all but the first character.
+ */
+- (void) condense: (BOOL)internal;
+
 /** Returns the content text of the receiver.  This may be an empty string
- * if no content has been added to the receiver (but will never be nil).<br />
- * The returned value will have no leading or trailing white space.
+ * if no content has been added to the receiver (but will never be nil).
  */
 - (NSString*) content;
 
@@ -330,7 +335,7 @@ extern "C" {
 - (void) setAttribute: (NSString*)attribute forKey: (NSString*)key;
 
 /** Sets the value of the content string of the receiver, replacing any
- * content already present.  Any leading white space is removed.<br />
+ * content already present.<br />
  * You may use an empty string or nil to remove content from the
  * receiver.
  */
