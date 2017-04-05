@@ -41,6 +41,7 @@ static Class    NSDictionaryClass;
 static Class    NSNullClass;
 static Class    NSNumberClass;
 static Class    NSStringClass;
+static NSTimeZone       *tz;
 
 static NSString*
 JSONQuote(NSString *str)
@@ -579,6 +580,7 @@ newParsed(context *ctxt)
   boolY = [[NSNumberClass numberWithBool: YES] retain];
   boolN = [[NSNumberClass numberWithBool: NO] retain];
   null = [[NSNullClass null] retain];
+  tz = [[NSTimeZone timeZoneWithName: @"GMT"] retain];
 }
 
 - (void) appendObject: (id)o
@@ -949,12 +951,49 @@ newParsed(context *ctxt)
   [super dealloc];
 }
 
+- (NSCalendarDate*) decodeDateTimeFrom: (NSString*)source
+{
+  int	                year;
+  int	                month;
+  int	                day;
+  int	                hour;
+  int	                minute;
+  int	                second;
+  int                   millisecond;
+  NSTimeInterval	ti;
+  const char            *u;
+  NSCalendarDate        *d;
+
+  u = [source UTF8String];
+  if (sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+    &year, &month, &day, &hour, &minute, &second, &millisecond) != 7)
+    {
+      [NSException raise: NSInvalidArgumentException
+                  format: @"bad date/time format '%@'", source];
+    }
+  d = [NSCalendarDate alloc];
+  d = [d initWithYear: year
+                month: month
+                  day: day
+                 hour: hour
+               minute: minute
+               second: second
+             timeZone: tz];
+
+  ti = millisecond;
+  ti /= 1000.0;
+  ti += [d timeIntervalSinceReferenceDate];
+  d = [d initWithTimeIntervalSinceReferenceDate: ti];
+  [d setTimeZone: tz];
+  return [d autorelease];
+}
+
 - (NSString*) encodeDateTimeFrom: (NSDate*)source
 {
   NSString	*s;
 
-  s = [source descriptionWithCalendarFormat: @"%Y%m%dT%H:%M:%S"
-                                   timeZone: [self timeZone]
+  s = [source descriptionWithCalendarFormat: @"%Y-%m-%dT%H:%M:%S.%FZ"
+                                   timeZone: tz
                                      locale: nil];
   return s;
 }
@@ -1148,6 +1187,11 @@ newParsed(context *ctxt)
     }
 }
 
+- (void) setTimeZone: (NSTimeZone*)timeZone
+{
+  return;
+}
+
 - (void) setVersion: (NSString*)v
 {
   if (YES == [ver2 isEqual: v])
@@ -1162,6 +1206,11 @@ newParsed(context *ctxt)
     {
       _version = nil;
     }
+}
+
+- (NSTimeZone*) timeZone
+{
+  return tz;
 }
 
 - (NSString*) version
