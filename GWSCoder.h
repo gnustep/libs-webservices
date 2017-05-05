@@ -586,15 +586,20 @@ typedef enum {
                     order: (NSArray*)order;
 
 /** A helper method which decodes a timestamp from ISO8601 format,
- * YYYY-MM-DDTHH:MM:SS.mmmZ
+ * YYYY-MM-DDTHH:MM:SS.mmmZ<br />
+ * This tolerates omission of the trailing Z (in which case it assumes
+ * the local timezone rather than GMT), the millisecond part,
+ * and (in the case that both milliseconds and 'Z' are omitted) also
+ * tolerates omission of the hyphens and colons (YYYYMMDDTHHMMSS).
  */
 - (NSCalendarDate*) decodeDateTimeFrom: (NSString*)source;
 
 /** Take the supplied date and encode it as a string.<br />
- * This uses the timezone currently set in the receiver to determine
- * the time of day encoded.<br />
  * There is no standard for JSON timestamps, but the recommended value
- * (supported by javascript) is ISO8601 ... YYYY-MM-DDTHH:MM:SS.mmmZ
+ * (supported by javascript) is ISO8601 ... YYYY-MM-DDTHH:MM:SS.mmmZ<br />
+ * If the -setTimeZone: method is used, the format YYYYMMDDTHHMMSS will
+ * be used relative to the time zone value set (unless a nil argument
+ * was supplied).
  */
 - (NSString*) encodeDateTimeFrom: (NSDate*)source;
 
@@ -612,7 +617,10 @@ typedef enum {
  */
 - (void) setRPCID: (id)o;
 
-/** Does nothing ... JSON always uses GMT as the time zone.
+/** Sets a timeZone so that encoding of date/time values will be done
+ * relative to that timeZone as YYYMMDDTHHMMSS format rather than the
+ * standard YYYY-MM-DDTHH:MM:SS.mmZ format using GMT.<br />
+ * Setting a nil timeZone reverts to standard behavior.
  */
 - (void) setTimeZone: (NSTimeZone*)timeZone;
 
@@ -625,10 +633,6 @@ typedef enum {
  * to the method call overrides any value set in the coder).
  */
 - (void) setVersion: (NSString*)v;
-
-/** Return the time zone for encoding/decoding; always GMT for JSON.
- */
-- (NSTimeZone*) timeZone;
 
 /** Returns the json-rpc version (currently "2.0" or "1.0" or nil).<br />
  * See -setVersion: for details.

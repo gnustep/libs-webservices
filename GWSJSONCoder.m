@@ -41,7 +41,8 @@ static Class    NSDictionaryClass;
 static Class    NSNullClass;
 static Class    NSNumberClass;
 static Class    NSStringClass;
-static NSTimeZone       *tz;
+static NSTimeZone       *gmt;
+static BOOL     useTimeZone = NO;
 
 static NSString*
 JSONQuote(NSString *str)
@@ -580,7 +581,7 @@ newParsed(context *ctxt)
   boolY = [[NSNumberClass numberWithBool: YES] retain];
   boolN = [[NSNumberClass numberWithBool: NO] retain];
   null = [[NSNullClass null] retain];
-  tz = [[NSTimeZone timeZoneWithName: @"GMT"] retain];
+  gmt = [[NSTimeZone timeZoneWithName: @"GMT"] retain];
 }
 
 - (void) appendObject: (id)o
@@ -960,13 +961,42 @@ newParsed(context *ctxt)
   int	                minute;
   int	                second;
   int                   millisecond;
-  NSTimeInterval	ti;
+  int                   l;
+  NSTimeZone            *tz = nil;
   const char            *u;
   NSCalendarDate        *d;
 
   u = [source UTF8String];
-  if (sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
-    &year, &month, &day, &hour, &minute, &second, &millisecond) != 7)
+  l = strlen(u);
+  if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+    &year, &month, &day, &hour, &minute, &second, &millisecond) == 7)
+    {
+      tz = gmt;
+    }
+  else if (23 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d",
+    &year, &month, &day, &hour, &minute, &second, &millisecond) == 7)
+    {
+      tz = [self timeZone];
+    }
+  else if (20 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02dZ",
+    &year, &month, &day, &hour, &minute, &second) == 6)
+    {
+      millisecond = 0;
+      tz = gmt;
+    }
+  else if (19 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d",
+    &year, &month, &day, &hour, &minute, &second) == 6)
+    {
+      millisecond = 0;
+      tz = [self timeZone];
+    }
+  else if (15 == l && sscanf(u, "%04d%02d%02dT%02d%02d%02d",
+    &year, &month, &day, &hour, &minute, &second) == 6)
+    {
+      millisecond = 0;
+      tz = [self timeZone];
+    }
+  else
     {
       [NSException raise: NSInvalidArgumentException
                   format: @"bad date/time format '%@'", source];
@@ -979,22 +1009,35 @@ newParsed(context *ctxt)
                minute: minute
                second: second
              timeZone: tz];
+  if (millisecond != 0)
+    {
+      NSTimeInterval	ti;
 
-  ti = millisecond;
-  ti /= 1000.0;
-  ti += [d timeIntervalSinceReferenceDate];
-  d = [d initWithTimeIntervalSinceReferenceDate: ti];
+      ti = millisecond;
+      ti /= 1000.0;
+      ti += [d timeIntervalSinceReferenceDate];
+      d = [d initWithTimeIntervalSinceReferenceDate: ti];
+    }
   [d setTimeZone: tz];
   return [d autorelease];
 }
 
 - (NSString*) encodeDateTimeFrom: (NSDate*)source
 {
-  NSString	*s;
+  NSString      *s;
 
-  s = [source descriptionWithCalendarFormat: @"%Y-%m-%dT%H:%M:%S.%FZ"
-                                   timeZone: tz
-                                     locale: nil];
+  if (YES == useTimeZone)
+    {
+      s = [source descriptionWithCalendarFormat: @"%Y%m%dT%H:%M:%S"
+                                       timeZone: [self timeZone]
+                                         locale: nil];
+    }
+  else
+    {
+      s = [source descriptionWithCalendarFormat: @"%Y-%m-%dT%H:%M:%S.%FZ"
+                                       timeZone: gmt
+                                         locale: nil];
+    }
   return s;
 }
 
@@ -1189,7 +1232,16 @@ newParsed(context *ctxt)
 
 - (void) setTimeZone: (NSTimeZone*)timeZone
 {
-  return;
+  if (nil == timeZone)
+    {
+      timeZone = gmt;
+      useTimeZone = NO;         // Use standard date/time format
+    }
+  else
+    {
+      useTimeZone = YES;        // Use timezone relative date/time format
+    }
+  [super setTimeZone: timeZone];
 }
 
 - (void) setVersion: (NSString*)v
@@ -1206,11 +1258,6 @@ newParsed(context *ctxt)
     {
       _version = nil;
     }
-}
-
-- (NSTimeZone*) timeZone
-{
-  return tz;
 }
 
 - (NSString*) version
