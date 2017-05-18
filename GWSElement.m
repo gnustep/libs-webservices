@@ -551,8 +551,9 @@ static Class		GWSElementClass = Nil;
 - (GWSElement*) findChild: (NSString*)name
 {
   GWSElement	*child = _first;
+  NSUInteger	count = _children;
 
-  while (nil != child)
+  while (count-- > 0)
     {
       if ([name isEqualToString: child->_name] == YES)
         {
