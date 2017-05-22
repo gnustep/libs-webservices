@@ -544,7 +544,7 @@ static id       boolY;
       unichar	c = from[i];
 
       if ((c >= 0x20 && c <= 0xd7ff)
-	|| c == 0x9 || c == 0xd || c == 0xa
+	|| c == 0x9 || c == 0xd || c == 0xc || c == 0xa
 	|| (c >= 0xe000 && c <= 0xfffd))
 	{
 	  switch (c)
@@ -566,6 +566,7 @@ static id       boolY;
 		escape = YES;
 	        break;
 
+              case '\f':
               case '\r':
                 output += 5;
                 escape = YES;
@@ -607,7 +608,7 @@ static id       boolY;
 	  unichar	c = from[i];
 
 	  if ((c >= 0x20 && c <= 0xd7ff)
-	    || c == 0x9 || c == 0xd || c == 0xa
+	    || c == 0x9 || c == 0xd || c == 0xc || c == 0xa
 	    || (c >= 0xe000 && c <= 0xfffd))
 	    {
 	      switch (c)
@@ -649,6 +650,14 @@ static id       boolY;
 		    to[j++] = '&';
 		    to[j++] = 'g';
 		    to[j++] = 't';
+		    to[j++] = ';';
+		    break;
+
+                  case '\f':
+		    to[j++] = '&';
+		    to[j++] = '#';
+		    to[j++] = '1';
+		    to[j++] = '2';
 		    to[j++] = ';';
 		    break;
 
