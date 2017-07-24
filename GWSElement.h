@@ -105,8 +105,8 @@ extern "C" {
  */
 - (NSString*) attributeForName: (NSString*)name;
 
-/** Returns the attributes of the receiver, or an empty dictionary
- * if no attributes are set.
+/** Returns an autoreleased immutable copy of the attributes of the receiver,
+ * or an empty dictionary if no attributes are set.
  */
 - (NSDictionary*) attributes;
 
@@ -220,7 +220,10 @@ extern "C" {
 
 /* <init />
  * Initialises the receiver with the name, namespace URI, fully qualified
- * name, and attributes given.
+ * name, and attributes given.<br />
+ * The receiver makes a mutable copy of the attributes dictionary, and may
+ * subsequently modify that copy in response to the -setAttribute:forKey:
+ * method.
  */
 - (id) initWithName: (NSString*)name
           namespace: (NSString*)namespace
