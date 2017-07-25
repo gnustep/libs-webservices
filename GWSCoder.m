@@ -578,18 +578,31 @@ static id       boolY;
 		 */
 		if (c > 127)
 		  {
+                    uint32_t    u = c;
+
+                    /* Code to support surrogate pairs for possible future
+                     * use.  For now whese characters (illegal in xml-1.0)
+                     * will simply be passed through on the assumption that
+                     * UTF-8 encoding will be used for them.
+                     */
+                    if ((u >= 0xd800) && (u < 0xdc00) && i+1 < length
+                      && (c = from[i+1]) >= 0xdc00 && c <= 0xdfff)
+                      {
+                        i++;
+                        u = ((u - 0xd800) * 0x400) + (c - 0xdc00) + 0x10000;
+                      }
 		    output += 5;
-		    while (c >= 1000)
+		    while (u >= 1000)
 		      {
 			output++;
-			c /= 10;
+			u /= 10;
 		      }
 		    escape = YES;
 		  }
 		output++;
 		break;
 	    }
-	}
+        }
       else if (NO == _allUnicode)
 	{
 	  escape = YES;	// Need to remove bad characters
@@ -672,12 +685,25 @@ static id       boolY;
 		  default:
 		    if (c > 127)
 		      {
-			char	buf[12];
-			char	*ptr = buf;
+                        uint32_t        u = c;
+			char	        buf[16];
+			char	        *ptr = buf;
 
 			to[j++] = '&';
 			to[j++] = '#';
-			sprintf(buf, "%u", c);
+
+                        /* Code to support surrogate pairs for possible future
+                         * use.  For now whese characters (illegal in xml-1.0)
+                         * will simply be passed through on the assumption that
+                         * UTF-8 encoding will be used for them.
+                         */
+                        if ((u >= 0xd800) && (u < 0xdc00) && i+1 < length
+                          && (c = from[i+1]) >= 0xdc00 && c <= 0xdfff)
+                          {
+                            i++;
+                            u = ((u - 0xd800) * 0x400) + (c - 0xdc00) + 0x10000;
+                          }
+			sprintf(buf, "%"PRIu32, u);
 			while (*ptr != '\0')
 			  {
 			    to[j++] = *ptr++;
