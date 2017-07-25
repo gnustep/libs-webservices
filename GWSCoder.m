@@ -590,7 +590,7 @@ static id       boolY;
 		break;
 	    }
 	}
-      else
+      else if (NO == _allUnicode)
 	{
 	  escape = YES;	// Need to remove bad characters
 	}
@@ -691,6 +691,10 @@ static id       boolY;
 		    break;
 		}
 	    }
+          else if (YES == _allUnicode)
+            {
+              to[j++] = c;
+            }
 	}
       str = [[NSString alloc] initWithCharacters: to length: output];
       NSZoneFree (NSDefaultMallocZone (), to);
@@ -717,6 +721,63 @@ static id       boolY;
       _preferSloppyParser = [dflts boolForKey: @"GWSPreferSloppyParser"];
     }
   return self;
+}
+
+- (NSString*) legalXMLFrom: (NSString*)str
+{
+  unsigned	length = [str length];
+  unsigned	output = 0;
+  unichar	*from;
+  unsigned	i = 0;
+  BOOL		strip = NO;
+
+  if (length == 0)
+    {
+      return str;
+    }
+  from = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * length);
+  [str getCharacters: from];
+
+  for (i = 0; i < length; i++)
+    {
+      unichar	c = from[i];
+
+      if ((c >= 0x20 && c <= 0xd7ff)
+	|| c == 0x9 || c == 0xd || c == 0xc || c == 0xa
+	|| (c >= 0xe000 && c <= 0xfffd))
+	{
+          output++;
+	}
+      else
+	{
+	  strip = YES;	// Need to remove bad characters
+	}
+    }
+
+  if (strip == YES)
+    {
+      unichar	*to;
+      unsigned	j = 0;
+
+      to = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * output);
+
+      for (i = 0; i < length; i++)
+	{
+	  unichar	c = from[i];
+
+	  if ((c >= 0x20 && c <= 0xd7ff)
+	    || c == 0x9 || c == 0xd || c == 0xc || c == 0xa
+	    || (c >= 0xe000 && c <= 0xfffd))
+	    {
+              to[j++] = c;
+            }
+	}
+      str = [[NSString alloc] initWithCharacters: to length: output];
+      NSZoneFree (NSDefaultMallocZone (), to);
+      [str autorelease];
+    }
+  NSZoneFree (NSDefaultMallocZone (), from);
+  return str;
 }
 
 - (NSMutableString*) mutableString
@@ -1136,6 +1197,11 @@ static id       boolY;
     }
 }
 
+- (BOOL) permitAllUnicode
+{
+  return _allUnicode;
+}
+
 - (BOOL) preferSloppyParser
 {
   return _preferSloppyParser;
@@ -1174,6 +1240,11 @@ static id       boolY;
 
   _debug = flag ? YES : NO;
   return old;
+}
+
+- (void) setPermitAllUnicode: (BOOL)flag
+{
+  _allUnicode = flag;
 }
 
 - (void) setPreferSloppyParser: (BOOL)flag

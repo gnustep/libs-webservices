@@ -89,6 +89,7 @@ extern "C" {
   BOOL                  _preferSloppyParser; // Whether the tolerant GNUstep
                                              // parser should be used.
   BOOL                  _preserveSpace; // YES to preserve white spece
+  BOOL                  _allUnicode;    // YES to allow all unicode characters
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
@@ -148,6 +149,13 @@ extern "C" {
  */
 - (void) indent;
 
+/** Removes any characters which are not legal in xm version 1.0 leaving
+ * a 'legal' string.  This does not replace special characters such as
+ * ampersand with entities, for that you need to use the -escapeXMLFrom:
+ * method.
+ */
+- (NSString*) legalXMLFrom: (NSString*)str;
+
 /** Returns the mutable string currently in use for encoding.
  */
 - (NSMutableString*) mutableString;
@@ -179,6 +187,12 @@ extern "C" {
  * specified type.
  */
 - (id) parseXSI: (NSString*)type string: (NSString*)value;
+
+/**
+ * Whether characters that are illegal in xml 1.0 should be permitted in our
+ * encoding.  This should be turned on for xml 1.1 use.
+ */
+- (BOOL) permitAllUnicode;
 
 /**
  * Whether the more tolerant, non-libxml2 parser in GNUstep should be used.
@@ -220,6 +234,13 @@ extern "C" {
  * The method returns the previous setting.
  */
 - (int) setDebug: (int)flag;
+
+/**
+ * Specifies whether illegal characters (for xml 1.0) should be permitted
+ * in the output when escaping unicode text.
+ * You should turn this on for xml 1.1 output.
+ */
+- (void) setPermitAllUnicode: (BOOL)flag;
 
 /**
  * Specifies whether the more tolerant, non-libxml2 parser should be used if
