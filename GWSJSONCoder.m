@@ -960,46 +960,100 @@ newParsed(context *ctxt)
   int	                hour;
   int	                minute;
   int	                second;
-  int                   millisecond;
+  int                   h;
+  int                   m;
+  int                   milli;
   int                   l;
+  char                  c;
   NSTimeZone            *tz = nil;
   const char            *u;
   NSCalendarDate        *d;
 
   u = [source UTF8String];
   l = strlen(u);
-  if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
-    &year, &month, &day, &hour, &minute, &second, &millisecond) == 7)
+  if (29 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d:%02d",
+    &year, &month, &day, &hour, &minute, &second, &milli, &c, &h, &m) == 10
+    && h >= 0 && h < 24 && m >= 0 && m < 60 && ('-' == c || '+' == c))
+    {
+      tz = nil;
+    }
+  else if (28 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d%02d",
+    &year, &month, &day, &hour, &minute, &second, &milli, &c, &h, &m) == 10
+    && h >= 0 && h < 24 && m >= 0 && m < 60 && ('-' == c || '+' == c))
+    {
+      tz = nil;
+    }
+  else if (26 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d",
+    &year, &month, &day, &hour, &minute, &second, &milli, &c, &h, &m) == 9
+    && h >= 0 && h < 24 && ('-' == c || '+' == c))
+    {
+      m = 0;
+      tz = nil;
+    }
+  else if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
+    &year, &month, &day, &hour, &minute, &second, &milli) == 7)
     {
       tz = gmt;
     }
   else if (23 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d",
-    &year, &month, &day, &hour, &minute, &second, &millisecond) == 7)
+    &year, &month, &day, &hour, &minute, &second, &milli) == 7)
     {
       tz = [self timeZone];
+    }
+  else if (25 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d:%02d",
+    &year, &month, &day, &hour, &minute, &second, &c, &h, &m) == 9
+    && h >= 0 && h < 24 && m >= 0 && m < 60 && ('-' == c || '+' == c))
+    {
+      milli = 0;
+      tz = nil;
+    }
+  else if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d%02d",
+    &year, &month, &day, &hour, &minute, &second, &c, &h, &m) == 9
+    && h >= 0 && h < 24 && m >= 0 && m < 60 && ('-' == c || '+' == c))
+    {
+      milli = 0;
+      tz = nil;
+    }
+  else if (22 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d",
+    &year, &month, &day, &hour, &minute, &second, &c, &h, &m) == 8
+    && h >= 0 && h < 24 && ('-' == c || '+' == c))
+    {
+      milli = 0;
+      m = 0;
+      tz = nil;
     }
   else if (20 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02dZ",
     &year, &month, &day, &hour, &minute, &second) == 6)
     {
-      millisecond = 0;
+      milli = 0;
       tz = gmt;
     }
   else if (19 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d",
     &year, &month, &day, &hour, &minute, &second) == 6)
     {
-      millisecond = 0;
+      milli = 0;
       tz = [self timeZone];
     }
   else if (15 == l && sscanf(u, "%04d%02d%02dT%02d%02d%02d",
     &year, &month, &day, &hour, &minute, &second) == 6)
     {
-      millisecond = 0;
+      milli = 0;
       tz = [self timeZone];
     }
   else
     {
       [NSException raise: NSInvalidArgumentException
                   format: @"bad date/time format '%@'", source];
+    }
+  if (nil == tz)
+    {
+      int       o = h * 60 + m;
+
+      if ('-' == c)
+        {
+          o = -o;
+        }
+      tz = [NSTimeZone timeZoneForSecondsFromGMT: o * 60];
     }
   d = [NSCalendarDate alloc];
   d = [d initWithYear: year
@@ -1009,11 +1063,11 @@ newParsed(context *ctxt)
                minute: minute
                second: second
              timeZone: tz];
-  if (millisecond != 0)
+  if (milli != 0)
     {
       NSTimeInterval	ti;
 
-      ti = millisecond;
+      ti = milli;
       ti /= 1000.0;
       ti += [d timeIntervalSinceReferenceDate];
       d = [d initWithTimeIntervalSinceReferenceDate: ti];
