@@ -26,6 +26,8 @@
 #import	<Foundation/Foundation.h>
 #import	"GWSPrivate.h"
 
+static NSString *emo = @"😀😁😂🤣😃😄😅😆😉😊😋😎😍😘😗😙😚☺️🙂🤗🤩🤔🤨😐";
+
 int
 main()
 {
@@ -42,17 +44,36 @@ main()
 
   if ([defs boolForKey: @"Internal"] == YES)
     {
-      GWSSOAPCoder      *coder;
+      GWSCoder          *xml;
+      GWSSOAPCoder      *soap;
+      GWSElement        *elem;
       NSCalendarDate    *now;
       NSCalendarDate    *dec;
       NSString          *str;
 
-      coder = [[GWSSOAPCoder new] autorelease];
+      xml = [[GWSCoder new] autorelease];
+      str = [xml escapeXMLFrom: emo];
+      if (YES == [str isEqual: emo])
+        {
+          GSPrintf(stderr, @"Emoji escaping failure %@ %@\n", emo, str);
+          [pool release];
+          return 1;
+        }
+      str = [NSString stringWithFormat: @"<smile>%@</smile>", str];
+      elem = [xml parseXML: [str dataUsingEncoding: NSUTF8StringEncoding]];
+      if (NO == [emo isEqual: [elem content]])
+        {
+          GSPrintf(stderr, @"Emoji encoding failure %@\n", elem);
+          [pool release];
+          return 1;
+        }
+
+      soap = [[GWSSOAPCoder new] autorelease];
       now = [NSCalendarDate date];
 
       [now setTimeZone: [NSTimeZone timeZoneWithAbbreviation: @"GMT"]];
-      str = [coder encodeDateTimeFrom: now];
-      dec = [coder parseXSI: @"xsd:dateTime" string: str];
+      str = [soap encodeDateTimeFrom: now];
+      dec = [soap parseXSI: @"xsd:dateTime" string: str];
       if (NO == [[dec description] isEqual: [now description]])
         {
           GSPrintf(stderr, @"Date encoding failure %@ %@ %@\n", now, str, dec);
@@ -61,8 +82,8 @@ main()
         }
 
       [now setTimeZone: [NSTimeZone timeZoneWithAbbreviation: @"PST"]];
-      str = [coder encodeDateTimeFrom: now];
-      dec = [coder parseXSI: @"xsd:dateTime" string: str];
+      str = [soap encodeDateTimeFrom: now];
+      dec = [soap parseXSI: @"xsd:dateTime" string: str];
       if (NO == [[dec description] isEqual: [now description]])
         {
           GSPrintf(stderr, @"Date encoding failure %@ %@ %@\n", now, str, dec);
@@ -70,6 +91,7 @@ main()
           return 1;
         }
 
+      GSPrintf(stdout, @"Internal tests OK\n");
       [pool release];
       return 0;
     }
@@ -106,7 +128,7 @@ main()
       GSPrintf(stderr, @"	-Method name (method/operation to use)\n");
       GSPrintf(stderr, @"	-Service name (for service in WSDL)\n");
       GSPrintf(stderr, @"	-WSDL filename (for WSDL document)\n");
-      GSPrintf(stderr, @"\nor	-Internal YES for docer self test\n");
+      GSPrintf(stderr, @"\nor	-Internal YES for coder self test\n");
       [pool release];
       return 1;
     }

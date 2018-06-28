@@ -543,9 +543,8 @@ static id       boolY;
     {
       unichar	c = from[i];
 
-      if ((c >= 0x20 && c <= 0xd7ff)
-	|| c == 0x9 || c == 0xd || c == 0xc || c == 0xa
-	|| (c >= 0xe000 && c <= 0xfffd))
+      if ((c >= 0x20 && c <= 0xfffd)
+	|| c == 0x9 || c == 0xd || c == 0xc || c == 0xa)
 	{
 	  switch (c)
 	    {
@@ -580,10 +579,7 @@ static id       boolY;
 		  {
                     uint32_t    u = c;
 
-                    /* Code to support surrogate pairs for possible future
-                     * use.  For now whese characters (illegal in xml-1.0)
-                     * will simply be passed through on the assumption that
-                     * UTF-8 encoding will be used for them.
+                    /* Code to support surrogate pairs.
                      */
                     if ((u >= 0xd800) && (u < 0xdc00) && i+1 < length
                       && (c = from[i+1]) >= 0xdc00 && c <= 0xdfff)
@@ -620,9 +616,8 @@ static id       boolY;
 	{
 	  unichar	c = from[i];
 
-	  if ((c >= 0x20 && c <= 0xd7ff)
-	    || c == 0x9 || c == 0xd || c == 0xc || c == 0xa
-	    || (c >= 0xe000 && c <= 0xfffd))
+	  if ((c >= 0x20 && c <= 0xfffd)
+	    || c == 0x9 || c == 0xd || c == 0xc || c == 0xa)
 	    {
 	      switch (c)
 		{
@@ -692,10 +687,7 @@ static id       boolY;
 			to[j++] = '&';
 			to[j++] = '#';
 
-                        /* Code to support surrogate pairs for possible future
-                         * use.  For now whese characters (illegal in xml-1.0)
-                         * will simply be passed through on the assumption that
-                         * UTF-8 encoding will be used for them.
+                        /* Code to support surrogate pairs.
                          */
                         if ((u >= 0xd800) && (u < 0xdc00) && i+1 < length
                           && (c = from[i+1]) >= 0xdc00 && c <= 0xdfff)
