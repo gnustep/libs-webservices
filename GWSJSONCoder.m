@@ -919,19 +919,36 @@ newParsed(context *ctxt)
     {
       if (YES == [container isKindOfClass: NSDictionaryClass])
         {
-          id    o = [container objectForKey: @"params"];
+          id    o;
 
-          if (nil == o)
+          /* If this is not a fault we must set the 'result' field rather
+           * than the normal 'params' field.
+           */
+          if (nil == [container objectForKey: @"error"])
             {
-              o = null;
+              if (nil == (o = [container objectForKey: @"params"]))
+                {
+                  o = null;
+                }
+              else if (YES == [o isKindOfClass: [NSDictionary class]]
+                && 1 == [o count] && nil != [o objectForKey: GWSJSONResultKey])
+                {
+                  o = [o objectForKey: GWSJSONResultKey];
+                }
+              [container setObject: o forKey: @"result"];
             }
-          else if (YES == [o isKindOfClass: [NSDictionary class]]
-            && 1 == [o count] && nil != [o objectForKey: GWSJSONResultKey])
-            {
-              o = [o objectForKey: GWSJSONResultKey];
-            }
-          [container setObject: o forKey: @"result"];
           [container removeObjectForKey: @"params"];
+          if (ver1 == [self version])
+            {
+              if (nil == [container objectForKey: @"error"])
+                {
+                  [container setObject: null forKey: @"error"];
+                }
+              if (nil == [container objectForKey: @"result"])
+                {
+                  [container setObject: null forKey: @"result"];
+                }
+            }
           o = [container objectForKey: GWSOrderKey];
           if (nil == o)
             {
@@ -984,7 +1001,7 @@ newParsed(context *ctxt)
       tz = nil;
     }
   else if (26 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d",
-    &year, &month, &day, &hour, &minute, &second, &milli, &c, &h, &m) == 9
+    &year, &month, &day, &hour, &minute, &second, &milli, &c, &h) == 9
     && h >= 0 && h < 24 && ('-' == c || '+' == c))
     {
       m = 0;
@@ -1000,22 +1017,22 @@ newParsed(context *ctxt)
     {
       tz = [self timeZone];
     }
-  else if (25 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d:%02d",
+  else if (25 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
     &year, &month, &day, &hour, &minute, &second, &c, &h, &m) == 9
     && h >= 0 && h < 24 && m >= 0 && m < 60 && ('-' == c || '+' == c))
     {
       milli = 0;
       tz = nil;
     }
-  else if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d%02d",
+  else if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d%c%02d%02d",
     &year, &month, &day, &hour, &minute, &second, &c, &h, &m) == 9
     && h >= 0 && h < 24 && m >= 0 && m < 60 && ('-' == c || '+' == c))
     {
       milli = 0;
       tz = nil;
     }
-  else if (22 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d",
-    &year, &month, &day, &hour, &minute, &second, &c, &h, &m) == 8
+  else if (22 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d%c%02d",
+    &year, &month, &day, &hour, &minute, &second, &c, &h) == 8
     && h >= 0 && h < 24 && ('-' == c || '+' == c))
     {
       milli = 0;
@@ -1095,6 +1112,237 @@ newParsed(context *ctxt)
   return s;
 }
 
+- (void) _jsonrpcFrom: (NSDictionary*)o to: (NSMutableDictionary*)result
+{
+  id    jsonerror = [o objectForKey: @"error"];
+  id    jsonmethod = [o objectForKey: @"method"];
+  id    jsonparams = [o objectForKey: @"params"];
+  id    jsonresult = [o objectForKey: @"result"];
+  id    v;
+
+  if (nil != jsonmethod && nil != jsonresult)
+    {
+      [NSException raise: NSGenericException
+        format: @"Not a JSON-RPC document (has both 'method' and 'result')"];
+    }
+  if (nil != jsonmethod && nil != jsonerror)
+    {
+      [NSException raise: NSGenericException
+        format: @"Not a JSON-RPC document (has both 'method' and 'error')"];
+    }
+  if (nil != jsonmethod)
+    {
+      if ([(v = jsonmethod) isKindOfClass: NSStringClass])
+        {
+          [result setObject: v forKey: GWSMethodKey];
+          if (nil == (v = jsonparams))
+            {
+              if (ver1 == [self version])
+                {
+                  [NSException raise: NSGenericException
+                    format: @"Not a valid JSON-RPC 1.0 document"
+                    @" (the 'params' field is missing)"];
+                }
+            }
+          else
+            {
+              if (YES == [v isKindOfClass: NSDictionaryClass])
+                {
+                  if (ver1 == [self version])
+                    {
+                      [NSException raise: NSGenericException
+                        format: @"Not a valid JSON-RPC 1.0 document"
+                        @" (the 'params' field is not an array)"];
+                    }
+                  [result setObject: v forKey: GWSParametersKey];
+                  [result setObject: [v allKeys] forKey: GWSOrderKey];
+                }
+              else if (YES == [v isKindOfClass: NSArrayClass])
+                {
+                  NSMutableArray        *order;
+                  NSMutableDictionary   *params;
+                  NSUInteger            c;
+                  NSUInteger            i;
+
+                  c = [v count];
+                  order = [NSMutableArray arrayWithCapacity: c];
+                  params = [NSMutableDictionary dictionaryWithCapacity: c];
+                  for (i = 0; i < c; i++)
+                    {
+                      NSString  *k;
+
+                      k = [NSString stringWithFormat: @"Arg%u", (unsigned)i];
+                      [order addObject: k];
+                      [params setObject: [v objectAtIndex: i] forKey: k];
+                    }
+                  [result setObject: params forKey: GWSParametersKey];
+                  [result setObject: order forKey: GWSOrderKey];
+                }
+              else
+                {
+                  [NSException raise: NSGenericException
+                    format: @"Not a JSON-RPC document (params has wrong type)"];
+                }
+            }
+        }
+      else
+        {
+          [NSException raise: NSGenericException
+            format: @"Not a JSON-RPC request ('method' is not a string)"];
+        }
+    }
+  else
+    {
+      if (nil != jsonparams)
+        {
+          [NSException raise: NSGenericException format:
+            @"Not a valid JSON-RPC response"
+            @" (contains 'params' field from request)"];
+        }
+      if ([self version] == ver1)
+        {
+          if (nil == jsonresult)
+            {
+              [NSException raise: NSGenericException format:
+                @"Not a valid JSON-RPC version 1.0 response"
+                @" (missing 'result' field)"];
+            }
+          if (nil == jsonerror)
+            {
+              [NSException raise: NSGenericException format:
+                @"Not a valid JSON-RPC version 1.0 response"
+                @" (missing 'error' field)"];
+            }
+        }
+      else
+        {
+          if (nil != jsonresult && nil != jsonerror)
+            {
+              [NSException raise: NSGenericException format:
+                @"Not a valid JSON-RPC version 2.0 response"
+                @" (both 'result' and 'error' field provided)"];
+            }
+        }
+      if (jsonerror == null)
+        {
+          if ([self version] == ver1)
+            {
+              if (jsonresult == null || jsonresult == nil)
+                {
+                  [NSException raise: NSGenericException format:
+                    @"Not a valid JSON-RPC version 1.0 response"
+                    @" (null 'error' field without a non-null result)"];
+                }
+            }
+        }
+      if (nil != jsonerror && null != jsonerror && nil != jsonresult)
+        {
+          [NSException raise: NSGenericException format:
+            @"Not a valid JSON-RPC response"
+            @" (both non-null 'result' and non-null 'error')"];
+        }
+      if ((v = jsonresult) != nil)
+        {
+          if (YES == [v isKindOfClass: NSDictionaryClass])
+            {
+              [result setObject: v forKey: GWSParametersKey];
+              [result setObject: [v allKeys] forKey: GWSOrderKey];
+            }
+          else
+            {
+              NSMutableArray        *order;
+              NSMutableDictionary   *params;
+              NSUInteger            c;
+              NSUInteger            i;
+
+              if (NO == [v isKindOfClass: NSArrayClass])
+                {
+                  v  = [NSArray arrayWithObject: v];
+                }
+
+              c = [v count];
+              order = [NSMutableArray arrayWithCapacity: c];
+              params = [NSMutableDictionary dictionaryWithCapacity: c];
+              for (i = 0; i < c; i++)
+                {
+                  NSString  *k;
+
+                  k = [NSString stringWithFormat: @"Arg%u", (unsigned)i];
+                  [order addObject: k];
+                  [params setObject: [v objectAtIndex: i] forKey: k];
+                }
+              [result setObject: params forKey: GWSParametersKey];
+              [result setObject: order forKey: GWSOrderKey];
+            }
+        }
+      if ((v = jsonerror) != nil)
+        {
+          if (YES == [(v = jsonerror) isKindOfClass: NSDictionaryClass])
+            {
+              [result setObject: v forKey: GWSFaultKey];
+              if ([self version] == ver2)
+                {
+                  id    code = [v objectForKey: @"code"];
+                  id    message = [v objectForKey: @"message"];
+
+                  if (NO == [code isKindOfClass: [NSNumber class]])
+                    {
+                      [NSException raise: NSGenericException format:
+                        @"Not a valid JSON-RPC version 2.0 response"
+                        @" (fault 'code' field is not an integer)"];
+                    }
+                  if (NO == [message isKindOfClass: [NSString class]])
+                    {
+                      [NSException raise: NSGenericException format:
+                        @"Not a valid JSON-RPC version 2.0 response"
+                        @" (fault 'message' field is not a string)"];
+                    }
+                  if (YES == _jsonrpc)
+                    {
+                      int       expect;
+
+                      expect = (nil == [v objectForKey: @"data"]) ? 2 : 3;
+                      if ([v count] != expect)
+                        {
+                          v = [[v mutableCopy] autorelease];
+                          [v removeObjectForKey: @"code"];
+                          [v removeObjectForKey: @"message"];
+                          [v removeObjectForKey: @"data"];
+                          [NSException raise: NSGenericException format:
+                            @"Not a valid JSON-RPC version 2.0 fault response"
+                            @" ('error' has extraneous fields: %@)", v];
+                        }
+                    }
+                }
+            }
+          else
+            {
+              [NSException raise: NSGenericException format:
+                @"Not a valid JSON-RPC response"
+                @" ('error' field is not a JSON object)"];
+            }
+        }
+    }
+  if (YES == _jsonrpc)
+    {
+      NSMutableDictionary       *m = [[o mutableCopy] autorelease];
+
+      [m removeObjectForKey: @"id"];
+      [m removeObjectForKey: @"jsonrpc"];
+      [m removeObjectForKey: @"error"];
+      [m removeObjectForKey: @"method"];
+      [m removeObjectForKey: @"params"];
+      [m removeObjectForKey: @"result"];
+
+      if ([m count] > 0)
+        {
+          [NSException raise: NSGenericException format:
+            @"Not a valid JSON-RPC response"
+            @" (extraneous fields: %@)", m];
+        }
+    }
+}
+
 - (NSMutableDictionary*) parseMessage: (NSData*)data
 {
   NSAutoreleasePool     *pool;
@@ -1137,6 +1385,10 @@ newParsed(context *ctxt)
             {
               [self setVersion: v];
             }
+          else if (YES == _jsonrpc)
+            {
+              [self setVersion: ver1];
+            }
           if (nil != (v = [self version]))
             {
               [result setObject: v forKey: GWSRPCVersionKey];
@@ -1148,6 +1400,15 @@ newParsed(context *ctxt)
                 {
                   [NSException raise: NSGenericException
                     format: @"Not a JSON-RPC document (no 'id' field)"];
+                }
+              if ([self version] != ver1
+                && v != null
+                && NO == [v isKindOfClass: [NSString class]]
+                && NO == [v isKindOfClass: [NSNumber class]])
+                {
+                  [NSException raise: NSGenericException
+                    format: @"Not a JSON-RPC version 2.0 document"
+                    @" ('id' field is not a string, number or null value)"];
                 }
               [self setRPCID: v];
               [result setObject: [self RPCID] forKey: GWSRPCIDKey];
@@ -1167,88 +1428,9 @@ newParsed(context *ctxt)
           o = [NSArray arrayWithObject: @"Result"];
           [result setObject: o forKey: GWSOrderKey];
         }
-      else if ([(v = [o objectForKey: @"method"]) isKindOfClass: NSStringClass])
-        {
-          [result setObject: v forKey: GWSMethodKey];
-          v = [o objectForKey: @"params"];
-          if (nil != v)
-            {
-              if (YES == [v isKindOfClass: NSDictionaryClass])
-                {
-                  [result setObject: v forKey: GWSParametersKey];
-                  [result setObject: [v allKeys] forKey: GWSOrderKey];
-                }
-              else if (YES == [v isKindOfClass: NSArrayClass])
-                {
-                  NSMutableArray        *order;
-                  NSMutableDictionary   *params;
-                  NSUInteger            c;
-                  NSUInteger            i;
-
-                  c = [v count];
-                  order = [NSMutableArray arrayWithCapacity: c];
-                  params = [NSMutableDictionary dictionaryWithCapacity: c];
-                  for (i = 0; i < c; i++)
-                    {
-                      NSString  *k;
-
-                      k = [NSString stringWithFormat: @"Arg%u", (unsigned)i];
-                      [order addObject: k];
-                      [params setObject: [v objectAtIndex: i] forKey: k];
-                    }
-                  [result setObject: params forKey: GWSParametersKey];
-                  [result setObject: order forKey: GWSOrderKey];
-                }
-              else
-                {
-                  [NSException raise: NSGenericException
-                    format: @"Not a JSON-RPC document (params has wrong type)"];
-                }
-            }
-        }
-      else if ((v = [o objectForKey: @"result"]) != nil)
-        {
-          if (YES == [v isKindOfClass: NSDictionaryClass])
-            {
-              [result setObject: v forKey: GWSParametersKey];
-              [result setObject: [v allKeys] forKey: GWSOrderKey];
-            }
-          else
-            {
-              NSMutableArray        *order;
-              NSMutableDictionary   *params;
-              NSUInteger            c;
-              NSUInteger            i;
-
-              if (NO == [v isKindOfClass: NSArrayClass])
-                {
-                  v  = [NSArray arrayWithObject: v];
-                }
-
-              c = [v count];
-              order = [NSMutableArray arrayWithCapacity: c];
-              params = [NSMutableDictionary dictionaryWithCapacity: c];
-              for (i = 0; i < c; i++)
-                {
-                  NSString  *k;
-
-                  k = [NSString stringWithFormat: @"Arg%u", (unsigned)i];
-                  [order addObject: k];
-                  [params setObject: [v objectAtIndex: i] forKey: k];
-                }
-              [result setObject: params forKey: GWSParametersKey];
-              [result setObject: order forKey: GWSOrderKey];
-            }
-        }
-      else if (YES == [(v = [o objectForKey: @"error"])
-        isKindOfClass: NSDictionaryClass])
-        {
-          [result setObject: v forKey: GWSFaultKey];
-        }
       else
         {
-          [NSException raise: NSGenericException
-                      format: @"Not a JSON-RPC document (missing info)"];
+          [self _jsonrpcFrom: o to: result];
         }
     }
   NS_HANDLER
@@ -1284,6 +1466,11 @@ newParsed(context *ctxt)
     }
 }
 
+- (void) setStrictParsing: (BOOL)isStrict
+{
+  _jsonrpc = (isStrict ? YES : NO);
+}
+
 - (void) setTimeZone: (NSTimeZone*)timeZone
 {
   if (nil == timeZone)
@@ -1312,6 +1499,11 @@ newParsed(context *ctxt)
     {
       _version = nil;
     }
+}
+
+- (BOOL) strictParsing
+{
+  return _jsonrpc;
 }
 
 - (NSString*) version

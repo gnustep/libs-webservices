@@ -552,13 +552,18 @@ typedef enum {
  * </p>
  * <p>The JSON coder supports JSON-RPC versions 1.0 and 2.0 as well as
  * supporting simple encoding/decoding of JSON documents without JSON-RPC
- * (where the RPC version is set to nil).
+ * (where the RPC version is set to nil).<br />
+ * To force parsing as JSON-RPC rather than simply a JSON document, call
+ * the -setStrictParsing: method.  In this case, if the jsonrpc field is
+ * missing the request is assumed to be version 1.0 (this field was added
+ * in 2.0) and a value of the jsonrpc field other than 2.0 is illegal. 
  * </p>
  */
 @interface GWSJSONCoder : GWSCoder
 {
   NSString      *_version;      /** Not retained ... default version */
   id            _jsonID;        /** Default request/response ID */
+  BOOL          _jsonrpc;       /** Set to force strict JSON-RPC parsing */
 }
 
 /** This method appends an object to the mutable string in use by the coder.
@@ -638,6 +643,10 @@ typedef enum {
  */
 - (void) setRPCID: (id)o;
 
+/** If set, parsing only permits strict JSON-RPC requests/responses.
+ */
+- (void) setStrictParsing: (BOOL)isStrict;
+
 /** Sets a timeZone so that encoding of date/time values will be done
  * relative to that timeZone as YYYMMDDTHHMMSS format rather than the
  * standard YYYY-MM-DDTHH:MM:SS.mmZ format using GMT.<br />
@@ -654,6 +663,10 @@ typedef enum {
  * to the method call overrides any value set in the coder).
  */
 - (void) setVersion: (NSString*)v;
+
+/** Returns whether strict parsing as JSON-RPC has been configured.
+ */
+- (BOOL) strictParsing;
 
 /** Returns the json-rpc version (currently "2.0" or "1.0" or nil).<br />
  * See -setVersion: for details.
