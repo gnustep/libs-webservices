@@ -1010,11 +1010,15 @@ newParsed(context *ctxt)
   else if (24 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03dZ",
     &year, &month, &day, &hour, &minute, &second, &milli) == 7)
     {
+      h = m = 0;
+      c = 0;
       tz = gmt;
     }
   else if (23 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d",
     &year, &month, &day, &hour, &minute, &second, &milli) == 7)
     {
+      h = m = 0;
+      c = 0;
       tz = [self timeZone];
     }
   else if (25 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d%c%02d:%02d",
@@ -1043,18 +1047,24 @@ newParsed(context *ctxt)
     &year, &month, &day, &hour, &minute, &second) == 6)
     {
       milli = 0;
+      h = m = 0;
+      c = 0;
       tz = gmt;
     }
   else if (19 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d",
     &year, &month, &day, &hour, &minute, &second) == 6)
     {
       milli = 0;
+      h = m = 0;
+      c = 0;
       tz = [self timeZone];
     }
   else if (15 == l && sscanf(u, "%04d%02d%02dT%02d%02d%02d",
     &year, &month, &day, &hour, &minute, &second) == 6)
     {
       milli = 0;
+      h = m = 0;
+      c = 0;
       tz = [self timeZone];
     }
   else
