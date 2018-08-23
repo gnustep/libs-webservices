@@ -986,6 +986,10 @@ newParsed(context *ctxt)
   const char            *u;
   NSCalendarDate        *d;
 
+  if (NO == [source isKindOfClass: [NSString class]])
+    {
+      return nil;
+    }
   u = [source UTF8String];
   l = strlen(u);
   if (29 == l && sscanf(u, "%04d-%02d-%02dT%02d:%02d:%02d.%03d%c%02d:%02d",
@@ -1069,8 +1073,7 @@ newParsed(context *ctxt)
     }
   else
     {
-      [NSException raise: NSInvalidArgumentException
-                  format: @"bad date/time format '%@'", source];
+      return nil;       // Bad date/time format
     }
   if (nil == tz)
     {
@@ -1107,7 +1110,11 @@ newParsed(context *ctxt)
 {
   NSString      *s;
 
-  if (YES == useTimeZone)
+  if (NO == [source isKindOfClass: [NSDate class]])
+    {
+      s = nil;
+    }
+  else if (YES == useTimeZone)
     {
       s = [source descriptionWithCalendarFormat: @"%Y%m%dT%H:%M:%S"
                                        timeZone: [self timeZone]

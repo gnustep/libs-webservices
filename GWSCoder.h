@@ -616,7 +616,8 @@ typedef enum {
  * This tolerates omission of the trailing Z (in which case it assumes
  * the local timezone rather than GMT), the millisecond part,
  * and (in the case that both milliseconds and 'Z' are omitted) also
- * tolerates omission of the hyphens and colons (YYYYMMDDTHHMMSS).
+ * tolerates omission of the hyphens and colons (YYYYMMDDTHHMMSS).<br />
+ * Returns nil if the argument cannot be decoded.
  */
 - (NSCalendarDate*) decodeDateTimeFrom: (NSString*)source;
 
