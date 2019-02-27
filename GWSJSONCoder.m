@@ -70,7 +70,7 @@ JSONQuote(NSString *str)
 	{
 	  output += 2;
 	}
-      else if (c < 0x20)
+      else if (c < 0x20 || c > 0x7f)
 	{
 	  output += 6;
 	}
@@ -101,7 +101,7 @@ JSONQuote(NSString *str)
 	      default: to[j++] = '"'; break;
 	    }
 	}
-      else if (c < 0x20)
+      else if (c < 0x20 || c > 0x7f)
 	{
 	  char	buf[5];
 
