@@ -158,6 +158,11 @@ static id       boolY;
     }
 }
 
+- (BOOL) cdata
+{
+  return _cdata;
+}
+
 - (BOOL) compact
 {
   return _compact;
@@ -524,6 +529,101 @@ static id       boolY;
   return [str autorelease];
 }
 
+- (NSString*) escapeCDATAFrom: (NSString*)str
+{
+  NSUInteger	length = [str length];
+  unichar	*from;
+  NSUInteger	i = 0;
+  BOOL		escape = NO;
+
+  if (length == 0)
+    {
+      return str;
+    }
+  from = NSZoneMalloc(NSDefaultMallocZone(), sizeof(unichar) * length);
+  [str getCharacters: from];
+
+  for (i = 0; i < length; i++)
+    {
+      unichar	c = from[i];
+
+      if ((c >= 0x20 && c <= 0xfffd)
+	|| c == 0x9 || c == 0xd || c == 0xc || c == 0xa)
+	{
+	  if (c > 127 || strchr("\"'&<>\f\r", c) != 0)
+	    {
+	      escape = YES;
+	      break;
+	    }
+        }
+      else if (NO == _allUnicode)
+	{
+	  escape = YES;	// Need to remove bad characters
+	  break;
+	}
+    }
+
+  if (escape == YES)
+    {
+      NSRange		r = [str rangeOfString: @"]]>"];
+      NSUInteger	output;
+      NSString		*a;
+      unichar		*to;
+      NSUInteger	j = 0;
+
+      if (r.length > 0)
+	{
+	  /* We have a CEND sequence in the string so we must split it across
+	   * CDATA sections.
+	   */
+	  length = r.location + 1;
+	  a = [str substringFromIndex: length];
+	  str = [str substringToIndex: length];
+	  a = [self escapeCDATAFrom: a]; 
+	}
+      else
+	{
+	  a = nil;
+	}
+      output = length + 12 + [a length];
+
+      to = NSZoneMalloc(NSDefaultMallocZone(), sizeof(unichar) * output);
+      to[j++] = '<';
+      to[j++] = '!';
+      to[j++] = '[';
+      to[j++] = 'C';
+      to[j++] = 'D';
+      to[j++] = 'A';
+      to[j++] = 'T';
+      to[j++] = 'A';
+      to[j++] = '[';
+      for (i = 0; i < length; i++)
+	{
+	  unichar	c = from[i];
+
+          if ((YES == _allUnicode)
+	    || ((c >= 0x20 && c <= 0xfffd)
+	    || c == 0x9 || c == 0xd || c == 0xc || c == 0xa))
+	    {
+	      to[j++] = c;
+	    }
+	}
+      to[j++] = ']';
+      to[j++] = ']';
+      to[j++] = '>';
+      if (nil != a)
+	{
+	  [a getCharacters: &to[j]];
+	  j += [a length];
+	}
+      str = [[NSString alloc] initWithCharacters: to length: j];
+      NSZoneFree(NSDefaultMallocZone(), to);
+      [str autorelease];
+    }
+  NSZoneFree(NSDefaultMallocZone(), from);
+  return str;
+}
+
 - (NSString*) escapeXMLFrom: (NSString*)str
 {
   unsigned	length = [str length];
@@ -536,7 +636,7 @@ static id       boolY;
     {
       return str;
     }
-  from = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * length);
+  from = NSZoneMalloc(NSDefaultMallocZone(), sizeof(unichar) * length);
   [str getCharacters: from];
 
   for (i = 0; i < length; i++)
@@ -610,7 +710,7 @@ static id       boolY;
       unichar	*to;
       unsigned	j = 0;
 
-      to = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * output);
+      to = NSZoneMalloc(NSDefaultMallocZone(), sizeof(unichar) * output);
 
       for (i = 0; i < length; i++)
 	{
@@ -715,10 +815,10 @@ static id       boolY;
             }
 	}
       str = [[NSString alloc] initWithCharacters: to length: output];
-      NSZoneFree (NSDefaultMallocZone (), to);
+      NSZoneFree(NSDefaultMallocZone(), to);
       [str autorelease];
     }
-  NSZoneFree (NSDefaultMallocZone (), from);
+  NSZoneFree(NSDefaultMallocZone(), from);
   return str;
 }
 
@@ -753,7 +853,7 @@ static id       boolY;
     {
       return str;
     }
-  from = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * length);
+  from = NSZoneMalloc(NSDefaultMallocZone(), sizeof(unichar) * length);
   [str getCharacters: from];
 
   for (i = 0; i < length; i++)
@@ -777,7 +877,7 @@ static id       boolY;
       unichar	*to;
       unsigned	j = 0;
 
-      to = NSZoneMalloc (NSDefaultMallocZone(), sizeof(unichar) * output);
+      to = NSZoneMalloc(NSDefaultMallocZone(), sizeof(unichar) * output);
 
       for (i = 0; i < length; i++)
 	{
@@ -791,10 +891,10 @@ static id       boolY;
             }
 	}
       str = [[NSString alloc] initWithCharacters: to length: output];
-      NSZoneFree (NSDefaultMallocZone (), to);
+      NSZoneFree(NSDefaultMallocZone(), to);
       [str autorelease];
     }
-  NSZoneFree (NSDefaultMallocZone (), from);
+  NSZoneFree(NSDefaultMallocZone(), from);
   return str;
 }
 
@@ -1238,14 +1338,19 @@ static id       boolY;
   _level = 0;
 }
 
+- (void) setCDATA: (BOOL)flag
+{
+  _cdata = (flag ? YES : NO);
+}
+
 - (void) setCompact: (BOOL)flag
 {
-  _compact = flag;
+  _compact = (flag ? YES : NO);
 }
 
 - (void) setCRLF: (BOOL)flag
 {
-  _crlf = flag;
+  _crlf = (flag ? YES : NO);
 }
 
 /* Much software uses integer settings for debug levels, so to selector
@@ -1262,17 +1367,17 @@ static id       boolY;
 
 - (void) setPermitAllUnicode: (BOOL)flag
 {
-  _allUnicode = flag;
+  _allUnicode = (flag ? YES : NO);
 }
 
 - (void) setPreferSloppyParser: (BOOL)flag
 {
-  _preferSloppyParser = flag;
+  _preferSloppyParser = (flag ? YES : NO);
 }
 
 - (void) setPreserveSpace: (BOOL)flag
 {
-  _preserveSpace = flag;
+  _preserveSpace = (flag ? YES : NO);
 }
 
 - (void) unindent
@@ -1358,7 +1463,7 @@ static id       boolY;
 
 - (void) setFault: (BOOL)flag
 {
-  _fault = flag;
+  _fault = (flag ? YES : NO);
 }
 
 - (void) setTimeZone: (NSTimeZone*)timeZone

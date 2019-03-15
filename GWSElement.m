@@ -379,8 +379,17 @@ static Class		GWSElementClass = Nil;
         }
       else
         {
-          [[coder mutableString]
-	    appendString: [coder escapeXMLFrom: [self content]]];
+	  NSString	*s = [self content];
+
+	  if ([coder cdata])
+	    {
+	      s = [coder escapeCDATAFrom: s];
+	    }
+	  else
+	    {
+	      s = [coder escapeXMLFrom: s];
+	    }
+          [[coder mutableString] appendString: s];
         }
     }
 }

@@ -90,6 +90,7 @@ extern "C" {
                                              // parser should be used.
   BOOL                  _preserveSpace; // YES to preserve white spece
   BOOL                  _allUnicode;    // YES to allow all unicode characters
+  BOOL			_cdata;		// YES if we use -characterDataFrom:
   unsigned              _level;         // Current indentation level.
   NSMutableString       *_ms;           // Not retained.
   id                    _delegate;      // Not retained.
@@ -100,6 +101,11 @@ extern "C" {
  * concrete subclass.
  */
 + (GWSCoder*) coder;
+
+/**
+ * Return the value set by a prior call to -setCDATA: (or NO ... the default).
+ */
+- (BOOL) cdata;
 
 /**
  * Return the value set by a prior call to -setCompact: (or NO ... the default).
@@ -140,6 +146,11 @@ extern "C" {
  * The canonical form uses upper case hexadecimal digits.
  */
 - (NSString*) encodeHexBinaryFrom: (NSData*)source;
+
+/** Takes the supplied string and uses CDATA to escape it for use in an XML
+ * element where character data is allowed.
+ */
+- (NSString*) escapeCDATAFrom: (NSString*)str;
 
 /** Take the supplied string and add all necessary escapes for XML.
  */
@@ -212,6 +223,12 @@ extern "C" {
  * or -setCRLF: methods.
  */
 - (void) reset;
+
+/** Specifies whether character data content of elements is output using
+ * CDATA sections.  If this is NO, characters are individually escaped
+ * using numeric entities when required.
+ */
+- (void) setCDATA: (BOOL)flag;
 
 /**
  * Specify whether to generate compact XML (omit indentation and other white
