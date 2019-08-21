@@ -591,6 +591,9 @@ available(NSString *host)
       GWSElement        *elem;
 
       _lock = [NSRecursiveLock new];
+#if	!defined(GNUSTEP)
+      _newAPI = YES;
+#endif
       _SOAPAction = @"\"\"";
       _debug = [[NSUserDefaults standardUserDefaults] boolForKey: @"GWSDebug"];
       _name = [name copy];
@@ -910,7 +913,7 @@ available(NSString *host)
   /* Now we initiate the asynchronous I/O process.
    */
   _code = 0;
-  if (_clientCertificate == nil
+  if (YES == _newAPI && nil == _clientCertificate 
 #if	defined(GNUSTEP)
 /* GNUstep has better debugging with NSURLHandle than NSURLConnection
  */
@@ -1682,6 +1685,14 @@ available(NSString *host)
       _HTTPMethod = [method copy];
       [old release];
     }
+}
+
+- (BOOL) setNewAPI: (BOOL)aFlag
+{
+  BOOL	old = _newAPI;
+
+  _newAPI = (aFlag ? YES : NO);
+  return old;
 }
 
 - (void) setObject: (id)anObject forKey: (NSString*)aKey

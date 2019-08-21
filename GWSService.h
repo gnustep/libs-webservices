@@ -113,6 +113,7 @@ extern "C" {
   BOOL			_prioritised;
   BOOL			_cancelled;	// Timeout occurred
   BOOL			_completedIO;	// Comms completed
+  BOOL			_newAPI;
   NSString		*_operation;
   GWSPort		*_port;
   NSMutableDictionary	*_parameters;
@@ -327,7 +328,7 @@ extern "C" {
 
 /** Specifies whether debug information is enabled.  See -debug for more
  * information.<br />
- * A non-zero setting sets debg to YES while a zero setting sets it to NO.
+ * A non-zero setting sets debug to YES while a zero setting sets it to NO.
  * The method returns the previous setting.
  */
 - (int) setDebug: (int)flag;
@@ -357,6 +358,15 @@ extern "C" {
  * Setting an nil string reverts to the default 'POST' method.<br />
  */
 - (void) setHTTPMethod: (NSString*)method;
+
+/** Controls whether the new (NSURLConnection/NSURLRequest) API is used
+ * or the old (NSURLHandle) API is used.  The default depends on the
+ * platform (GNUstep uses the old API while Apple uses the new).<br />
+ * Turning on debug or the use of client certificates overrides this
+ * to use the old API since the new one does not yet support those
+ * features.
+ */
+- (BOOL) setNewAPI: (BOOL)flag;
 
 /** Tags the service with entra information in the form of anObject
  * references by aKey.  if anObject is nil, this removes any previous
