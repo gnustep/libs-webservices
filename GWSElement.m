@@ -117,7 +117,7 @@ static Class		GWSElementClass = Nil;
       if (attributes == nil)
 	{
 	  /* As a special case, we are allowed to have a single NSDictionary
-	   * rather than a nil terminated llist of keys and values.
+	   * rather than a nil terminated list of keys and values.
 	   */
 	  if ([k isKindOfClass: [NSDictionary class]] == YES)
 	    {
@@ -132,7 +132,8 @@ static Class		GWSElementClass = Nil;
 	{
 	  [attributes release];
 	  [NSException raise: NSInvalidArgumentException
-		      format: @"attribute name/value pairs unbalanced"];
+		      format: @"attribute name/value pairs unbalanced -"
+	    @" no value for name %@ in element %@", k, name];
 	}
       [a setObject: v forKey: k];
     }
