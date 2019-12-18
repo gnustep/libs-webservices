@@ -93,7 +93,8 @@ extern "C" {
 - (GWSElement*) addChildNamed: (NSString*)name
 		    namespace: (NSString*)namespace
 		    qualified: (NSString*)qualified
-		      content: (NSString*)content, ...;
+		      content: (NSString*)content,
+			   ... NS_REQUIRES_NIL_TERMINATION;
 		    
 /** Adds a string to the content of the receiver.  New content is appended
  * to any existing content.
