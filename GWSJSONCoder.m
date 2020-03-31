@@ -337,6 +337,11 @@ newParsed(context *ctxt)
                 }
             }
         }
+      if (nil == s && 0 == ctxt->error)
+	{
+	  ctxt->error = "invalid string";
+	  ctxt->index = start;
+	}
       return s;
     }
   else if ('[' == c)
@@ -352,6 +357,11 @@ newParsed(context *ctxt)
 	    {
 	      [a addObject: o];
               [o release];
+	    }
+	  else if (ctxt->error != 0)
+	    {
+	      [a release];
+	      return nil;
 	    }
 
 	  c = skipSpace(ctxt);
@@ -392,15 +402,17 @@ newParsed(context *ctxt)
 	  c = skipSpace(ctxt);
 	  if ('}' == c && nil == k)
 	    {
-              [k release];
 	      get(ctxt);
 	      return d;	// Empty
 	    }
 	  if (NO == [k isKindOfClass: NSStringClass])
 	    {
               [k release];
-	      ctxt->error = "non-string value for key";
-	      ctxt->index = ctxt->length;
+	      if (0 == ctxt->error)
+		{
+		  ctxt->error = "non-string value for key";
+		  ctxt->index = ctxt->length;
+		}
 	      return nil;
 	    }
 	  if (':' != c)
@@ -415,8 +427,11 @@ newParsed(context *ctxt)
 	  if (nil == v)
 	    {
               [k release];
-	      ctxt->error = "missing value after colon";
-	      ctxt->index = ctxt->length;
+	      if (0 == ctxt->error)
+		{
+		  ctxt->error = "missing value after colon";
+		  ctxt->index = ctxt->length;
+		}
 	      return nil;
 	    }
 	  c = skipSpace(ctxt);
@@ -1116,7 +1131,7 @@ newParsed(context *ctxt)
     }
   else if (YES == useTimeZone)
     {
-      s = [source descriptionWithCalendarFormat: @"%Y%m%dT%H:%M:%S"
+      s = [source descriptionWithCalendarFormat: @"%Y-%m-%dT%H:%M:%S.%F"
                                        timeZone: [self timeZone]
                                          locale: nil];
     }
@@ -1387,6 +1402,11 @@ newParsed(context *ctxt)
 	  x.error = "unexpected data at end of text";
 	}
 
+      if (x.error != 0)
+	{
+	  [NSException raise: NSGenericException
+		      format: @"Not a JSON document: %s", x.error];
+	}
       if (NO == [o isKindOfClass: NSDictionaryClass])
         {
           if (nil != [self version])
