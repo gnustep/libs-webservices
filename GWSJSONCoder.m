@@ -1395,6 +1395,7 @@ newParsed(context *ctxt)
       x.line = 1;
       x.column = 1;
       x.index = 0;
+      x.error = 0;
 
       o = [newParsed(&x) autorelease];
       if (skipSpace(&x) >= 0)
@@ -1585,6 +1586,7 @@ newParsed(context *ctxt)
       x.line = 1;
       x.column = 1;
       x.index = 0;
+      x.error = 0;
 
       o = newParsed(&x);
       if (skipSpace(&x) >= 0)
