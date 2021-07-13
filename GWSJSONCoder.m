@@ -196,6 +196,10 @@ newParsed(context *ctxt)
                 {
                   unicode = YES;
                 }
+	      else if (c < 0)
+		{
+		  break;
+		}
 	    }
 	  else if ('"' == c)
 	    {
@@ -205,12 +209,12 @@ newParsed(context *ctxt)
             {
               ascii = NO;
             }
-	  else if (c < 0)
-	    {
-	      ctxt->error = "premature end of string";
-	      ctxt->index = ctxt->length;
-	      return nil;
-	    }
+	}
+      if (c < 0)
+	{
+	  ctxt->error = "premature end of string";
+	  ctxt->index = ctxt->length;
+	  return nil;
 	}
       if (NO == escapes)
 	{
@@ -297,6 +301,7 @@ newParsed(context *ctxt)
                         {
                           ctxt->error = "short unicode escape in string";
                           ctxt->index = ctxt->length;
+			  RELEASE(s);
                           return nil;
                         }
                       hex = [[m substringWithRange: NSMakeRange(pos + 2, 4)]
@@ -310,6 +315,7 @@ newParsed(context *ctxt)
                         {
                           ctxt->error = "invalid unicode escape in string";
                           ctxt->index = ctxt->length;
+			  RELEASE(s);
                           return nil;
                         }
                       rep = [NSStringClass stringWithCharacters: &u length: 1];
