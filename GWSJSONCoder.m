@@ -419,6 +419,7 @@ newParsed(context *ctxt)
 		  ctxt->error = "non-string value for key";
 		  ctxt->index = ctxt->length;
 		}
+	      [d release];
 	      return nil;
 	    }
 	  if (':' != c)
@@ -426,6 +427,7 @@ newParsed(context *ctxt)
               [k release];
 	      ctxt->error = "missing colon after key";
 	      ctxt->index = ctxt->length;
+	      [d release];
 	      return nil;
 	    }
 	  get(ctxt);	// Skip the colon
@@ -438,6 +440,7 @@ newParsed(context *ctxt)
 		  ctxt->error = "missing value after colon";
 		  ctxt->index = ctxt->length;
 		}
+	      [d release];
 	      return nil;
 	    }
 	  c = skipSpace(ctxt);
@@ -469,6 +472,7 @@ newParsed(context *ctxt)
 		  ctxt->error = "bad character in object";
 		}
 	      ctxt->index = ctxt->length;
+	      [d release];
 	      return nil;
 	    }
 	}
