@@ -871,7 +871,7 @@ static Class		GWSElementClass = Nil;
   GWSElement	*elem = _first;
   GWSElement	*up;
 
-  while (count-- > 0)
+  while (elem != nil && count-- > 0)
     {
       GWSElement	*found;
 
