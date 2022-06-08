@@ -1,3 +1,12 @@
+2022-06-08 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	For GNUstep, implement GSLogDelegate protocol so that we can override
+	debug logging of the I/O performed.  This can be done either by a
+	delegate which imnplements the protocol methods or by a subclass
+	overriding the protocol methods.
+
 2019-08-21 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

@@ -957,6 +957,7 @@ available(NSString *host)
       if (YES == requestDebug)
         {
           [request setDebug: [self debug]];
+	  [request setDebugLogDelegate: self];
         }
 #endif
 
@@ -978,10 +979,8 @@ available(NSString *host)
 	    URLHandleUsingCache: NO] retain];
 	}
       [handle setDebug: [self debug]];
-      if ([handle respondsToSelector: @selector(setReturnAll:)] == YES)
-	{
-          [handle setReturnAll: YES];
-	}
+      [(id)handle setDebugLogDelegate: self];
+      [handle setReturnAll: YES];
       if (_clientCertificate != nil)
 	{
 	  [handle writeProperty: _clientCertificate 
@@ -1426,6 +1425,19 @@ available(NSString *host)
   return _documentation;
 }
 
+/* Method called as debug logging delegate for GNUstep APIs
+ */
+- (BOOL) getBytes: (const uint8_t*)bytes
+         ofLength: (NSUInteger)length
+         byHandle: (NSObject*)anObject
+{
+  if ([_delegate respondsToSelector: _cmd])
+    {
+      return [_delegate getBytes: bytes ofLength: length byHandle: self];
+    }
+  return NO;	// Use default logging
+}
+
 - (NSDictionary*) headers
 {
   return _headers;
@@ -1481,6 +1493,18 @@ available(NSString *host)
   return [_extra objectForKey: aKey];
 }
 
+/* Method called as debug logging delegate for GNUstep APIs
+ */
+- (BOOL) putBytes: (const uint8_t*)bytes
+         ofLength: (NSUInteger)length
+         byHandle: (NSObject*)anObject
+{
+  if ([_delegate respondsToSelector: _cmd])
+    {
+      return [_delegate putBytes: bytes ofLength: length byHandle: self];
+    }
+  return NO;	// Use default logging
+}
 - (NSMutableDictionary*) result
 {
   if (_timer == nil)

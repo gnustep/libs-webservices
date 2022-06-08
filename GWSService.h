@@ -27,6 +27,7 @@
 #define	INCLUDED_GWSSERVICE_H
 
 #import <Foundation/NSObject.h>
+#import <Foundation/NSDebug.h>
 
 #if     defined(__cplusplus)
 extern "C" {
@@ -91,6 +92,9 @@ extern "C" {
  * </p>
  */
 @interface	GWSService : NSObject
+#if	defined(GNUSTEP)
+  <GSLogDelegate>
+#endif
 {
 @private
   NSString              *_name;
@@ -237,6 +241,18 @@ extern "C" {
  */
 - (GWSElement*) documentation;
 
+/** Method called (if GNUstep debug logging is turned on) when a chunk of
+ * data from the HTTP request has been written.  The default implementation
+ * returns NO (so default logging is used) unless the delegate supports the
+ * method (in which case the delegate method is used), but subclasses may
+ * override it to provide their own logging and return YES.
+ * When the delegate method is called, the handle sent to it is the GWSService
+ * instance. 
+ */
+- (BOOL) getBytes: (const uint8_t*)bytes
+         ofLength: (NSUInteger)length
+         byHandle: (NSObject*)anObject;
+
 /** Returns the value set by a previous call to the -setHeaders: method.
  */
 - (NSDictionary*) headers;
@@ -265,6 +281,18 @@ extern "C" {
  */
 - (id) objectForKey: (NSString*)aKey;
 
+
+/** Method called (if GNUstep debug logging is turned on) when a chunk of
+ * data from the HTTP request has been written.  The default implementation
+ * returns NO (so default logging is used) unless the delegate supports the
+ * method (in which case the delegate method is used), but subclasses may
+ * override it to provide their own logging and return YES.
+ * When the delegate method is called, the handle sent to it is the GWSService
+ * instance. 
+ */
+- (BOOL) putBytes: (const uint8_t*)bytes
+         ofLength: (NSUInteger)length
+         byHandle: (NSObject*)anObject;
 /**
  * Returns the result of the last method call, or nil if there has been
  * no method call or one is in progress.<br />
@@ -366,7 +394,7 @@ extern "C" {
  * to use the old API since the new one does not yet support those
  * features.
  */
-- (BOOL) setNewAPI: (BOOL)flag;
+- (BOOL) setNewAPI: (BOOL)aFlag;
 
 /** Tags the service with entra information in the form of anObject
  * references by aKey.  if anObject is nil, this removes any previous
@@ -458,7 +486,6 @@ extern "C" {
  * performed.
  */
 - (GWSPort*) webServicePort;
-
 @end
 
 /**
@@ -557,10 +584,7 @@ extern "C" {
  * (such as the URL to send to) before the data is actualy sent.
  */
 - (NSData*) webService: (GWSService*)sender willSendRequest: (NSData*)data;
-
 @end
-
-
 
 #if	defined(__cplusplus)
 }
