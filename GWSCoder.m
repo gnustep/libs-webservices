@@ -577,9 +577,7 @@ static id       boolY;
 	   * CDATA sections.
 	   */
 	  length = r.location + 1;
-	  a = [str substringFromIndex: length];
-	  str = [str substringToIndex: length];
-	  a = [self escapeCDATAFrom: a]; 
+	  a = [self escapeCDATAFrom: [str substringFromIndex: length]];
 	}
       else
 	{
