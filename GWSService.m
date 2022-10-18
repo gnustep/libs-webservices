@@ -39,6 +39,15 @@ static NSMutableDictionary	*active = nil;
 static NSMutableDictionary	*queues = nil;
 static NSMutableArray		*queued = nil;
 static NSMutableDictionary	*perHostReserve = nil;
+
+#if	defined(GNUSTEP)
+#import <GNUstepBase/NSURL+GNUstepBase.h>
+
+static NSLock	                *handleLock = nil;
+static NSMutableDictionary      *handles = nil;
+static unsigned                 handleCount = 0;
+#endif
+
 #define	IOTHREADS	8
 static BOOL			useIOThreads = NO;
 static NSThread			*ioThreads[IOTHREADS] = { 0 };
@@ -418,6 +427,38 @@ available(NSString *host)
   _port = nil;
   [_request release];
   _request = nil;
+}
+
+- (void) _clearConnection
+{
+  if (_connection != nil)
+    {
+#if	defined(GNUSTEP)
+      if ([_connection isKindOfClass: [NSURLHandle class]])
+        {
+          [handleLock lock];
+          if (handleCount < pool + 16)
+            {
+              NSString  *k = [_connectionURL cacheKey];
+
+              if (k)
+                {
+                  NSMutableArray        *a = [handles objectForKey: k];
+
+                  if (nil == a)
+                    {
+                      a = [NSMutableArray array];
+                      [handles setObject: a forKey: k];
+                    }
+                  [a addObject: _connection];
+                  handleCount++;
+                }
+            }
+          [handleLock unlock];
+        }
+#endif
+      [_connection release];
+    }
 }
 
 - (void) _completed
@@ -960,11 +1001,7 @@ available(NSString *host)
 	  [request setDebugLogDelegate: self];
         }
 #endif
-
-      if (_connection != nil)
-	{
-	  [_connection release];
-	}
+      [self _clearConnection];
       _connection = [NSURLConnection alloc];
       _response = [[NSMutableData alloc] init];
       _connection = [_connection initWithRequest: request delegate: self];
@@ -973,6 +1010,30 @@ available(NSString *host)
   else
     {
 #if	defined(GNUSTEP)
+      if (_connection == nil)
+	{
+          NSString      *k;
+
+          [handleLock lock];
+          if ((k = [_connectionURL cacheKey]) != nil)
+            {
+              NSMutableArray    *a = [handles objectForKey: k];
+
+              if ([a count])
+                {
+                  _connection = RETAIN([a firstObject]);
+                  [handle setURL: _connectionURL];
+                  [a removeObjectAtIndex: 0];
+                  if (0 == [a count])
+                    {
+                      [handles removeObjectForKey: k];
+                    }
+                  handleCount--;
+                }
+            }
+          [handleLock unlock];
+        }
+          
       if (_connection == nil)
 	{
           _connection = (NSURLConnection*)[[_connectionURL
@@ -1043,6 +1104,8 @@ available(NSString *host)
 #if	defined(GNUSTEP)
       requestDebug = [[NSMutableURLRequest class]
         instancesRespondToSelector: @selector(setDebug:)];
+      handleLock = [NSLock new];
+      handles = [NSMutableDictionary new];
 #endif
       queueLock = [NSRecursiveLock new];
       active = [NSMutableDictionary new];
@@ -1392,10 +1455,7 @@ available(NSString *host)
   _coder = nil;
   [_tz release];
   [_result release];
-  if (_connection)
-    {
-      [_connection release];
-    }
+  [self _clearConnection];
   [_response release];
   [_connectionURL release];
   [_documentation release];
@@ -1790,6 +1850,7 @@ available(NSString *host)
 	}
       url = u;
     }
+  [self _clearConnection];
   old = _connectionURL;
   _connectionURL = [url copy];
   [old release];
@@ -1802,8 +1863,6 @@ available(NSString *host)
   old = _clientPassword;
   _clientPassword = [pwd copy];
   [old release];
-  [_connection release];
-  _connection = nil;
   [_response release];
   _response = nil;
 }

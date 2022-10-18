@@ -1,3 +1,11 @@
+2022-10-18 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSPrivate.h:
+	* GWSService.m:
+	Implement caching of URL handle objects so that we keep connections to
+	web servers alive.  The size of the cache is the same as the permitted
+	number of outstanding connections plus a small margin.
+
 2022-06-08 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:

@@ -85,6 +85,7 @@ typedef int NSInteger;
 + (void) _run: (NSString*)host;
 - (void) _activate;
 - (void) _clean;
+- (void) _clearConnection;
 - (void) _completed;
 - (void) _completedIO;
 - (BOOL) _enqueue;
