@@ -1,3 +1,9 @@
+2022-10-19 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Add (+flushConnections:) method to empty the new connection cache.
+
 2022-10-18 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSPrivate.h:

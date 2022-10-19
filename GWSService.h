@@ -149,6 +149,11 @@ extern "C" {
  */
 + (NSString*) description;
 
+/** Empty the cache of connections being kept alive to the specified
+ * URL or, if url is nil empty the entire cache.
+ */
++ (void) flushConnections: (NSURL*)url;
+
 /** Sets maximum active requests to a single host.  This is silently limited
  * to be no more than the value set by the +setPool: method.
  */

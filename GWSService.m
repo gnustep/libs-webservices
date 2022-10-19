@@ -1152,6 +1152,28 @@ available(NSString *host)
   return result;
 }
 
++ (void) flushConnections: (NSURL*)url
+{
+  ENTER_POOL
+  NSString      *key = [url cacheKey];
+
+  [handleLock lock];
+  if (key)
+    {
+      NSArray   *a = [handles objectForKey: key];
+
+      handleCount -= [a count];
+      [handles removeObjectForKey: key];
+    }
+  else
+    {
+      handleCount = 0;
+      [handles removeAllObjects];
+    }
+  [handleLock unlock];
+  LEAVE_POOL
+}
+
 + (void) setPerHostPool: (unsigned)max
 {
   [queueLock lock];
