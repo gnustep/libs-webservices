@@ -1022,7 +1022,6 @@ available(NSString *host)
               if ([a count])
                 {
                   _connection = RETAIN([a firstObject]);
-                  [handle setURL: _connectionURL];
                   [a removeObjectAtIndex: 0];
                   if (0 == [a count])
                     {
@@ -1032,6 +1031,11 @@ available(NSString *host)
                 }
             }
           [handleLock unlock];
+          /* If a cached handle was found, we have to adjust its URL
+           * to be the one we are using.  Do this outside the locked
+           * section in caise it raises an exception.
+           */
+          [handle setURL: _connectionURL];
         }
           
       if (_connection == nil)
@@ -1157,16 +1161,22 @@ available(NSString *host)
   ENTER_POOL
   NSString      *key = [url cacheKey];
 
+  /* The connections removed are retained and autoreleased so that
+   * they get released when the pool is emptied outside the locked
+   * region.  Any exception during their destruction should not
+   * mess up the locking.
+   */
   [handleLock lock];
   if (key)
     {
-      NSArray   *a = [handles objectForKey: key];
+      NSArray   *a = AUTORELEASE(RETAIN([handles objectForKey: key]));
 
       handleCount -= [a count];
       [handles removeObjectForKey: key];
     }
   else
     {
+      [handles allValues];      // preserve the objects
       handleCount = 0;
       [handles removeAllObjects];
     }
