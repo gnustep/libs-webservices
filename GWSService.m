@@ -431,10 +431,13 @@ available(NSString *host)
 
 - (void) _clearConnection
 {
-  if (_connection != nil)
+  if (_connection)
     {
+      id        obj = _connection;
+
+      _connection = nil;
 #if	defined(GNUSTEP)
-      if ([_connection isKindOfClass: [NSURLHandle class]])
+      if ([obj isKindOfClass: [NSURLHandle class]])
         {
           [handleLock lock];
           if (handleCount < pool + 16)
@@ -450,14 +453,14 @@ available(NSString *host)
                       a = [NSMutableArray array];
                       [handles setObject: a forKey: k];
                     }
-                  [a addObject: _connection];
+                  [a addObject: obj];
                   handleCount++;
                 }
             }
           [handleLock unlock];
         }
 #endif
-      [_connection release];
+      [obj release];
     }
 }
 
