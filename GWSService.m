@@ -1000,8 +1000,16 @@ available(NSString *host)
 #if	defined(GNUSTEP)
       if (YES == requestDebug)
         {
-          [request setDebug: [self debug]];
-	  [request setDebugLogDelegate: self];
+          if ([self debug])
+            {
+              [request setDebug: YES];
+              [request setDebugLogDelegate: self];
+            }
+          else
+            {
+              [request setDebug: NO];
+              [request setDebugLogDelegate: nil];
+            }
         }
 #endif
       [self _clearConnection];
@@ -1034,11 +1042,22 @@ available(NSString *host)
                 }
             }
           [handleLock unlock];
-          /* If a cached handle was found, we have to adjust its URL
-           * to be the one we are using.  Do this outside the locked
-           * section in caise it raises an exception.
-           */
-          [handle setURL: _connectionURL];
+          NS_DURING
+            {
+              /* If a cached handle was found, we have to adjust its URL
+               * to be the one we are using.  This can raise an exception
+               * if the handle is in use, which should never happen.
+               */
+              [handle setURL: _connectionURL];
+            }
+          NS_HANDLER
+            {
+              DESTROY(_connection);
+              NSLog(@"[%@-%@] problem with handle cache: %@",
+                NSStringFromClass([self class]), NSStringFromSelector(_cmd),
+                localException);
+            }
+          NS_ENDHANDLER
         }
           
       if (_connection == nil)
@@ -1046,8 +1065,16 @@ available(NSString *host)
           _connection = (NSURLConnection*)[[_connectionURL
 	    URLHandleUsingCache: NO] retain];
 	}
-      [handle setDebug: [self debug]];
-      [(id)handle setDebugLogDelegate: self];
+      if ([self debug])
+        {
+          [handle setDebug: YES];
+          [(id)handle setDebugLogDelegate: self];
+        }
+      else
+        {
+          [handle setDebug: NO];
+          [(id)handle setDebugLogDelegate: nil];
+        }
       [handle setReturnAll: YES];
       if (_clientCertificate != nil)
 	{

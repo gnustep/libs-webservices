@@ -2,6 +2,8 @@
 
 	* GWSService.m:
 	Ensure the debug log delegate is only set when debug is turned on.
+	Add exception handler to catch the possibility of an issue when
+	setting the URL of a handle retrieved from the cache.
 
 2022-10-19 Richard Frith-Macdonald  <rfm@gnu.org>
 
