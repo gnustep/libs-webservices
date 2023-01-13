@@ -1,3 +1,7 @@
+2023-01-13 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GNUmakefile: bump version for release (Version 0.9.0)
+
 2023-01-11 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.m:
@@ -49,7 +53,7 @@
 2018-06-28 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSCoder.m: Fix for surrogate pairs.
-	testGWSSOAPCoder.m: Add test foir surrogate pairs (emojis)
+	testGWSSOAPCoder.m: Add test for surrogate pairs (emojis)
 
 2017-08-25 Richard Frith-Macdonald  <rfm@gnu.org>
 
