@@ -30,25 +30,27 @@ PKG_PROG_PKG_CONFIG([])
 #--------------------------------------------------------------------
 # Check for nettle
 #--------------------------------------------------------------------
-PKG_CHECK_MODULES([NETTLE], nettle, HAVE_NETTLE=1, HAVE_NETTLE=0)
-if test "$HAVE_NETTLE" = "1"; then
+PKG_CHECK_MODULES([NETTLE], [nettle], [HAVE_NETTLE=1], [HAVE_NETTLE=0])
+if test "x$HAVE_NETTLE" = "x1"; then
   saved_CFLAGS=$CFLAGS
   saved_LIBS=$LIBS
   NETTLE_CFLAGS=`pkg-config --cflags nettle`
-  NETTLE_LIBS=`pkg-config --libs nettle`
+  NETTLE_LDFLAGS=`pkg-config --libs-only-L nettle`
+  NETTLE_LIBS=`pkg-config --libs-only-l nettle`
   CFLAGS="$CFLAGS $NETTLE_CFLAGS"
-  LIBS="$NETTLE_LIBS $LIBS"
+  LIBS="$NETTLE_LDFLAGS $NETTLE_LIBS $LIBS"
   AC_CHECK_FUNCS(nettle_sha3_512_init)
   if test "$ac_cv_func_nettle_sha3_512_init" = "no"; then
     CFLAGS=$saved_CFLAGS
     LIBS=$saved_LIBS
-    HAVE_NETTLE=0
+    AC_DEFINE([HAVE_NETTLE], [0])
   fi
 fi
 AC_SUBST(NETTLE_CFLAGS)
+AC_SUBST(NETTLE_LDFLAGS)
 AC_SUBST(NETTLE_LIBS)
 AC_SUBST(HAVE_NETTLE)
-if test "$HAVE_NETTLE" = "0"; then
+if test "x$HAVE_NETTLE" = "x0"; then
   AC_MSG_WARN("Nettle not available (or too old); advanced hash digest disabled.")
 fi
 
@@ -56,14 +58,15 @@ fi
 #--------------------------------------------------------------------
 # Check for gnutls
 #--------------------------------------------------------------------
-PKG_CHECK_MODULES([GNUTLS], gnutls, HAVE_GNUTLS=1, HAVE_GNUTLS=0)
-if test "$HAVE_GNUTLS" = "1"; then
+PKG_CHECK_MODULES([GNUTLS], [gnutls], [HAVE_GNUTLS=1], [HAVE_GNUTLS=0])
+if test "x$HAVE_GNUTLS" = "x1"; then
   saved_CFLAGS=$CFLAGS
   saved_LIBS=$LIBS
   GNUTLS_CFLAGS=`pkg-config --cflags gnutls`
-  GNUTLS_LIBS=`pkg-config --libs gnutls`
+  GNUTLS_LDFLAGS=`pkg-config --libs-only-L gnutls`
+  GNUTLS_LIBS=`pkg-config --libs-only-l gnutls`
   CFLAGS="$CFLAGS $GNUTLS_CFLAGS"
-  LIBS="$GNUTLS_LIBS $LIBS"
+  LIBS="$GNUTLS_LDFLAGS $GNUTLS_LIBS $LIBS"
   AC_CHECK_FUNCS(gnutls_hash_fast)
   if test "$ac_cv_func_gnutls_hash_fast" = "no"; then
     CFLAGS=$saved_CFLAGS
@@ -72,9 +75,10 @@ if test "$HAVE_GNUTLS" = "1"; then
   fi
 fi
 AC_SUBST(GNUTLS_CFLAGS)
+AC_SUBST(GNUTLS_LDFLAGS)
 AC_SUBST(GNUTLS_LIBS)
 AC_SUBST(HAVE_GNUTLS)
-if test "$HAVE_GNUTLS" = "0"; then
+if test "x$HAVE_GNUTLS" = "x0"; then
   AC_MSG_WARN("GnuTLS not available (or too old); advanced cryptographic functions are disabled.")
 fi
 
