@@ -48,6 +48,37 @@ static NSMutableDictionary      *handles = nil;
 static unsigned                 handleCount = 0;
 #endif
 
+static NSString *
+cacheKey(NSURL *host)
+{
+  NSString      *k;
+
+  if (host)
+    {
+      NSString  *s = [[host scheme] lowercaseString];
+      NSString  *h = [[host host] lowercaseString];
+      NSNumber  *p = [host port];
+
+      if (nil == p)
+        {
+          if ([s isEqualToString: @"http"])
+            {
+              p = [NSNumber numberWithInt: 80];
+            }
+          else if ([s isEqualToString: @"https"])
+            {
+              p = [NSNumber numberWithInt: 443];
+            }
+        }
+      k = [NSString stringWithFormat: @"%@://%@:%@", s, h, p];
+    }
+  else
+    {
+      k = nil;
+    }
+  return k;
+}
+ 
 #define	IOTHREADS	8
 static BOOL			useIOThreads = NO;
 static NSThread			*ioThreads[IOTHREADS] = { 0 };
@@ -190,7 +221,7 @@ available(NSString *host)
 
 	  if (svc->_request != nil)
 	    {
-	      if (available([svc->_connectionURL host]) == YES)
+	      if (available(cacheKey(svc->_connectionURL)) == YES)
 		{
 		  [svc _activate];
 		  if (nil == a)
@@ -251,7 +282,7 @@ available(NSString *host)
   /* Add self to active list.
    * Keep the count of active requests up to date.
    */
-  host = [_connectionURL host];
+  host = cacheKey(_connectionURL);
   hostQueue = [active objectForKey: host];
   if (hostQueue == nil)
     {
@@ -439,22 +470,30 @@ available(NSString *host)
 #if	defined(GNUSTEP)
       if ([obj isKindOfClass: [NSURLHandle class]])
         {
+          /* Caching of handles; because runtime reconfiguration of
+           * pool sizes may occur we make sure we do not cache a handle
+           * if we already have enough cached handles for the current
+           * maximum number of concurrent connections.
+           */
           [handleLock lock];
-          if (handleCount < pool + 16)
+          if (handleCount < pool)
             {
-              NSString  *k = [_connectionURL cacheKey];
+              NSString  *k = cacheKey(_connectionURL);
 
               if (k)
                 {
-                  NSMutableArray        *a = [handles objectForKey: k];
+                  NSMutableArray        *h = [handles objectForKey: k];
 
-                  if (nil == a)
+                  if ([h count] < perHostPool)
                     {
-                      a = [NSMutableArray array];
-                      [handles setObject: a forKey: k];
+                      if (nil == h)
+                        {
+                          h = [NSMutableArray array];
+                          [handles setObject: h forKey: k];
+                        }
+                      [h addObject: obj];
+                      handleCount++;
                     }
-                  [a addObject: obj];
-                  handleCount++;
                 }
             }
           [handleLock unlock];
@@ -485,7 +524,7 @@ available(NSString *host)
     }
   else
     {
-      NSString		*host;
+      NSString		*host = cacheKey(_connectionURL);
       NSMutableArray	*a;
       NSUInteger	index;
 
@@ -504,12 +543,16 @@ available(NSString *host)
 	}
       [self _clean];
 
+      /* Make communication resources available (we are no longer using
+       * the connection/session to the remote system).
+       */
+      [self _clearConnection];
+
       /* Retain self and host in case the delegate changes the URL
        * or releases us (or removing self from active list would
        * cause deallocation).
        */
       [[self retain] autorelease];
-      host = [[[_connectionURL host] retain] autorelease];
 
       /* Now make sure the receiver is no longer active.
        * This must be done before informing the delegate of
@@ -555,7 +598,7 @@ available(NSString *host)
 
 - (BOOL) _enqueue
 {
-  NSString	*host = [_connectionURL host];
+  NSString	*host = cacheKey(_connectionURL);
   BOOL		result = NO;
 
   if (nil != host)
@@ -807,7 +850,7 @@ available(NSString *host)
 
   /* Make sure that this is de-queued and run if possible.
    */
-  [GWSService _run: [_connectionURL host]];
+  [GWSService _run: cacheKey(_connectionURL)];
 }
 
 - (void) _received
@@ -1026,7 +1069,7 @@ available(NSString *host)
           NSString      *k;
 
           [handleLock lock];
-          if ((k = [_connectionURL cacheKey]) != nil)
+          if ((k = cacheKey(_connectionURL)) != nil)
             {
               NSMutableArray    *a = [handles objectForKey: k];
 
@@ -1183,13 +1226,18 @@ available(NSString *host)
 	}
     }
   [queueLock unlock];
+#if	defined(GNUSTEP)
+  [handleLock lock];
+  result = [result stringByAppendingFormat: @"  Session cache %@\n", handles];
+  [handleLock unlock];
+#endif
   return result;
 }
 
 + (void) flushConnections: (NSURL*)url
 {
   ENTER_POOL
-  NSString      *key = [url cacheKey];
+  NSString      *key = cacheKey(url);
 
   /* The connections removed are retained and autoreleased so that
    * they get released when the pool is emptied outside the locked
@@ -1262,22 +1310,24 @@ available(NSString *host)
   qMax = max;
 }
 
-+ (void) setReserve: (unsigned)reserve forHost: (NSString*)host
++ (void) setReserve: (unsigned)reserve forHost: (NSURL*)hostURL
 {
+  NSString      *hostKey = cacheKey(hostURL);
+
   [queueLock lock];
   if (0 == reserve)
     {
-      [perHostReserve removeObjectForKey: host];
+      [perHostReserve removeObjectForKey: hostKey];
     }
   else
     {
       // is there a better way to maintain backward compatibility?
 #if !defined(GNUSTEP) && (MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4)
       [perHostReserve setObject: [NSNumber numberWithInt: reserve]
-			 forKey: host];
+			 forKey: hostKey];
 #else
       [perHostReserve setObject: [NSNumber numberWithInteger: reserve]
-			 forKey: host];
+			 forKey: hostKey];
 #endif
     }
   if (pool <= [perHostReserve count])
@@ -1737,7 +1787,7 @@ available(NSString *host)
     {
       /* Make sure that this is de-queued and run if possible.
        */
-      [GWSService _run: [_connectionURL host]];
+      [GWSService _run: cacheKey(_connectionURL)];
     }
   return YES;
 }
@@ -1974,7 +2024,7 @@ available(NSString *host)
     }
   else
     {
-      NSString	*host = [_connectionURL host];
+      NSString	*host = cacheKey(_connectionURL);
 
       notYetActive = NO;
       [queued removeObjectAtIndex: index];

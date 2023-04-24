@@ -154,8 +154,11 @@ extern "C" {
  */
 + (void) flushConnections: (NSURL*)url;
 
-/** Sets maximum active requests to a single host.  This is silently limited
- * to be no more than the value set by the +setPool: method.
+/** Sets maximum concurrently active requests to a single host.<br />
+ * A host is actually specified by the combination of scheme, host,
+ * and port of a URL.<br />
+ * This is silently limited to be no more than the value set by
+ * the +setPool: method.
  */
 + (void) setPerHostPool: (unsigned)max;
 
@@ -183,10 +186,12 @@ extern "C" {
  * Setting a non-zero value for a host also reserves a single space in
  * the connection pool for this host, so it is always possible for at
  * least one request to be in progress to the host.<br />
+ * The scheme, host and port combination of hostURL define the
+ * unique host that the queue refers to.<br />
  * This setting overrides the values defined by the +setPerHostQMax: and
  * +setQMax: methods.
  */
-+ (void) setReserve: (unsigned)reserve forHost: (NSString*)host;
++ (void) setReserve: (unsigned)reserve forHost: (NSURL*)hostURL;
 
 /** Sets whether the I/O for requests is to be performed in separate
  * threads rather than the thread which queued the RPC.<br />

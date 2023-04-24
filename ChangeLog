@@ -1,3 +1,11 @@
+2023-04-24 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.h:
+	* GWSService.m:
+	Make the new connection cache code return a connection to the cache
+	as soon as I/O has finished, so the number of concurrent connections
+	will not grow above the configured size.
+
 2023-01-13 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GNUmakefile: bump version for release (Version 0.9.0)
