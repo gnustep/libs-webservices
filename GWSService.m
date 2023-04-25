@@ -45,7 +45,9 @@ static NSMutableDictionary	*perHostReserve = nil;
 
 static NSLock	                *handleLock = nil;
 static NSMutableDictionary      *handles = nil;
-static unsigned                 handleCount = 0;
+static unsigned                 activeHandleCount = 0;
+static unsigned                 cachedHandleCount = 0;
+static unsigned                 peakHandleCount = 0;
 #endif
 
 static NSString *
@@ -476,7 +478,8 @@ available(NSString *host)
            * maximum number of concurrent connections.
            */
           [handleLock lock];
-          if (handleCount < pool)
+          activeHandleCount--;
+          if (cachedHandleCount < pool)
             {
               NSString  *k = cacheKey(_connectionURL);
 
@@ -492,7 +495,7 @@ available(NSString *host)
                           [handles setObject: h forKey: k];
                         }
                       [h addObject: obj];
-                      handleCount++;
+                      cachedHandleCount++;
                     }
                 }
             }
@@ -1081,8 +1084,15 @@ available(NSString *host)
                     {
                       [handles removeObjectForKey: k];
                     }
-                  handleCount--;
+                  cachedHandleCount--;
                 }
+            }
+          /* Either we re-used a handle or we are about to create a new one.
+           */
+          activeHandleCount++;
+          if (activeHandleCount + cachedHandleCount > peakHandleCount)
+            {
+              peakHandleCount = activeHandleCount + cachedHandleCount;
             }
           [handleLock unlock];
           NS_DURING
@@ -1254,7 +1264,9 @@ available(NSString *host)
 
       [a setObject: [NSNumber numberWithInteger: c] forKey: k];
     }
-  result = [result stringByAppendingFormat: @"  Session cache %@\n", a];
+  result = [result stringByAppendingFormat: @"  Session cache %@\n"
+    @"  Handles active: %u\n  Handles cached: %u\n  Handles peak:   %u\n",
+    a, activeHandleCount, cachedHandleCount, peakHandleCount];
   [handleLock unlock];
 #endif
   return result;
@@ -1262,6 +1274,7 @@ available(NSString *host)
 
 + (void) flushConnections: (NSURL*)url
 {
+#if	defined(GNUSTEP)
   ENTER_POOL
   NSString      *key = cacheKey(url);
 
@@ -1275,17 +1288,18 @@ available(NSString *host)
     {
       NSArray   *a = AUTORELEASE(RETAIN([handles objectForKey: key]));
 
-      handleCount -= [a count];
+      cachedHandleCount -= [a count];
       [handles removeObjectForKey: key];
     }
   else
     {
       [handles allValues];      // preserve the objects
-      handleCount = 0;
+      cachedHandleCount = 0;
       [handles removeAllObjects];
     }
   [handleLock unlock];
   LEAVE_POOL
+#endif
 }
 
 + (void) setPerHostPool: (unsigned)max

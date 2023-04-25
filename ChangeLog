@@ -1,3 +1,8 @@
+2023-04-25 Richard Frith-Macdonald  <rfm@gnu.org>
+
+	* GWSService.m: Improve stats/description of connection caching and
+	fix conditional compilation for GNUstep only.
+
 2023-04-24 Richard Frith-Macdonald  <rfm@gnu.org>
 
 	* GWSService.h:
