@@ -1197,20 +1197,38 @@ available(NSString *host)
 
 + (NSString*) description
 {
-  NSString	*result;
+  NSString	        *result;
+  NSEnumerator          *e;
+  NSString              *k;
+  NSMutableDictionary   *a = [NSMutableDictionary dictionary];
+  NSMutableDictionary   *q = [NSMutableDictionary dictionary];
 
   [queueLock lock];
+  e = [active keyEnumerator];
+  while ((k = [e nextObject]) != nil)
+    {
+      int       c = [[active objectForKey: k] count];
+
+      [a setObject: [NSNumber numberWithInteger: c] forKey: k];
+    }
+  e = [queues keyEnumerator];
+  while ((k = [e nextObject]) != nil)
+    {
+      int       c = [[queues objectForKey: k] count];
+
+      [q setObject: [NSNumber numberWithInteger: c] forKey: k];
+    }
   if (0 == [workThreads maxThreads])
     {
       result = [NSString stringWithFormat: @"GWSService async request status..."
         @" Pool: %u (per host: %u) Active: %@ Queues: %@\n",
-        pool, perHostPool, active, queues];
+        pool, perHostPool, a, q];
     }
   else
     {
       result = [NSString stringWithFormat: @"GWSService async request status..."
         @" Pool: %u (per host: %u) Active: %@ Queues: %@\nWorkers: %@\n",
-        pool, perHostPool, active, queues, workThreads];
+        pool, perHostPool, a, q, workThreads];
     }
   if (YES == useIOThreads)
     {
@@ -1228,7 +1246,15 @@ available(NSString *host)
   [queueLock unlock];
 #if	defined(GNUSTEP)
   [handleLock lock];
-  result = [result stringByAppendingFormat: @"  Session cache %@\n", handles];
+  [a removeAllObjects];
+  e = [handles keyEnumerator];
+  while ((k = [e nextObject]) != nil)
+    {
+      int       c = [[handles objectForKey: k] count];
+
+      [a setObject: [NSNumber numberWithInteger: c] forKey: k];
+    }
+  result = [result stringByAppendingFormat: @"  Session cache %@\n", a];
   [handleLock unlock];
 #endif
   return result;
@@ -1761,6 +1787,18 @@ available(NSString *host)
        * know where it's going.
        */
       [self _prepare];
+    }
+
+  if (0 == [[_connectionURL host] length])
+    {
+      _stage = RPCIdle;
+      [_timer invalidate];
+      _timer = nil;
+      [self _clean];
+      NSLog(@"[%@-%@] request with bad URL (%@)",
+        NSStringFromClass([self class]), NSStringFromSelector(_cmd),
+        _connectionURL);
+      return NO;
     }
 
   if (NO == [self _enqueue])
