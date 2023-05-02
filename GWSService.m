@@ -42,11 +42,11 @@ static NSMutableDictionary	*perHostReserve = nil;
 
 #if	defined(GNUSTEP)
 #import <GNUstepBase/NSURL+GNUstepBase.h>
+#endif
 
 static NSLock	                *handleLock = nil;
 static NSMutableDictionary      *handles = nil;
 static unsigned                 handleCount = 0;
-#endif
 
 #define	IOTHREADS	8
 static BOOL			useIOThreads = NO;

@@ -49,9 +49,17 @@
 //Let's add some very crude substitutions
 #define NSDebugFLog(format, args...) NSLog(format, args)
 #define NSDebugMLog(format, args...) NSLog(format, args)
+#define NSWarnMLog(format, args...)  NSLog(format, args)
 
-#ifndef	ASSIGN
+#if !defined(RETAIN)
+#define RETAIN(object)          [object retain]
+#define RELEASE(object)         [object release]
+#define AUTORELEASE(object)     [object autorelease]
 #define	ASSIGN(object,value)	object = (value)
+#define ENTER_POOL      {NSAutoreleasePool *_lARP=[NSAutoreleasePool new];
+#define LEAVE_POOL      [_lARP drain];}
+#define	CREATE_AUTORELEASE_POOL(X)	\
+             NSAutoreleasePool *X = [NSAutoreleasePool new]
 #endif
 
 
