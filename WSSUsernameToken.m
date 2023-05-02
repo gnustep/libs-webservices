@@ -27,7 +27,9 @@
 #import "GWSPrivate.h"
 #import "GWSHash.h"
 #import "WSSUsernameToken.h"
+#if defined HAVE_CONFIG_H
 #include <config.h>
+#endif
 #include <stdlib.h>
 
 #if     USE_NETTLE

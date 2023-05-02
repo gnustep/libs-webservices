@@ -45,7 +45,9 @@
 #import <GNUstepBase/NSData+GNUstepBase.h>
 #endif
 
-#include "config.h"
+#if defined HAVE_CONFIG_H
+#include <config.h>
+#endif
 #include <unistd.h>
 #include <fcntl.h>
 
