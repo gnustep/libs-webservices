@@ -532,7 +532,7 @@ available(NSString *host)
       NSUInteger	index;
 
       [_timer invalidate];
-      _timer = nil;
+      DESTROY(_timer);
       if ([self debug] == YES)
 	{
 	  if (_request != nil)
@@ -596,7 +596,7 @@ available(NSString *host)
   _completedIO = YES;
   threadRem(&_ioThread);
   [_timer invalidate];
-  _timer = nil;
+  DESTROY(_timer);
 }
 
 - (BOOL) _enqueue
@@ -1782,12 +1782,12 @@ available(NSString *host)
    * so the loop for that thread needs to be run in order to
    * deal with timeouts of queued operations.
    */
-  _timer = [NSTimer
+  _timer = RETAIN([NSTimer
     scheduledTimerWithTimeInterval: [_timeout timeIntervalSinceNow]
     target: self
     selector: @selector(timeout:)
     userInfo: nil
-    repeats: NO];
+    repeats: NO]);
 
   _prepMethod = [method copy]; 
   _prepParameters = [parameters copy]; 
@@ -1807,7 +1807,7 @@ available(NSString *host)
     {
       _stage = RPCIdle;
       [_timer invalidate];
-      _timer = nil;
+      DESTROY(_timer);
       [self _clean];
       NSLog(@"[%@-%@] request with bad URL (%@)",
         NSStringFromClass([self class]), NSStringFromSelector(_cmd),
@@ -1819,7 +1819,7 @@ available(NSString *host)
     {
       _stage = RPCIdle;
       [_timer invalidate];
-      _timer = nil;
+      DESTROY(_timer);
       [self _clean];
       return NO;        // Too many enqueued requests in process
     }
@@ -2103,7 +2103,7 @@ available(NSString *host)
    * cancelling ... which would change our problem report from 'cancelled'
    */
   [_timer invalidate];
-  _timer = nil;
+  DESTROY(_timer);
 
   if (NO == notYetActive)
     {
