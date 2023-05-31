@@ -856,6 +856,8 @@ available(NSString *host)
   [GWSService _run: cacheKey(_connectionURL)];
 }
 
+/* Only ever called after I/O has completed and the timer has been stopped.
+ */
 - (void) _received
 {
   if (_result != nil && [_result objectForKey: GWSErrorKey] != nil)
@@ -988,6 +990,8 @@ available(NSString *host)
   if (YES == _cancelled)
     {
       threadRem(&_ioThread);
+      [_timer invalidate];
+      DESTROY(_timer);
       [_lock unlock];
       [self _completed];
       return;

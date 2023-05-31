@@ -4,6 +4,8 @@
 	timer retained only by the run loop can result in us invalidating a
 	deallocated instance if the completion method is invoked from a
 	notification posted after the timer has been destroyed.
+	Ensure the timer is only updated either before I/O starts or in a
+	lock protected region.
 
 2023-04-25 Richard Frith-Macdonald  <rfm@gnu.org>
 
