@@ -619,6 +619,7 @@ GNUTLS_LDFLAGS
 GNUTLS_LIBS
 GNUTLS_CFLAGS
 HAVE_NETTLE
+NETTLE_OTHERFLAGS
 NETTLE_LDFLAGS
 OBJEXT
 EXEEXT
@@ -2382,8 +2383,8 @@ fi
 #--------------------------------------------------------------------
 
 pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for NETTLE" >&5
-printf %s "checking for NETTLE... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for nettle" >&5
+printf %s "checking for nettle... " >&6; }
 
 if test -n "$NETTLE_CFLAGS"; then
     pkg_cv_NETTLE_CFLAGS="$NETTLE_CFLAGS"
@@ -2423,7 +2424,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -2432,33 +2433,34 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        NETTLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "nettle" 2>&1`
+                NETTLE_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "nettle" 2>&1`
         else
-	        NETTLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "nettle" 2>&1`
+                NETTLE_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "nettle" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$NETTLE_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$NETTLE_PKG_ERRORS" >&5
 
-	HAVE_NETTLE=0
+        HAVE_NETTLE=0
 elif test $pkg_failed = untried; then
-     	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	HAVE_NETTLE=0
+        HAVE_NETTLE=0
 else
-	NETTLE_CFLAGS=$pkg_cv_NETTLE_CFLAGS
-	NETTLE_LIBS=$pkg_cv_NETTLE_LIBS
+        NETTLE_CFLAGS=$pkg_cv_NETTLE_CFLAGS
+        NETTLE_LIBS=$pkg_cv_NETTLE_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	HAVE_NETTLE=1
+        HAVE_NETTLE=1
 fi
 if test "x$HAVE_NETTLE" = "x1"; then
   saved_CFLAGS=$CFLAGS
   saved_LIBS=$LIBS
   NETTLE_CFLAGS=`pkg-config --cflags nettle`
   NETTLE_LDFLAGS=`pkg-config --libs-only-L nettle`
+  NETTLE_OTHERFLAGS=`pkg-config --libs-only-other nettle`
   NETTLE_LIBS=`pkg-config --libs-only-l nettle`
   CFLAGS="$CFLAGS $NETTLE_CFLAGS"
-  LIBS="$NETTLE_LDFLAGS $NETTLE_LIBS $LIBS"
+  LIBS="$NETTLE_OTHERFLAGS $NETTLE_LDFLAGS $NETTLE_LIBS $LIBS"
 
 
 
@@ -3473,6 +3475,7 @@ fi
 
 
 
+
 if test "x$HAVE_NETTLE" = "x0"; then
   { printf "%s\n" "$as_me:${as_lineno-$LINENO}: WARNING: \"Nettle not available (or too old); advanced hash digest disabled.\"" >&5
 printf "%s\n" "$as_me: WARNING: \"Nettle not available (or too old); advanced hash digest disabled.\"" >&2;}
@@ -3484,8 +3487,8 @@ fi
 #--------------------------------------------------------------------
 
 pkg_failed=no
-{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for GNUTLS" >&5
-printf %s "checking for GNUTLS... " >&6; }
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for gnutls" >&5
+printf %s "checking for gnutls... " >&6; }
 
 if test -n "$GNUTLS_CFLAGS"; then
     pkg_cv_GNUTLS_CFLAGS="$GNUTLS_CFLAGS"
@@ -3525,7 +3528,7 @@ fi
 
 
 if test $pkg_failed = yes; then
-   	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
 
 if $PKG_CONFIG --atleast-pkgconfig-version 0.20; then
@@ -3534,24 +3537,24 @@ else
         _pkg_short_errors_supported=no
 fi
         if test $_pkg_short_errors_supported = yes; then
-	        GNUTLS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gnutls" 2>&1`
+                GNUTLS_PKG_ERRORS=`$PKG_CONFIG --short-errors --print-errors --cflags --libs "gnutls" 2>&1`
         else
-	        GNUTLS_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gnutls" 2>&1`
+                GNUTLS_PKG_ERRORS=`$PKG_CONFIG --print-errors --cflags --libs "gnutls" 2>&1`
         fi
-	# Put the nasty error message in config.log where it belongs
-	echo "$GNUTLS_PKG_ERRORS" >&5
+        # Put the nasty error message in config.log where it belongs
+        echo "$GNUTLS_PKG_ERRORS" >&5
 
-	HAVE_GNUTLS=0
+        HAVE_GNUTLS=0
 elif test $pkg_failed = untried; then
-     	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
+        { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: no" >&5
 printf "%s\n" "no" >&6; }
-	HAVE_GNUTLS=0
+        HAVE_GNUTLS=0
 else
-	GNUTLS_CFLAGS=$pkg_cv_GNUTLS_CFLAGS
-	GNUTLS_LIBS=$pkg_cv_GNUTLS_LIBS
+        GNUTLS_CFLAGS=$pkg_cv_GNUTLS_CFLAGS
+        GNUTLS_LIBS=$pkg_cv_GNUTLS_LIBS
         { printf "%s\n" "$as_me:${as_lineno-$LINENO}: result: yes" >&5
 printf "%s\n" "yes" >&6; }
-	HAVE_GNUTLS=1
+        HAVE_GNUTLS=1
 fi
 if test "x$HAVE_GNUTLS" = "x1"; then
   saved_CFLAGS=$CFLAGS

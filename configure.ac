@@ -36,9 +36,10 @@ if test "x$HAVE_NETTLE" = "x1"; then
   saved_LIBS=$LIBS
   NETTLE_CFLAGS=`pkg-config --cflags nettle`
   NETTLE_LDFLAGS=`pkg-config --libs-only-L nettle`
+  NETTLE_OTHERFLAGS=`pkg-config --libs-only-other nettle`
   NETTLE_LIBS=`pkg-config --libs-only-l nettle`
   CFLAGS="$CFLAGS $NETTLE_CFLAGS"
-  LIBS="$NETTLE_LDFLAGS $NETTLE_LIBS $LIBS"
+  LIBS="$NETTLE_OTHERFLAGS $NETTLE_LDFLAGS $NETTLE_LIBS $LIBS"
   AC_CHECK_FUNCS(nettle_sha3_512_init)
   if test "$ac_cv_func_nettle_sha3_512_init" = "no"; then
     CFLAGS=$saved_CFLAGS
@@ -48,6 +49,7 @@ if test "x$HAVE_NETTLE" = "x1"; then
 fi
 AC_SUBST(NETTLE_CFLAGS)
 AC_SUBST(NETTLE_LDFLAGS)
+AC_SUBST(NETTLE_OTHERFLAGS)
 AC_SUBST(NETTLE_LIBS)
 AC_SUBST(HAVE_NETTLE)
 if test "x$HAVE_NETTLE" = "x0"; then
