@@ -45,19 +45,9 @@
 #import "GWSService.h"
 #import "GWSType.h"
 
+
 #if !defined(GNUSTEP)
-//Let's add some very crude substitutions
-#define NSDebugFLog(format, args...) NSLog(format, args)
-#define NSDebugMLog(format, args...) NSLog(format, args)
-
-#ifndef	ASSIGN
-#define	ASSIGN(object,value)	object = (value)
-#endif
-
-
-#if (MAC_OS_X_VERSION_MAX_ALLOWED <= MAC_OS_X_VERSION_10_4)
-typedef int NSInteger;
-#endif
+#import  "GNUstep.h"
 #endif
 
 @interface      GWSBinding (Private)

@@ -35,6 +35,10 @@
 #include <nettle/sha3.h>
 #endif
 
+#if !defined (GNUSTEP)
+#import  "GNUstep.h"
+#endif
+
 static NSTimeZone	*gmt = nil;
 static GWSCoder		*coder = nil;
 
