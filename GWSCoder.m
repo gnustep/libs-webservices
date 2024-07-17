@@ -151,7 +151,7 @@ static id       boolY;
           NSWarnMLog(@"No separate class for the sloppy parser. All parsers "
                      @"will be sloppy.");
 #else
-          NSWarnMLog(@"No separate class for the sloppy parser. All parsers "
+          NSWarnMLog(@"No separate class for the sloppy parser. All parsers ",
                      @"will be strict.");
 #endif
         }

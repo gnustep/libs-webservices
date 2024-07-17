@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 42;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -34,12 +34,15 @@
 		79DC40BE0ED21ED9009451BF /* GWSPort.m in Sources */ = {isa = PBXBuildFile; fileRef = 79DC40B70ED21E79009451BF /* GWSPort.m */; };
 		79E778FE0D5BB5DE000C97BA /* GWSDocument.m in Sources */ = {isa = PBXBuildFile; fileRef = 792C21700D55B94900459A2C /* GWSDocument.m */; };
 		79E778FF0D5BB5E1000C97BA /* GWSDocument.h in Headers */ = {isa = PBXBuildFile; fileRef = 792C216F0D55B94900459A2C /* GWSDocument.h */; settings = {ATTRIBUTES = (Public, ); }; };
-		8591FB731A12E2F300923420 /* Performance.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8591FA991A12E27A00923420 /* Performance.framework */; };
 		8591FBC71A12E74600923420 /* GWSHash.h in Headers */ = {isa = PBXBuildFile; fileRef = 8591FBC41A12E74600923420 /* GWSHash.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8591FBC81A12E74600923420 /* GWSHash.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBC51A12E74600923420 /* GWSHash.m */; };
 		8591FBE61A12E85800923420 /* GWSJSONCoder.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBE31A12E85800923420 /* GWSJSONCoder.m */; };
 		8591FBE71A12E85800923420 /* WSSUsernameToken.h in Headers */ = {isa = PBXBuildFile; fileRef = 8591FBE41A12E85800923420 /* WSSUsernameToken.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		8591FBE81A12E85800923420 /* WSSUsernameToken.m in Sources */ = {isa = PBXBuildFile; fileRef = 8591FBE51A12E85800923420 /* WSSUsernameToken.m */; };
+		85DA4C022C41DC3500FC0E77 /* Performance.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 8591FA991A12E27A00923420 /* Performance.framework */; };
+		85DA4C042C41DF8A00FC0E77 /* GNUstep.h in Headers */ = {isa = PBXBuildFile; fileRef = 85DA4C032C41DF8A00FC0E77 /* GNUstep.h */; };
+		85DA4C062C41E1D700FC0E77 /* libgnutls.30.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 85DA4C052C41E1D700FC0E77 /* libgnutls.30.dylib */; };
+		85DA4C082C41E22800FC0E77 /* libnettle.8.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 85DA4C072C41E22800FC0E77 /* libnettle.8.8.dylib */; };
 		8DC2EF530486A6940098B216 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 089C1666FE841158C02AAC07 /* InfoPlist.strings */; };
 		8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 1058C7B1FEA5585E11CA2CBB /* Cocoa.framework */; };
 /* End PBXBuildFile section */
@@ -93,6 +96,9 @@
 		8591FBE31A12E85800923420 /* GWSJSONCoder.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GWSJSONCoder.m; sourceTree = "<group>"; };
 		8591FBE41A12E85800923420 /* WSSUsernameToken.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = WSSUsernameToken.h; sourceTree = "<group>"; };
 		8591FBE51A12E85800923420 /* WSSUsernameToken.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = WSSUsernameToken.m; sourceTree = "<group>"; };
+		85DA4C032C41DF8A00FC0E77 /* GNUstep.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = GNUstep.h; sourceTree = "<group>"; };
+		85DA4C052C41E1D700FC0E77 /* libgnutls.30.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libgnutls.30.dylib; path = ../../../../opt/local/lib/libgnutls.30.dylib; sourceTree = "<group>"; };
+		85DA4C072C41E22800FC0E77 /* libnettle.8.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libnettle.8.8.dylib; path = ../../../../opt/local/lib/libnettle.8.8.dylib; sourceTree = "<group>"; };
 		8DC2EF5A0486A6940098B216 /* Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		8DC2EF5B0486A6940098B216 /* WebServices.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = WebServices.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		D2F7E79907B2D74100F64583 /* CoreData.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = CoreData.framework; path = /System/Library/Frameworks/CoreData.framework; sourceTree = "<absolute>"; };
@@ -111,8 +117,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				85DA4C082C41E22800FC0E77 /* libnettle.8.8.dylib in Frameworks */,
 				8DC2EF570486A6940098B216 /* Cocoa.framework in Frameworks */,
-				8591FB731A12E2F300923420 /* Performance.framework in Frameworks */,
+				85DA4C062C41E1D700FC0E77 /* libgnutls.30.dylib in Frameworks */,
+				85DA4C022C41DC3500FC0E77 /* Performance.framework in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -162,6 +170,7 @@
 		08FB77AEFE84172EC02AAC07 /* Classes */ = {
 			isa = PBXGroup;
 			children = (
+				85DA4C032C41DF8A00FC0E77 /* GNUstep.h */,
 				8591FBE31A12E85800923420 /* GWSJSONCoder.m */,
 				8591FBE41A12E85800923420 /* WSSUsernameToken.h */,
 				8591FBE51A12E85800923420 /* WSSUsernameToken.m */,
@@ -207,6 +216,8 @@
 		1058C7B2FEA5585E11CA2CBB /* Other Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				85DA4C072C41E22800FC0E77 /* libnettle.8.8.dylib */,
+				85DA4C052C41E1D700FC0E77 /* libgnutls.30.dylib */,
 				0867D6A5FE840307C02AAC07 /* AppKit.framework */,
 				D2F7E79907B2D74100F64583 /* CoreData.framework */,
 				0867D69BFE84028FC02AAC07 /* Foundation.framework */,
@@ -235,6 +246,7 @@
 				791866DD0D4A46A1003EBF9C /* GWSConstants.h in Headers */,
 				791866DE0D4A46A1003EBF9C /* GWSElement.h in Headers */,
 				791866E20D4A46A1003EBF9C /* GWSMessage.h in Headers */,
+				85DA4C042C41DF8A00FC0E77 /* GNUstep.h in Headers */,
 				791866E40D4A46A1003EBF9C /* GWSPortType.h in Headers */,
 				791866E60D4A46A1003EBF9C /* GWSPrivate.h in Headers */,
 				791866E70D4A46A1003EBF9C /* GWSService.h in Headers */,
@@ -292,8 +304,11 @@
 /* Begin PBXProject section */
 		0867D690FE84028FC02AAC07 /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0510;
+			};
 			buildConfigurationList = 1DEB91B108733DA50010E9CD /* Build configuration list for PBXProject "WebServices" */;
-			compatibilityVersion = "Xcode 2.4";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -380,9 +395,14 @@
 		1DEB91AE08733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				COPY_PHASE_STRIP = NO;
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				FRAMEWORK_VERSION = A;
 				GCC_DYNAMIC_NO_PIC = NO;
 				GCC_ENABLE_FIX_AND_CONTINUE = YES;
@@ -390,9 +410,22 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = WebServices_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"find:",
+					"/Library/Caches/com.apple.Spotlight:",
+					Permission,
+					"denied\n/opt/local/include/",
+				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
 				PRODUCT_NAME = WebServices;
+				SDKROOT = macosx;
 				WRAPPER_EXTENSION = framework;
 				ZERO_LINK = YES;
 			};
@@ -401,17 +434,35 @@
 		1DEB91AF08733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
+				COMBINE_HIDPI_IMAGES = YES;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DYLIB_COMPATIBILITY_VERSION = 1;
 				DYLIB_CURRENT_VERSION = 1;
+				FRAMEWORK_SEARCH_PATHS = (
+					"$(inherited)",
+					"$(LOCAL_LIBRARY_DIR)/Frameworks",
+				);
 				FRAMEWORK_VERSION = A;
 				GCC_ENABLE_EXCEPTIONS = YES;
 				GCC_MODEL_TUNING = G5;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = WebServices_Prefix.pch;
+				HEADER_SEARCH_PATHS = (
+					"$(inherited)",
+					/Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/include,
+					"find:",
+					"/Library/Caches/com.apple.Spotlight:",
+					Permission,
+					"denied\n/opt/local/include/",
+				);
 				INFOPLIST_FILE = Info.plist;
 				INSTALL_PATH = "$(HOME)/Library/Frameworks";
+				LIBRARY_SEARCH_PATHS = (
+					"$(inherited)",
+					/opt/local/lib,
+				);
 				PRODUCT_NAME = WebServices;
+				SDKROOT = macosx;
 				WRAPPER_EXTENSION = framework;
 			};
 			name = Release;
@@ -419,12 +470,11 @@
 		1DEB91B208733DA50010E9CD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
+				ONLY_ACTIVE_ARCH = YES;
 				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
 				SYMROOT = "$(PROJECT_DIR)/build";
 			};
 			name = Debug;
@@ -432,12 +482,10 @@
 		1DEB91B308733DA50010E9CD /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1)";
-				ARCHS_STANDARD_32_BIT_PRE_XCODE_3_1 = "ppc i386";
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				PREBINDING = NO;
-				SDKROOT = /Developer/SDKs/MacOSX10.5.sdk;
+				SDKROOT = "$(DEVELOPER_SDK_DIR)/MacOSX10.5.sdk";
 				SYMROOT = "$(PROJECT_DIR)/build";
 			};
 			name = Release;
