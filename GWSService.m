@@ -1613,6 +1613,7 @@ available(NSString *host)
   [_result release];
   [self _clearConnection];
   [_response release];
+  [_contentType release];
   [_connectionURL release];
   [_documentation release];
   [_extensibility release];
@@ -1620,6 +1621,9 @@ available(NSString *host)
   [_HTTPMethod release];
   [_ports release];
   [_name release];
+  [_clientCertificate release];
+  [_clientKey release];
+  [_clientPassword release];
   [_headers release];
   [_extra release];
   [_lock release];
