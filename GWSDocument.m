@@ -383,7 +383,7 @@ static NSLock			*extLock = nil;
 
           /* Handle imports.
            */
-          while ([(name = [_elem name]) isEqualToString: @"import"])
+          while ([[_elem name] isEqualToString: @"import"])
             {
               NSLog(@"Argh ... 'import' not handled");
               _elem = [_elem sibling];
@@ -391,7 +391,7 @@ static NSLock			*extLock = nil;
 
           /* Extract documentation.
            */
-          if ([(name = [_elem name]) isEqualToString: @"documentation"])
+          if ([[_elem name] isEqualToString: @"documentation"])
             {
               _documentation = [_elem retain];
               _elem = [_elem sibling];
@@ -400,12 +400,12 @@ static NSLock			*extLock = nil;
 
           /* Handle types.
            */
-          if ([(name = [_elem name]) isEqualToString: @"types"])
+          if ([[_elem name] isEqualToString: @"types"])
             {
               GWSElement        *next = [_elem sibling];
 
               _elem = [_elem firstChild];
-              if ([(name = [_elem name]) isEqualToString: @"documentation"])
+              if ([[_elem name] isEqualToString: @"documentation"])
                 {
                   _elem = [_elem sibling];
                 }
@@ -415,7 +415,7 @@ static NSLock			*extLock = nil;
               _elem = next;
             }
 
-          while ([(name = [_elem name]) isEqualToString: @"message"])
+          while ([[_elem name] isEqualToString: @"message"])
             {
               GWSMessage   *message;
 
@@ -431,7 +431,7 @@ static NSLock			*extLock = nil;
               _elem = [_elem sibling];
             }
 
-          while ([(name = [_elem name]) isEqualToString: @"portType"])
+          while ([[_elem name] isEqualToString: @"portType"])
             {
               GWSPortType   *portType;
 
@@ -447,7 +447,7 @@ static NSLock			*extLock = nil;
               _elem = [_elem sibling];
             }
 
-          while ([(name = [_elem name]) isEqualToString: @"binding"])
+          while ([[_elem name] isEqualToString: @"binding"])
             {
               GWSBinding   *binding;
 
@@ -463,7 +463,7 @@ static NSLock			*extLock = nil;
               _elem = [_elem sibling];
             }
 
-          while ([(name = [_elem name]) isEqualToString: @"service"])
+          while ([[_elem name] isEqualToString: @"service"])
             {
               GWSService   *service;
 

@@ -1319,7 +1319,7 @@ newParsed(context *ctxt)
         }
       if ((v = jsonerror) != nil)
         {
-          if (YES == [(v = jsonerror) isKindOfClass: NSDictionaryClass])
+          if (YES == [v isKindOfClass: NSDictionaryClass])
             {
               [result setObject: v forKey: GWSFaultKey];
               if ([self version] == ver2)
