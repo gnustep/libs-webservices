@@ -78,7 +78,7 @@ typedef enum {
   NSString		*_nonce;
   unsigned		_ttl;
   GWSDigestAlgorithm    _algorithm;
-  void                  *_reserved;
+  void                  *_reserved __attribute((unused));
 }
 
 /** Takes a plaintext password, timestamp, and a base64 encoded nonce,
