@@ -242,7 +242,8 @@ static Class		GWSElementClass = Nil;
       unichar	(*caiImp)(NSString*, SEL, NSUInteger);
       unichar	letter;
 
-      caiImp = (unichar (*)())[_content methodForSelector: caiSel];
+      caiImp = (unichar (*)(id, SEL, NSUInteger))
+	[_content methodForSelector: caiSel];
 
       while (end > 0)
 	{
