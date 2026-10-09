@@ -144,6 +144,16 @@ include $(GNUSTEP_MAKEFILES)/documentation.make
 
 -include GNUmakefile.postamble
 
+# Things to do before compiling
+# Automatically run ./configure if needed to generate the makefiles
+# which we need in order to do our job.  If you need any special
+# argument to ./configure, you can't rely on this rule, and you must
+# always run ./configure manually.
+before-all:: config.h config.make GWSHash.h
+ifeq ($(_have_makefiles),)
+	./configure
+endif
+
 check::
 	(cd tests; ./test)
 
